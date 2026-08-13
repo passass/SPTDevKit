@@ -1,0 +1,24 @@
+eftsptdevkit@0.0.0 D:\Others\modding_eft\EFTSPTDevKit\eftsptdevkit
++-- @tsconfig/node24@24.0.4
++-- @types/node@24.13.3
++-- @vitejs/plugin-vue-jsx@5.1.6
++-- @vitejs/plugin-vue@6.0.8
++-- @vue/cli-plugin-babel@5.0.9
++-- @vue/cli-plugin-eslint@5.0.9
++-- @vue/cli-service@5.0.9
++-- @vue/tsconfig@0.9.1
++-- dataclass@2.1.1
++-- electron-builder@26.15.3
++-- electron-devtools-installer@3.2.1
++-- electron@13.6.9
++-- json2typescript@1.6.1
++-- npm-run-all2@9.0.3
++-- pinia@4.0.2
++-- typescript@6.0.3
++-- vite-plugin-electron@1.1.1
++-- vite-plugin-vue-devtools@8.2.1
++-- vite@8.2.1
++-- vue-cli-plugin-electron-builder@2.1.1
++-- vue-tsc@3.3.9
+`-- vue@3.5.41
+

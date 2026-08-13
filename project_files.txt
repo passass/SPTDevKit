@@ -1,0 +1,1714 @@
+================================================================================
+📁 КОЛЛЕКЦИЯ ФАЙЛОВ ПРОЕКТА
+📅 Дата: 2026-08-12 19:34:32
+📂 Текущая директория: D:\Others\modding_eft\EFTSPTDevKit\eftsptdevkit
+📄 Найдено файлов: 17
+================================================================================
+
+
+================================================================================
+📄 Файл: src\App.vue
+📏 Размер: 553 байт
+================================================================================
+
+<script setup lang="tsx">
+import { useFileDataStore } from "@/stores/fileStore.ts";
+import { onMounted } from "vue";
+import Main from "@/components/Main.vue";
+import { gameLocalization } from "@/types/localization";
+
+const fileStore = useFileDataStore()
+
+onMounted(async () => {
+	fileStore.read("quests.json")
+	fileStore.read("items.json")
+
+	gameLocalization.loadLocales()
+})
+</script>
+
+<template>
+	<div v-if="fileStore.isAllLoaded">
+		<Main></Main>
+	</div>
+	<div v-else>
+		<h1>
+			Загрузка
+		</h1>
+	</div>
+	
+</template>
+
+<style scoped></style>
+
+
+
+================================================================================
+📄 Файл: src\background.js
+📏 Размер: 1770 байт
+================================================================================
+
+// src/background.cjs
+const { app, BrowserWindow, ipcMain } = require('electron')
+const path = require('path')
+
+let mainWindow = null
+
+function createWindow() {
+  mainWindow = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js') // Важно: подключаем preload
+    }
+  })
+
+  // Загружаем приложение
+  if (process.env.WEBPACK_DEV_SERVER_URL) {
+    mainWindow.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
+    mainWindow.webContents.openDevTools()
+  } else {
+    mainWindow.loadFile(path.join(__dirname, '../dist-electron/index.html'))
+  }
+
+  mainWindow.on('closed', () => {
+    mainWindow = null
+  })
+
+  // Обработка сообщений от рендерера
+  ipcMain.on('toMain', (event, data) => {
+    console.log('Received from renderer:', data)
+    
+    // Отправляем ответ обратно в рендерер
+    event.reply('fromMain', 'Hello from main process!')
+    
+    // Или используем mainWindow для отправки
+    if (mainWindow) {
+      mainWindow.webContents.send('fromMain', 'Response from main!')
+    }
+  })
+}
+
+// Жизненный цикл приложения
+app.on('ready', createWindow)
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit()
+  }
+})
+
+app.on('activate', () => {
+  if (mainWindow === null) {
+    createWindow()
+  }
+})
+
+// Дополнительные IPC обработчики
+ipcMain.handle('get-app-version', () => {
+  return app.getVersion()
+})
+
+ipcMain.handle('get-app-path', () => {
+  return app.getPath('userData')
+})
+
+
+================================================================================
+📄 Файл: src\components\ListTabs.vue
+📏 Размер: 4283 байт
+================================================================================
+
+<template>
+	<div class="tab-container">
+		<!-- Левая панель - список вкладок -->
+		<div class="tab-list">
+			<div
+				v-for="tab in tabs"
+				:key="tab.id"
+				:class="['tab-item', { active: activeTab === tab.id }]"
+				@click="selectTab(tab.id)"
+			>
+				<span v-if="tab.icon" class="tab-icon">{{ tab.icon }}</span>
+				<span class="tab-label">{{ tab.label }}</span>
+				<span v-if="tab.badge" class="tab-badge">{{ tab.badge }}</span>
+			</div>
+		</div>
+
+		<!-- Правая панель - содержимое выбранной вкладки -->
+		<div class="tab-content">
+			<ListTabsFrame
+				v-if="currentTab"
+				:tab="currentTab"
+				@refresh="refreshTab"
+				@close="closeTab"
+				@update="handleContentUpdate"
+			>
+				<template #content="{ data }">
+					<!-- ✅ Теперь прокидываем именно те data, что пришли из фрейма -->
+					<slot name="content" :data="data"></slot>
+				</template>
+			</ListTabsFrame>
+			<div v-else class="empty-state">
+				<p>Выберите вкладку для просмотра</p>
+			</div>
+		</div>
+	</div>
+</template>
+
+<script lang="ts">
+import ListTabsFrame from "./RecordEditorFrame.vue";
+import type { Tab } from "@/tabs/tabs.ts";
+import type { PropType } from "vue";
+
+export default {
+	name: "TabListBox",
+
+	components: {
+		ListTabsFrame,
+	},
+
+	data(): {
+		activeTab: string | null;
+	} {
+		return {
+			activeTab: null,
+		};
+	},
+
+	props: {
+		tabs: {
+			type: Array as PropType<Tab[]>,
+			required: true,
+			default: () => [],
+		},
+	},
+
+	computed: {
+		currentTab(): Tab | undefined {
+			return this.tabs.find((t) => t.id === this.activeTab);
+		},
+	},
+
+	methods: {
+		selectTab(tabId: string) {
+			this.activeTab = tabId;
+			localStorage.setItem("activeTab", tabId);
+			this.$emit("tab-selected", tabId);
+		},
+
+		refreshTab() {
+			this.$emit("refresh", this.activeTab);
+		},
+
+		closeTab() {
+			this.activeTab = null;
+			localStorage.removeItem("activeTab");
+		},
+
+		handleContentUpdate(data: any) {
+			this.$emit("content-update", data);
+		},
+	},
+
+	mounted() {
+		const savedTab = localStorage.getItem("activeTab");
+		if (savedTab && this.tabs.some((t) => t.id === savedTab)) {
+			this.activeTab = savedTab;
+		} else if (this.tabs.length > 0) {
+			this.activeTab = this.tabs[0]?.id || null;
+		}
+	},
+};
+</script>
+
+<style scoped>
+/* ... стили без изменений ... */
+.tab-container {
+	display: flex;
+	height: 100%;
+	min-height: 500px;
+	background: #1e1e1e;
+	color: #e0e0e0;
+	border-radius: 8px;
+	overflow: hidden;
+	font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.tab-list {
+	width: 180px;
+	background: #2d2d2d;
+	padding: 8px 0;
+	border-right: 1px solid #3d3d3d;
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.tab-item {
+	display: flex;
+	align-items: center;
+	padding: 12px 16px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	border-left: 3px solid transparent;
+	gap: 5px;
+	user-select: none;
+	
+	word-wrap: break-word;        /* Перенос длинных слов */
+	word-break: break-word;
+	overflow-wrap: break-word;
+}
+
+.tab-item:hover {
+	background: #3a3a3a;
+}
+
+.tab-item.active {
+	background: #3d3d3d;
+	border-left-color: #42b883;
+}
+
+.tab-item .tab-icon {
+	font-size: 18px;
+	width: 24px;
+	text-align: center;
+}
+
+.tab-item .tab-label {
+	flex: 1;
+	font-size: 14px;
+	font-weight: 500;
+}
+
+.tab-item .tab-badge {
+	background: #42b883;
+	color: #1e1e1e;
+	font-size: 11px;
+	font-weight: bold;
+	padding: 2px 8px;
+	border-radius: 12px;
+	min-width: 18px;
+	text-align: center;
+}
+
+.tab-item.active .tab-badge {
+	background: #66d9a0;
+}
+
+.tab-content {
+	flex: 1;
+	padding: 20px;
+	background: #252525;
+	overflow: auto;
+}
+
+.empty-state {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100%;
+	color: #666;
+	font-size: 16px;
+}
+
+.tab-list::-webkit-scrollbar {
+	width: 6px;
+}
+
+.tab-list::-webkit-scrollbar-track {
+	background: #2d2d2d;
+}
+
+.tab-list::-webkit-scrollbar-thumb {
+	background: #555;
+	border-radius: 3px;
+}
+
+.tab-list::-webkit-scrollbar-thumb:hover {
+	background: #666;
+}
+</style>
+
+
+================================================================================
+📄 Файл: src\components\Main.vue
+📏 Размер: 4193 байт
+================================================================================
+
+<script setup lang="tsx">
+import ListTabs from "@/components/ListTabs.vue";
+import RecordEditor from "@/components/RecordEditor.vue";
+import type { Tab } from "@/tabs/tabs.ts";
+import { ref, type Component } from 'vue'
+import { JsonConvert } from "json2typescript"
+import { useFileDataStore } from "@/stores/fileStore.ts";
+import { gameLocalization } from "@/types/localization";
+import ListTabsFrame from "./RecordEditorFrame.vue";
+
+const fileStore = useFileDataStore()
+
+function getRecordEditorComponent(filename: string): Component {
+	return () => {
+		const itemsData: Tab[] = []
+				
+		const fileData = fileStore.getData(filename) ?? {};
+		
+		for (const [itemId, itemData] of Object.entries(fileData)) {
+			if (itemData && typeof itemData === "object")
+				itemsData.push(
+					{
+						id: itemId,
+						label: (
+							gameLocalization.getText(`${itemId} Name`)
+							?? gameLocalization.getText(`${itemId} name`)
+							?? itemId), //  
+						title: itemId,
+						data: itemData
+					}
+				);
+		}
+
+		return <RecordEditor
+			itemsData={itemsData}
+		></RecordEditor>
+	}
+}
+
+const {loaded: questsLoaded, data: questsData} = fileStore.getDataIfLoaded("quests.json")
+const {loaded: itemsLoaded, data: itemsData} = fileStore.getDataIfLoaded("items.json")
+
+const tabsContent = ref<Tab[]>([
+	{
+		id: "quests",
+		label: "Квесты",
+		icon: "📋",
+		badge: questsLoaded ? Object.keys(questsData).length : null,
+
+		title: "Управление квестами",
+		component: getRecordEditorComponent('quests.json'),
+	},
+	{
+		id: "items",
+		label: "Предметы",
+		icon: "📦",
+		badge: itemsLoaded ? Object.keys(itemsData).length : null,
+		title: "Редактор предметов",
+		component: getRecordEditorComponent('items.json'),
+	},
+	{
+		id: "traders",
+		label: "Торговцы",
+		icon: "🏪",
+		badge: 5,
+
+		title: "Торговцы и репутация",
+	},
+	{
+		id: "settings",
+		label: "Настройки",
+		icon: "⚙️",
+		badge: null,
+
+		title: "Настройки приложения",
+	},
+]);
+
+function handleRefresh() {
+	console.log('🔄 Обновление таблицы')
+	// Можно перезагрузить данные
+	const itemsTab = tabsContent.value.find(t => t.id === 'items')
+	if (itemsTab) {
+		// Пересоздаем компонент RecordEditor
+		itemsTab.component = () => {
+			const itemsData: Tab[] = []
+			const fileData = fileStore.getData('items.json') ?? {}
+			
+			for (const [itemId, itemData] of Object.entries(fileData)) {
+				if (itemData && typeof itemData === "object") {
+					itemsData.push({
+						id: itemId,
+						label: gameLocalization.getText(`${itemId} Name`) ?? itemId,
+						title: itemId,
+						data: itemData
+					})
+				}
+			}
+			return <RecordEditor itemsData={itemsData} />
+		}
+	}
+}
+
+function handleClose() {
+	console.log('❌ Закрытие таблицы')
+	// Можно очистить данные или перейти на другую страницу
+}
+
+function handleUpdate(data: any) {
+	console.log('📦 Обновлены данные:', data)
+}
+
+// ===== Создаем фейковую вкладку для обертки =====
+// ListTabsFrame ожидает объект Tab, поэтому создаем фиктивную вкладку
+const wrapperTab = ref<Tab>({
+	id: 'main-tabs',
+	label: 'Главная',
+	title: '📊 Управление данными',
+	// Компонент будет рендерить ListTabs
+	component: () => <ListTabs tabs={tabsContent.value} />
+})
+
+</script>
+
+<template>
+	<div class="app-container">
+		<!-- ✅ Оборачиваем ListTabs в ListTabsFrame -->
+		<ListTabsFrame
+			:tab="wrapperTab"
+			@refresh="handleRefresh"
+			@close="handleClose"
+			@update="handleUpdate"
+		>
+			<!-- Слот для содержимого -->
+			<template #content>
+				<!-- Здесь будет ListTabs -->
+				<ListTabs :tabs="tabsContent" />
+			</template>
+		</ListTabsFrame>
+	</div>
+</template>
+
+<style scoped>
+.app-container {
+	height: 90vh;
+	padding: 20px;
+	background: #1a1a1a;
+}
+</style>
+
+
+
+================================================================================
+📄 Файл: src\components\RecordEditor.vue
+📏 Размер: 561 байт
+================================================================================
+
+<script lang="tsx">
+	import RecordEditorInput from "./RecordEditorInput.vue";
+	import ListTabs from "./ListTabs.vue";
+	import type { Tab } from "@/tabs/tabs.ts";
+	import type { PropType } from "vue";
+
+	export default {
+		components: {
+			ListTabs,
+			RecordEditorInput
+		},
+
+		props: {
+			itemsData: {
+				type: Array as PropType<Tab[]>,
+				required: true,
+			},
+		},
+	};
+</script>
+
+<template>
+	<ListTabs :tabs="itemsData">
+		<template #content="{ data }">
+			<RecordEditorInput :data="data" />
+		</template>
+	</ListTabs>
+</template>
+
+
+================================================================================
+📄 Файл: src\components\RecordEditorFrame.vue
+📏 Размер: 5488 байт
+================================================================================
+
+<template>
+	<div class="tab-frame">
+		<div
+			v-if="tab.title || pathStack.length > 0"
+			class="frame-header"
+		>
+			<div class="frame-header-left">
+				<h3 v-if="tab.title">{{ tab.title }}</h3>
+
+				<!-- Хлебные крошки -->
+				<div v-if="pathStack.length > 0" class="frame-breadcrumbs">
+					<button class="back-btn" @click="goBack" title="Назад">←</button>
+					<span class="breadcrumbs-path">
+						<span class="breadcrumb-root" @click="goRoot">root</span>
+						<span v-for="(segment, i) in pathStack" :key="i">
+							<span class="breadcrumb-separator"> / </span>
+							<span class="breadcrumb-item" @click="jumpToLevel(i)">{{
+								segment
+							}}</span>
+						</span>
+					</span>
+				</div>
+			</div>
+
+			<div class="frame-actions">
+				<button @click="handleRefresh" title="Обновить">⟳</button>
+				<button @click="handleClose" title="Закрыть">✕</button>
+			</div>
+		</div>
+
+		<div class="frame-body">
+			<component
+				v-if="tab.component"
+				:is="tab.component"
+				v-bind="tab.props || {}"
+				:data="displayData"
+				@update="handleUpdate"
+			/>
+			<div v-else-if="displayData">
+				<slot name="content" :data="displayData"></slot>
+			</div>
+			<div v-else class="empty-state">
+				<slot name="empty">
+					<p>Нет данных для отображения</p>
+				</slot>
+			</div>
+		</div>
+	</div>
+</template>
+
+<script lang="ts">
+import type { PropType } from "vue";
+import type { Tab } from "@/tabs/tabs.ts";
+
+export default {
+	name: "ListTabsFrame",
+
+	provide() {
+		return {
+			frameNavigator: {
+				navigate: (key: string) => this.navigateToKey(key),
+				goBack: () => this.goBack(),
+				goRoot: () => this.goRoot(),
+			},
+		};
+	},
+
+	emits: {
+		refresh: () => true,
+		close: () => true,
+		update: (data: any) => typeof data === "object" && data !== null,
+	},
+
+	props: {
+		tab: {
+			type: Object as PropType<Tab>,
+			required: true,
+		},
+	},
+
+	data(): {
+		pathStack: string[];
+	} {
+		return {
+			pathStack: [],
+		};
+	},
+
+	computed: {
+		sourceData(): Record<string, any> | undefined {
+			return this.tab.data ?? undefined;
+		},
+
+		displayData(): Record<string, any> | undefined {
+			if (!this.sourceData) return undefined;
+			let current: any = this.sourceData;
+			for (const key of this.pathStack) {
+				if (
+					current &&
+					typeof current === "object" &&
+					!Array.isArray(current) &&
+					key in current
+				) {
+					current = current[key];
+				} else {
+					return undefined;
+				}
+			}
+			return current;
+		},
+	},
+
+	watch: {
+		"tab.id"() {
+			this.pathStack = [];
+		},
+	},
+
+	methods: {
+		handleRefresh() {
+			this.$emit("refresh");
+		},
+
+		handleClose() {
+			this.$emit("close");
+		},
+
+		handleUpdate(data: any) {
+			this.$emit("update", data);
+		},
+
+		isNavigable(value: any): boolean {
+			return (
+				value !== null &&
+				typeof value === "object" &&
+				!Array.isArray(value)
+			);
+		},
+
+		navigateToKey(key: string) {
+			const target = this.displayData?.[key];
+			if (this.isNavigable(target)) {
+				this.pathStack.push(key);
+			}
+		},
+
+		goBack() {
+			this.pathStack.pop();
+		},
+
+		goRoot() {
+			this.pathStack = [];
+		},
+
+		jumpToLevel(index: number) {
+			this.pathStack = this.pathStack.slice(0, index + 1);
+		},
+	},
+};
+</script>
+
+<style scoped>
+.tab-frame {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	background: #2a2a2a;
+	border-radius: 6px;
+	outline: 1px solid #3d3d3d;
+	overflow: hidden;
+}
+
+.frame-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 3px 9px;
+	background: #413c25;
+	border-bottom: 1px solid #3d3d3d;
+	gap: 12px;
+}
+
+.frame-header-left {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex: 1;
+	min-width: 0;
+	flex-wrap: wrap;
+}
+
+.frame-header h3 {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 600;
+	color: #e8e8e8;
+	flex-shrink: 0;
+}
+
+/* ===== Хлебные крошки ===== */
+.frame-breadcrumbs {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 13px;
+	flex-wrap: wrap;
+}
+
+.back-btn {
+	background: #3d3d3d;
+	border: 1px solid #4a4a4a;
+	color: #e0e0e0;
+	padding: 2px 8px;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 13px;
+	transition: all 0.2s;
+}
+
+.back-btn:hover {
+	background: #4a4a4a;
+	border-color: #42b883;
+}
+
+.breadcrumbs-path {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 2px;
+	color: #999;
+}
+
+.breadcrumb-root {
+	cursor: pointer;
+	color: #42b883;
+	font-weight: 500;
+}
+
+.breadcrumb-root:hover {
+	text-decoration: underline;
+}
+
+.breadcrumb-item {
+	cursor: pointer;
+	color: #42b883;
+	transition: color 0.2s;
+}
+
+.breadcrumb-item:hover {
+	color: #66d9a0;
+	text-decoration: underline;
+}
+
+.breadcrumb-separator {
+	color: #666;
+	margin: 0 2px;
+}
+
+/* ===== Действия ===== */
+.frame-actions {
+	display: flex;
+	gap: 8px;
+	flex-shrink: 0;
+}
+
+.frame-actions button {
+	background: transparent;
+	border: none;
+	color: #999;
+	cursor: pointer;
+	padding: 4px 8px;
+	border-radius: 4px;
+	font-size: 16px;
+	transition: all 0.2s;
+}
+
+.frame-actions button:hover {
+	background: #4a4a4a;
+	color: #fff;
+}
+
+.frame-body {
+	flex: 1;
+	padding: 16px;
+	overflow: auto;
+}
+
+.empty-state {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100%;
+	color: #666;
+	font-size: 16px;
+}
+</style>
+
+
+================================================================================
+📄 Файл: src\components\RecordEditorInput.vue
+📏 Размер: 5410 байт
+================================================================================
+
+<template>
+	<div class="form-frame">
+		<div v-if="title" class="form-frame__title">
+			<h3>{{ title }}</h3>
+		</div>
+
+		<div class="form-frame__fields">
+			<div v-for="(value, key) in data" :key="key" class="form-field">
+				<div class="form-field__header">
+					<label :for="key">{{ formatLabel(key) }}</label>
+					<button
+						v-if="isNavigable(value)"
+						class="navigate-btn"
+						@click="handleNavigate(key)"
+						title="Открыть вложенную структуру"
+					>
+						→
+					</button>
+				</div>
+
+				<input
+					v-if="getFieldType(value) === 'text'"
+					:id="key"
+					v-model="data[key]"
+					type="text"
+				/>
+
+				<input
+					v-else-if="getFieldType(value) === 'number'"
+					:id="key"
+					v-model.number="data[key]"
+					type="number"
+				/>
+
+				<input
+					v-else-if="getFieldType(value) === 'boolean'"
+					:id="key"
+					v-model="data[key]"
+					type="checkbox"
+				/>
+
+				<textarea
+					v-else-if="getFieldType(value) === 'textarea'"
+					:id="key"
+					v-model="data[key]"
+					rows="3"
+				></textarea>
+
+				<select
+					v-else-if="getFieldType(value) === 'select'"
+					:id="key"
+					v-model="data[key]"
+				>
+					<option
+						v-for="option in value"
+						:key="option"
+						:value="option"
+					>
+						{{ option }}
+					</option>
+				</select>
+
+				<div
+					v-else-if="getFieldType(value) === 'object'"
+					class="object-summary"
+				>
+					{{ getObjectSummary(value) }}
+				</div>
+			</div>
+		</div>
+
+		<div v-if="$slots.actions" class="form-frame__actions">
+			<slot name="actions"></slot>
+		</div>
+	</div>
+</template>
+
+<script lang="tsx">
+import { inject } from "vue";
+
+export default {
+	name: "RecordEditorInput",
+	props: {
+		data: {
+			type: Object,
+			required: true,
+		},
+		title: {
+			type: String,
+			default: "",
+		},
+	},
+	setup() {
+		const frameNavigator = inject<{ navigate?: (key: string) => void }>(
+			"frameNavigator",
+			{}
+		);
+		return { frameNavigator };
+	},
+	methods: {
+		formatLabel(key: string) {
+			return key
+				.replace(/([A-Z])/g, " $1")
+				.replace(/_/g, " ")
+				.replace(/^./, (str: string) => str.toUpperCase());
+		},
+		getFieldType(value: any): string {
+			if (value === null || value === undefined) return "text";
+			if (Array.isArray(value)) {
+				if (
+					value.length > 0 &&
+					["string", "number", "boolean"].includes(typeof value[0])
+				) {
+					return "select";
+				}
+				return "textarea";
+			}
+			if (typeof value === "boolean") return "boolean";
+			if (typeof value === "number") return "number";
+			if (typeof value === "string" && value.length > 100) return "textarea";
+			if (typeof value === "object") return "object";
+			return "text";
+		},
+		isNavigable(value: any): boolean {
+			return (
+				value !== null &&
+				typeof value === "object" &&
+				!Array.isArray(value)
+			);
+		},
+		getObjectSummary(value: Record<string, any>): string {
+			const keys = Object.keys(value);
+			if (keys.length === 0) return "{}";
+			const preview = keys.slice(0, 3).join(", ");
+			return keys.length > 3
+				? `{ ${preview}... (${keys.length} полей) }`
+				: `{ ${preview} }`;
+		},
+		handleNavigate(key: string) {
+			this.frameNavigator?.navigate?.(key);
+		},
+	},
+};
+</script>
+
+<style scoped>
+.form-frame {
+	background: #2a2a2a;
+	border-radius: 8px;
+	padding: 24px;
+	border: 1px solid #3d3d3d;
+	color: #e0e0e0;
+}
+
+.form-frame__title {
+	margin-bottom: 20px;
+	padding-bottom: 12px;
+	border-bottom: 1px solid #3d3d3d;
+}
+
+.form-frame__title h3 {
+	margin: 0;
+	font-size: 18px;
+	color: #e8e8e8;
+	font-weight: 600;
+}
+
+.form-field {
+	margin-bottom: 16px;
+}
+
+.form-field__header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 6px;
+}
+
+.form-field label {
+	font-weight: 500;
+	font-size: 14px;
+	color: #b0b0b0;
+}
+
+.navigate-btn {
+	background: transparent;
+	border: 1px solid #4a4a4a;
+	color: #42b883;
+	width: 28px;
+	height: 28px;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 14px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.2s;
+}
+
+.navigate-btn:hover {
+	background: #42b883;
+	color: #1e1e1e;
+	border-color: #42b883;
+}
+
+.form-field input,
+.form-field textarea,
+.form-field select {
+	width: 100%;
+	padding: 8px 12px;
+	background: #333333;
+	border: 1px solid #4a4a4a;
+	border-radius: 6px;
+	font-size: 14px;
+	color: #e0e0e0;
+	transition: border-color 0.2s, box-shadow 0.2s;
+	box-sizing: border-box;
+}
+
+.form-field input:focus,
+.form-field textarea:focus,
+.form-field select:focus {
+	outline: none;
+	border-color: #42b883;
+	box-shadow: 0 0 0 2px rgba(66, 184, 131, 0.15);
+}
+
+.form-field input::placeholder,
+.form-field textarea::placeholder {
+	color: #777;
+}
+
+.form-field input[type="checkbox"] {
+	width: 18px;
+	height: 18px;
+	margin-top: 4px;
+	accent-color: #42b883;
+	cursor: pointer;
+}
+
+.object-summary {
+	padding: 8px 12px;
+	background: #333333;
+	border: 1px solid #4a4a4a;
+	border-radius: 6px;
+	font-size: 13px;
+	color: #999;
+	font-family: "Consolas", "Monaco", monospace;
+	cursor: default;
+	user-select: none;
+}
+
+.form-frame__actions {
+	margin-top: 20px;
+	padding-top: 16px;
+	border-top: 1px solid #3d3d3d;
+	display: flex;
+	gap: 10px;
+	justify-content: flex-end;
+}
+</style>
+
+
+================================================================================
+📄 Файл: src\main.ts
+📏 Размер: 322 байт
+================================================================================
+
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
+import App from './App.vue'
+// import ListTabs from './components/ListTabs.vue'
+
+const pinia = createPinia() // Создаём экземпляр
+const app = createApp(App)
+
+app.use(pinia) // Подключаем к приложению
+app.mount('#app')
+
+
+================================================================================
+📄 Файл: src\preload.js
+📏 Размер: 617 байт
+================================================================================
+
+// src/preload.js
+const { contextBridge, ipcRenderer } = require('electron')
+
+// Экспонируем безопасные API для рендерера
+contextBridge.exposeInMainWorld('electronAPI', {
+  send: (channel, data) => {
+    // Белый список каналов
+    const validChannels = ['toMain']
+    if (validChannels.includes(channel)) {
+      ipcRenderer.send(channel, data)
+    }
+  },
+  receive: (channel, func) => {
+    const validChannels = ['fromMain']
+    if (validChannels.includes(channel)) {
+      ipcRenderer.on(channel, (event, ...args) => func(...args))
+    }
+  }
+})
+
+
+================================================================================
+📄 Файл: src\shims-vue.d.ts
+📏 Размер: 485 байт
+================================================================================
+
+declare module '*.vue' {
+  import type { DefineComponent } from 'vue'
+  const component: DefineComponent<{}, {}, any>
+  export default component
+}
+
+declare module './components/*.vue' {
+  import type { DefineComponent } from 'vue'
+  const component: DefineComponent<{}, {}, any>
+  export default component
+}
+
+declare module '../components/*.vue' {
+  import type { DefineComponent } from 'vue'
+  const component: DefineComponent<{}, {}, any>
+  export default component
+}
+
+
+================================================================================
+📄 Файл: src\stores\fileStore.ts
+📏 Размер: 6130 байт
+================================================================================
+
+import { defineStore } from "pinia";
+import { ref, computed } from "vue";
+import { readLocalJson, writeLocalJson } from "@/utils/fileReader";
+import { Data } from "dataclass";
+import { JsonConvert, JsonObject, JsonProperty } from "json2typescript";
+
+const jsonConvert: JsonConvert = new JsonConvert();
+
+// ===== Типы =====
+
+export class FileConfig<T = any> extends Data {
+	filename!: string;
+	data: T | null = null;
+	loading: boolean = false;
+	error: string | null = null;
+	initialized: boolean = false;
+}
+
+// Type guard
+export function isLoaded<T>(
+	config: FileConfig<T>,
+): config is FileConfig<T> & { data: T } {
+	return config.initialized && config.data !== null;
+}
+
+// ===== Store =====
+
+export const useFileDataStore = defineStore("fileStore", () => {
+	// Состояние
+	const files = ref<Map<string, FileConfig>>(new Map());
+	const globalLoading = ref(false);
+
+	// Геттеры
+	const isAllLoaded = computed(() => {
+		if (files.value.size === 0) return false;
+		return Array.from(files.value.values()).every((f) => f.initialized);
+	});
+
+	const anyLoading = computed(() =>
+		Array.from(files.value.values()).some((f) => f.loading),
+	);
+
+	// Приватные helpers
+	function getOrCreate<T>(filename: string): FileConfig<T> {
+		if (files.value.has(filename)) {
+			return files.value.get(filename) as FileConfig<T>
+		}
+		else {
+			const newFileConfig: FileConfig = FileConfig.create({
+				filename: filename,
+			});
+			files.value.set(filename, newFileConfig);
+			return newFileConfig;
+		}
+	}
+
+	function updateConfig<T>(
+		filename: string,
+		patch: Partial<FileConfig<T>>,
+	): void {
+		const existing = files.value.get(filename);
+		if (existing) {
+			files.value.set(filename, { ...existing, ...patch } as FileConfig);
+		}
+	}
+
+	async function read<T = any>(filename: string): Promise<FileConfig<T>> {
+		const config = getOrCreate<T>(filename);
+
+		// Уже в кэше
+		if (isLoaded(config)) {
+			return config;
+		}
+
+		// Уже грузится — ждём
+		if (config.loading) {
+			await waitFor(filename);
+			const refreshed = files.value.get(filename);
+			if (!refreshed || !isLoaded(refreshed)) {
+				throw new Error(`Ошибка загрузки ${filename}`);
+			}
+			return refreshed as FileConfig<T>;
+		}
+
+		// Начинаем загрузку
+		updateConfig(filename, { loading: true, error: null });
+
+		try {
+			const data = (await readLocalJson(filename)) as T;
+			updateConfig(filename, { data, initialized: true, loading: false });
+			
+			// Возвращаем обновленный конфиг
+			const updatedConfig = files.value.get(filename);
+			if (!updatedConfig) {
+				throw new Error(`Не удалось получить конфиг после загрузки ${filename}`);
+			}
+			return updatedConfig as FileConfig<T>;
+		} catch (err: any) {
+			updateConfig(filename, { error: err.message, loading: false });
+			throw err;
+		}
+	}
+
+	/**
+	 * Сохранить файл. Обновляет кэш при успехе.
+	 */
+	async function write<T = any>(filename: string, data: T): Promise<void> {
+		const config = getOrCreate<T>(filename);
+		updateConfig(filename, { loading: true, error: null });
+
+		try {
+			await writeLocalJson(filename, data as any);
+			updateConfig(filename, { data, initialized: true, loading: false });
+		} catch (err: any) {
+			updateConfig(filename, { error: err.message, loading: false });
+			throw err;
+		}
+	}
+
+	/**
+	 * Прочитать данные из кэша без загрузки.
+	 */
+
+	function getData(filename: string): unknown | null;
+	function getData<T extends object>(filename: string, dataType: new () => T): T | null;
+
+	// Одна реализация
+	function getData<T extends object>(filename: string, dataType?: new () => T): unknown | T | null {
+		const config = getOrCreate(filename);
+
+		if (!isLoaded(config) || !config.data) {
+			return null;
+		}
+
+		if (dataType) {
+			return jsonConvert.deserialize(
+				config.data as object[],
+				dataType
+			) as T;
+		}
+
+		return config.data;
+	}
+	/**
+	 * Требовательное чтение — кинет ошибку если не загружено.
+	 */
+	function getDataOrThrow(filename: string): unknown;
+	function getDataOrThrow<T extends object>(filename: string, dataType: new () => T): T;
+
+	function getDataOrThrow<T extends object>(filename: string, dataType?: new () => T): unknown | T {
+		
+		let data;
+		if (dataType)
+			data = getData<T>(filename, dataType);
+		else
+			data = getData(filename);
+		if (data === null) {
+			throw new Error(
+				`Файл "${filename}" не загружен. Вызовите read() сначала.`,
+			);
+		}
+		return data as T;
+	}
+
+	/**
+	 * Type-safe проверка с результатом.
+	 */
+	function getDataIfLoaded<T = any>(
+		filename: string,
+	): { loaded: true; data: T } | { loaded: false; data: null } {
+		const config = getOrCreate<T>(filename);
+		if (isLoaded(config)) {
+			return { loaded: true, data: config.data };
+		}
+		return { loaded: false, data: null };
+	}
+
+	async function reload<T = any>(filename: string): Promise<FileConfig<T>> {
+		files.value.delete(filename);
+		return read<T>(filename);
+	}
+
+	/**
+	 * Очистить кэш файла.
+	 */
+	function clear(filename: string): void {
+		files.value.delete(filename);
+	}
+
+	/**
+	 * Очистить весь кэш.
+	 */
+	function clearAll(): void {
+		files.value.clear();
+	}
+
+	// ===== Внутренние =====
+
+	function waitFor(filename: string): Promise<void> {
+		return new Promise((resolve) => {
+			const check = () => {
+				const config = files.value.get(filename);
+				if (!config?.loading) {
+					resolve();
+				} else {
+					setTimeout(check, 50);
+				}
+			};
+			check();
+		});
+	}
+
+	return {
+		// State
+		files,
+		globalLoading,
+		// Getters
+		isAllLoaded,
+		anyLoading,
+		getOrCreate,
+		// Actions
+		read,
+		write,
+		getData,
+		getDataOrThrow,
+		getDataIfLoaded,
+		reload,
+		clear,
+		clearAll,
+	};
+});
+
+
+
+================================================================================
+📄 Файл: src\tabs\tabs.ts
+📏 Размер: 470 байт
+================================================================================
+
+// src/tabs/tabs.ts
+import type { Component } from 'vue'
+
+export type TabData = object;
+
+// ===== Вкладка =====
+export interface Tab {
+  id: string
+  label: string
+  icon?: string
+  badge?: number | null
+
+  title?: string
+  component?: Component
+  props?: Record<string, any>
+  footer?: string
+
+  dataTitle?: string
+  data?: TabData
+}
+
+// ===== Экспорт по умолчанию для совместимости =====
+export default {}
+
+
+================================================================================
+📄 Файл: src\types\electron.d.ts
+📏 Размер: 420 байт
+================================================================================
+
+export interface ElectronAPI {
+  readLocalJson: (filename: string) => Promise<{ success: boolean; data: any; error?: string; path?: string }>;
+  writeLocalJson: (filename: string, data: any) => Promise<{ success: boolean; error?: string }>;
+  // добавьте сюда остальные методы из preload.js
+}
+
+declare global {
+  interface Window {
+    electronAPI: ElectronAPI;
+  }
+}
+
+export {};
+
+
+================================================================================
+📄 Файл: src\types\gameitems.ts
+📏 Размер: 171 байт
+================================================================================
+
+import { JsonObject, JsonProperty } from "json2typescript";
+
+@JsonObject("Item") // Make sure "City" is a unique identifier for this class
+export class gameItems {
+
+}
+
+
+================================================================================
+📄 Файл: src\types\localization.ts
+📏 Размер: 860 байт
+================================================================================
+
+import { FileConfig, useFileDataStore } from "@/stores/fileStore.ts";
+
+
+
+export class GameLocalization {
+	locales: Map<string, FileConfig<Record<string, string>>> = new Map()
+	fileStore: ReturnType<typeof useFileDataStore> | null = null
+
+	loadLocales() {
+		
+		this.fileStore = useFileDataStore()
+
+		const filenames: string[] = ["ru_localization.json"];
+
+		for (const filename of filenames) {
+			this.locales.set(filename, this.fileStore.getOrCreate(filename))
+
+			this.fileStore.read<Record<string, string>>(filename)
+		}
+
+	}
+
+	getText(localeId: string): string | null {
+		if (this.fileStore === null)
+			return null;
+
+		const {loaded, data} = this.fileStore.getDataIfLoaded("ru_localization.json")
+		if (loaded) {
+			return data[localeId] ?? null
+		}
+		return null
+	}
+}
+
+export const gameLocalization = new GameLocalization()
+
+
+================================================================================
+📄 Файл: src\utils\dataclass.ts
+📏 Размер: 6002 байт
+================================================================================
+
+/**
+ * Символ-маркер для внутренней идентификации dataclass
+ */
+export const IS_DATACLASS = Symbol('is_dataclass');
+
+/**
+ * Опции декоратора @dataclass
+ */
+export interface DataclassOptions<T = Record<string, any>> {
+  /** Значения по умолчанию (переопределяют property initializers класса) */
+  defaults?: Partial<T>;
+  /** Сделать объект неизменяемым после создания */
+  frozen?: boolean;
+  /** Валидация данных перед присвоением. Выбрасывает ошибку при невалидных данных */
+  validate?: (data: Partial<T>) => void;
+}
+
+/**
+ * Декоратор @dataclass
+ * 
+ * Автоматически создаёт конструктор, который:
+ * 1. Принимает объект с частичными данными (Partial<T>)
+ * 2. Применяет значения по умолчанию из property initializers класса
+ * 3. Применяет defaults из опций декоратора
+ * 4. Применяет переданные данные поверх всего
+ * 5. Поддерживает проверку типа через static isInstance()
+ * 
+ * Использование:
+ * @dataclass()
+ * class User {
+ *   name: string = 'Anonymous';
+ *   age: number = 0;
+ * }
+ * const u = new User({ name: 'John' }); // age === 0 автоматически
+ */
+export function dataclass<T extends { new (...args: any[]): any }>(
+  options: DataclassOptions<InstanceType<T>> = {}
+) {
+  return function (target: T): T {
+    const { defaults = {}, frozen = false, validate } = options;
+
+    const DataclassImpl = class extends target {
+      /** Маркер dataclass (для проверок в runtime) */
+      static [IS_DATACLASS] = true;
+      /** Имя оригинального класса */
+      static readonly __dataclass_name__ = target.name;
+
+      constructor(...args: any[]) {
+        // Определяем, передан ли объект с данными как единственный аргумент
+        const isDataObject =
+          args.length === 1 &&
+          args[0] !== null &&
+          typeof args[0] === 'object' &&
+          !(args[0] instanceof Date) &&
+          !Array.isArray(args[0]);
+
+        if (isDataObject) {
+          // Вызываем super() — property initializers базового класса выполнятся
+          super();
+          
+          const data = args[0] as Partial<InstanceType<T>>;
+          
+          // Валидация входных данных
+          if (validate) {
+            validate(data);
+          }
+
+          // 1. Применяем defaults из опций декоратора
+          Object.assign(this, defaults);
+          
+          // 2. Property initializers текущего класса уже выполнились 
+          //    (TypeScript инициализирует их сразу после super())
+          
+          // 3. Применяем переданные данные (имеют наивысший приоритет)
+          Object.assign(this, data);
+        } else {
+          // Обычный вызов конструктора с произвольными аргументами
+          super(...args);
+        }
+
+        // Замораживаем объект если нужно
+        if (frozen) {
+          Object.freeze(this);
+        }
+      }
+
+      /**
+       * Проверяет, является ли объект экземпляром этого dataclass
+       * @example User.isInstance(someObj)
+       */
+      static isInstance(obj: any): obj is InstanceType<T> {
+        return obj instanceof DataclassImpl;
+      }
+
+      /**
+       * Строковое представление объекта
+       */
+      toString(): string {
+        const entries = Object.entries(this)
+          .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
+          .join(', ');
+        return `${target.name}(${entries})`;
+      }
+
+      /**
+       * Глубокое сравнение двух dataclass объектов по значению
+       */
+      equals(other: any): boolean {
+        if (!DataclassImpl.isInstance(other)) return false;
+        return JSON.stringify(this) === JSON.stringify(other);
+      }
+
+      /**
+       * Создаёт копию объекта с изменёнными полями (удобно для immutable)
+       */
+      copy(updates: Partial<InstanceType<T>>): InstanceType<T> {
+        return new (this.constructor as any)({ ...this, ...updates });
+      }
+
+      /**
+       * Сериализация в JSON (без служебных полей)
+       */
+      toJSON(): Record<string, any> {
+        const result: Record<string, any> = {};
+        for (const [key, value] of Object.entries(this)) {
+          result[key] = value;
+        }
+        return result;
+      }
+    };
+
+    // Сохраняем оригинальное имя класса
+    Object.defineProperty(DataclassImpl, 'name', { value: target.name });
+    
+    // Копируем статические свойства из оригинального класса
+    const staticKeys = Object.getOwnPropertyNames(target).filter(
+      key => !['__attrs__', 'length', 'prototype', 'name'].includes(key)
+    );
+
+	Object.defineProperty(DataclassImpl, "__attrs__", staticKeys)
+
+    for (const key of staticKeys) {
+      try {
+        const descriptor = Object.getOwnPropertyDescriptor(target, key);
+        if (descriptor) {
+          Object.defineProperty(DataclassImpl, key, descriptor);
+        }
+      } catch {
+        // Игнорируем read-only свойства
+      }
+    }
+
+    return DataclassImpl as any;
+  };
+}
+
+
+================================================================================
+📄 Файл: src\utils\fileReader.ts
+📏 Размер: 1170 байт
+================================================================================
+
+/**
+ * Читает локальный JSON в любом окружении
+ * @param {string} filename — имя файла, например 'items.json'
+ * @returns {Promise<any>}
+ */
+export async function readLocalJson(filename: string) {
+  // Electron (production + dev)
+  if (window.electronAPI?.readLocalJson) {
+    const result = await window.electronAPI.readLocalJson(filename)
+    if (!result.success) {
+      throw new Error(`[${filename}] ${result.error}\nPath: ${result.path}`)
+    }
+    return result.data
+  }
+
+  // Fallback: обычный fetch (если файл в public/data/)
+  const res = await fetch(`/data/${filename}`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
+
+/**
+ * Записывает локальный JSON (только Electron)
+ */
+export async function writeLocalJson(filename: string, data: object | Array<any>) {
+  if (!window.electronAPI?.writeLocalJson) {
+    throw new Error('Запись доступна только в Electron')
+  }
+  const result = await window.electronAPI.writeLocalJson(filename, data)
+  if (!result.success) throw new Error(result.error)
+}
+
+
+================================================================================
+✅ Обработано файлов: 17
+📦 Общий размер: 38905 байт (38KB)
+================================================================================
