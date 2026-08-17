@@ -12,18 +12,20 @@
 				:key="schema.name"
 				:value="schema.name"
 			>
-				{{ schema.name }}
+				{{ gameLocalization.getUIText(schema.name, currentLocale) }}
 			</option>
 		</select>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, inject, ref, type Ref } from "vue";
 import { isObjectNotArray, type RecordSchema } from "@/types/fields/fields";
 import { SchemaChoicer } from "@/types/fields/fieldsSchemaChoicer";
+import { gameLocalization } from "@/types/localization";
+import { type locales } from "@/types/localization";
 
-
+const currentLocale = inject<Ref<string>>('currentLocale', ref('ru')).value as locales;
 const props = defineProps<{
 	recordData: RecordSchema
 }>();

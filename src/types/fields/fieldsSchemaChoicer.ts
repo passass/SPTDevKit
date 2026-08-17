@@ -23,3 +23,23 @@ export class SchemaChoicer {
 		return null
 	}
 }
+
+export function createSchemaChoiceForCondition(
+	config: {
+		name: string;
+		schema: ClassType<RecordSchema>;
+		conditionType?: string;
+		onSchemaChange?: (data: RecordSchema) => void;
+		onSchemaPostChange?: (data: RecordSchema) => void;
+	}
+): SchemaChoice {
+	const conditionType = config.conditionType ?? config.name.substring(0, config.name.lastIndexOf("Condition")).trim();;
+	
+	return {
+		name: config.name,
+		condition: (data: any) => data["conditionType"] === conditionType,
+		schema: config.schema,
+		onSchemaChange: config.onSchemaChange ?? ((oldSchema: RecordSchema) => oldSchema.set("conditionType", conditionType)),
+		onSchemaPostChange: config.onSchemaPostChange ?? ((newSchema: RecordSchema) => newSchema.sanitize()),
+	};
+}
