@@ -3,19 +3,28 @@ import { useFileDataStore } from "@/stores/fileStore.ts";
 import { onMounted } from "vue";
 import Main from "@/components/Main.vue";
 import { gameLocalization } from "@/types/localization";
+import { useDataStore } from "@/stores/dataStore";
+import { QuestSchema } from "./types/fields/fieldsQuests";
 
-const fileStore = useFileDataStore()
+const dataStore = useDataStore()
 
-onMounted(async () => {
-	fileStore.read("quests.json")
-	fileStore.read("items.json")
-
-	gameLocalization.loadLocales()
+dataStore.registerMultiple({
+	quests: { 
+		filename: ['quests.json'], 
+		schemaType: QuestSchema 
+	},
+	items: { 
+		filename: ['items.json'] 
+	},
 })
-</script>
+gameLocalization.loadLocales()
 
+dataStore.loadAll();
+
+</script>
+ 
 <template>
-	<div v-if="fileStore.isAllLoaded">
+	<div v-if="dataStore.isAllLoaded()">
 		<Main></Main>
 	</div>
 	<div v-else>

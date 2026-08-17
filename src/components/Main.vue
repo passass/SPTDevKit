@@ -2,35 +2,35 @@
 import ListTabs from "@/components/ListTabs.vue";
 import RecordEditor from "@/components/RecordEditor.vue";
 import type { Tab } from "@/tabs/tabs.ts";
-import { ref, type Component } from 'vue'
-import { JsonConvert } from "json2typescript"
-import { useFileDataStore } from "@/stores/fileStore.ts";
-import { gameLocalization } from "@/types/localization";
+import { ref, type Component, type Ref, provide } from 'vue'
+import { choiceStrings, gameLocalization, type locales } from "@/types/localization";
 import ListTabsFrame from "./ListTabsFrame.vue";
 import type { RecordSchema, SchemaConstructor } from "@/types/fields.ts";
-import { QuestSchema } from "@/types/fieldsQuests.ts";
+import { useDataStore, type dataStoreType } from "@/stores/dataStore.ts";
 
-const fileStore = useFileDataStore()
 
-function getRecordEditorComponent(filename: string, schemaType?: SchemaConstructor): Component {
+const dataStore = useDataStore()
+
+const currentLocale: Ref<locales> = ref('ru')
+provide('currentLocale', currentLocale)
+
+function getRecordEditorComponent(dataId: string): Component {
 	return () => {
 		const itemsData: Tab[] = []
 				
-		const fileData = fileStore.getData(filename) ?? {};
+		const fileData: dataStoreType<SchemaConstructor> = dataStore.getMap(dataId) ?? {};
 		
-		for (const [itemId, itemData] of Object.entries(fileData)) {
-			if (itemData && typeof itemData === "object")
-				itemsData.push(
-					{
-						id: itemId,
-						label: (
-							gameLocalization.getText(`${itemId} Name`)
-							?? gameLocalization.getText(`${itemId} name`)
-							?? itemId), //  
-						title: itemId,
-						data: schemaType ? new schemaType(itemData) : itemData
-					}
-				);
+		for (const [itemId, itemData] of fileData.entries()) {
+			const localizedName: string = gameLocalization.getText([`${itemId} Name`, `${itemId} name`], currentLocale.value as locales)
+
+			itemsData.push(
+				{
+					id: itemId,
+					label: localizedName,
+					title: localizedName,
+					data: itemData
+				}
+			);
 		}
 
 		return <RecordEditor
@@ -39,26 +39,26 @@ function getRecordEditorComponent(filename: string, schemaType?: SchemaConstruct
 	}
 }
 
-const {loaded: questsLoaded, data: questsData} = fileStore.getDataIfLoaded("quests.json")
-const {loaded: itemsLoaded, data: itemsData} = fileStore.getDataIfLoaded("items.json")
+const questsData = dataStore.getMap("quests")
+const itemsData = dataStore.getMap("items")
 
 const tabsContent = ref<Tab[]>([
 	{
 		id: "quests",
 		label: "Квесты",
 		icon: "📋",
-		badge: questsLoaded ? Object.keys(questsData).length : null,
+		badge: questsData.size,
 
 		title: "Управление квестами",
-		component: getRecordEditorComponent('quests.json', QuestSchema),
+		component: getRecordEditorComponent('quests'),
 	},
 	{
 		id: "items",
 		label: "Предметы",
 		icon: "📦",
-		badge: itemsLoaded ? Object.keys(itemsData).length : null,
+		badge: itemsData.size,
 		title: "Редактор предметов",
-		component: getRecordEditorComponent('items.json'),
+		component: getRecordEditorComponent('items'),
 	},
 	{
 		id: "traders",

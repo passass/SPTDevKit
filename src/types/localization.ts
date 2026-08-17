@@ -1,34 +1,64 @@
+import { useDataStore } from "@/stores/dataStore";
 import { FileConfig, useFileDataStore } from "@/stores/fileStore.ts";
 
+export type locales = 'ru' | 'en';
 
+export const availableLocales: Array<string> = ['ru', 'en']
+export const localeFiles: Map<string, string> = new Map()
+for (const locale of availableLocales) {
+	localeFiles.set(locale, `${locale}_localization.json`)
+}
+
+export const stringOrEmptyString = (value: string | null | undefined): string => (typeof value === "string" ? value : "")
+export const choiceStrings = (...args: Array<string | null | undefined>): string => {
+	for (const substr of args) {
+		if (typeof substr === "string" && substr !== '')
+			return substr
+	}
+	return ""
+}
 
 export class GameLocalization {
 	locales: Map<string, FileConfig<Record<string, string>>> = new Map()
-	fileStore: ReturnType<typeof useFileDataStore> | null = null
+	dataStore: ReturnType<typeof useDataStore> | null = null
 
 	loadLocales() {
-		
-		this.fileStore = useFileDataStore()
-
-		const filenames: string[] = ["ru_localization.json"];
-
-		for (const filename of filenames) {
-			this.locales.set(filename, this.fileStore.getOrCreate(filename))
-
-			this.fileStore.read<Record<string, string>>(filename)
+		this.dataStore = useDataStore()
+		for (const [locale, filename] of localeFiles.entries()) {
+			this.dataStore.register(`${locale}_localization`, {
+				filename: filename
+			})
 		}
-
+		
 	}
 
-	getText(localeId: string): string | null {
-		if (this.fileStore === null)
-			return null;
+	getText(localeId: string, locale: locales): string;
+	getText(localeId: string): string;
+	getText(localeId: string[], locale: locales): string;
+	getText(localeId: string[]): string;
 
-		const {loaded, data} = this.fileStore.getDataIfLoaded("ru_localization.json")
-		if (loaded) {
-			return data[localeId] ?? null
+	getText(localeId: string | string[], locale?: locales): string {
+		if (typeof locale !== 'string' || !availableLocales.includes(locale))
+			locale = 'en'
+
+		if (Array.isArray(localeId)) {
+			for (const _localeId of localeId) {
+				const translated = this.dataStore?.safeGet<string>(
+					[`${locale}_localization`, `en_localization`]
+					, _localeId
+				)
+				if (translated)
+					return translated;
+			}
+			return localeId[0]
 		}
-		return null
+
+		const translated = this.dataStore?.safeGet<string>(
+			[`${locale}_localization`, `en_localization`]
+			, localeId
+			, localeId
+		)
+		return translated ?? '';
 	}
 }
 

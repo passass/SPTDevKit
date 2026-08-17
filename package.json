@@ -21,6 +21,7 @@
     "dataclass": "^2.1.1",
     "json2typescript": "^1.6.1",
     "pinia": "^4.0.2",
+    "unplugin-auto-import": "^21.1.0",
     "vue": "^3.5.40"
   },
   "devDependencies": {

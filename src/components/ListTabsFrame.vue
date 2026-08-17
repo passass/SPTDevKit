@@ -9,13 +9,16 @@
 
 				<!-- Хлебные крошки -->
 				<div v-if="pathStack.length > 0" class="frame-breadcrumbs">
-					<button class="back-btn" @click="goBack" title="Назад">←</button>
+					<button class="back-btn" @click="navigator?.goBack()" title="Назад">←</button>
 					<span class="breadcrumbs-path">
-						<span class="breadcrumb-root" @click="goRoot">root</span>
+						<span class="breadcrumb-root" @click="navigator?.goRoot()">root</span>
 						<span v-for="(segment, i) in pathStack" :key="i">
 							<span class="breadcrumb-separator"> / </span>
-							<span class="breadcrumb-item" @click="jumpToLevel(i)">{{
-								segment
+							<span
+								:class="{ 'breadcrumb-item': navigator?.getPathItem(i)?.type !== 'array'}"
+								@click="navigator?.getPathItem(i)?.type !== 'array' && navigator?.jumpToLevel(i)"
+							>{{
+								segment.key
 							}}</span>
 						</span>
 					</span>
@@ -51,25 +54,11 @@
 <script lang="ts">
 import type { PropType } from "vue";
 import type { Tab } from "@/tabs/tabs.ts";
+import { Navigator, type PathItem } from "@/utils/navigation";
+import type { Any } from "json2typescript";
 
 export default {
 	name: "ListTabsFrame",
-
-	provide() {
-		return {
-			frameNavigator: {
-				navigate: (key: string) => this.navigateToKey(key),
-				goBack: () => this.goBack(),
-				goRoot: () => this.goRoot(),
-			},
-		};
-	},
-
-	emits: {
-		refresh: () => true,
-		close: () => true,
-		update: (data: any) => typeof data === "object" && data !== null,
-	},
 
 	props: {
 		tab: {
@@ -78,41 +67,42 @@ export default {
 		},
 	},
 
-	data(): {
-		pathStack: string[];
-	} {
+	emits: {
+		refresh: () => true,
+		close: () => true,
+		update: (data: Any) => typeof data === "object" && data !== null,
+	},
+
+	data() {
 		return {
-			pathStack: [],
+			navigator: new Navigator({ tab: this.tab }),
 		};
 	},
 
 	computed: {
-		sourceData(): Record<string, any> | undefined {
-			return this.tab.data ?? undefined;
+		pathStack(): PathItem[] {
+			return this.navigator?.getPathStack() ?? [];
 		},
 
 		displayData(): Record<string, any> | undefined {
-			if (!this.sourceData) return undefined;
-			let current: any = this.sourceData;
-			for (const key of this.pathStack) {
-				if (
-					current &&
-					typeof current === "object" &&
-					!Array.isArray(current) &&
-					key in current
-				) {
-					current = current[key];
-				} else {
-					return undefined;
-				}
-			}
-			return current;
+			return this.navigator?.getDisplayData();
 		},
 	},
 
+	provide() {
+		return {
+			frameNavigator: this.navigator,
+		};
+	},
+
 	watch: {
-		"tab.id"() {
-			this.pathStack = [];
+		"tab": {
+			handler(newTab: Tab) {
+				if (this.navigator && this.navigator.tab.id !== newTab.id) {
+					this.navigator.tab = newTab;
+				}
+			},
+			deep: false,
 		},
 	},
 
@@ -127,33 +117,6 @@ export default {
 
 		handleUpdate(data: any) {
 			this.$emit("update", data);
-		},
-
-		isNavigable(value: any): boolean {
-			return (
-				value !== null &&
-				typeof value === "object" &&
-				!Array.isArray(value)
-			);
-		},
-
-		navigateToKey(key: string) {
-			const target = this.displayData?.[key];
-			if (this.isNavigable(target)) {
-				this.pathStack.push(key);
-			}
-		},
-
-		goBack() {
-			this.pathStack.pop();
-		},
-
-		goRoot() {
-			this.pathStack = [];
-		},
-
-		jumpToLevel(index: number) {
-			this.pathStack = this.pathStack.slice(0, index + 1);
 		},
 	},
 };

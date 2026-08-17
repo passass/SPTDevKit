@@ -40,7 +40,7 @@
 				:title="tab.label"
 			>
 				<span v-if="tab.icon" class="tab-icon">{{ tab.icon }}</span>
-				<span class="tab-label" v-html="highlightMatch(tab.label)"></span>
+				<component class="tab-label" :is="highlightMatch(tab.label)"></component>
 				<span v-if="tab.badge" class="tab-badge">{{ tab.badge }}</span>
 			</div>
 
@@ -71,16 +71,23 @@
 	</div>
 </template>
 
-<script lang="ts">
+<script lang="tsx">
 import ListTabsFrame from "./ListTabsFrame.vue";
 import type { Tab } from "@/tabs/tabs.ts";
-import type { PropType } from "vue";
+import type { PropType, Component } from "vue";
 
 export default {
 	name: "TabListBox",
 
 	components: {
 		ListTabsFrame,
+	},
+
+	inject: {
+		frameNavigator: {
+			from: 'frameNavigator',
+			default: null,
+		},
 	},
 
 	data(): {
@@ -154,8 +161,10 @@ export default {
 
 	methods: {
 		selectTab(tabId: string) {
-			// Проверяем, что вкладка видима (не скрыта поиском)
 			if (this.isTabVisible(tabId)) {
+				if (this.activeTab !== tabId) {
+					(this as any).frameNavigator?.goRoot?.();
+				}
 				this.activeTab = tabId;
 				localStorage.setItem("activeTab", tabId);
 				this.$emit("tab-selected", tabId);
@@ -208,9 +217,9 @@ export default {
 		},
 
 		// ✅ Подсветка совпадений
-		highlightMatch(text: string): string {
+		highlightMatch(text: string): Component {
 			if (!this.isSearch || !this.searchQuery.trim() || !text) {
-				return text;
+				return <span>{text}</span>;
 			}
 
 			const query = this.caseSensitive 
@@ -220,13 +229,19 @@ export default {
 			const searchText = this.caseSensitive ? text : text.toLowerCase();
 			const index = searchText.indexOf(query);
 
-			if (index === -1) return text;
+			if (index === -1) return <span>{text}</span>;
 
 			const before = text.substring(0, index);
 			const match = text.substring(index, index + query.length);
 			const after = text.substring(index + query.length);
 
-			return `${before}<span class="search-highlight">${match}</span>${after}`;
+			return <span>
+				{before}
+				<span class="search-highlight">
+					{match}
+				</span>
+				{after}
+			</span>;
 		},
 	},
 
@@ -239,21 +254,20 @@ export default {
 		}
 	},
 
-	watch: {
-		// ✅ Обновляем активную вкладку при изменении списка
-		tabs: {
-			handler(newTabs) {
-				if (this.activeTab && !newTabs.some((t: any) => t.id === this.activeTab)) {
-					if (newTabs.length > 0) {
-						this.activeTab = newTabs[0].id;
-					} else {
-						this.activeTab = null;
-					}
-				}
-			},
-			deep: true,
-		},
-	},
+	// watch: {
+	// 	tabs: {
+	// 		handler(newTabs) {
+	// 			if (this.activeTab && !newTabs.some((t: any) => t.id === this.activeTab)) {
+	// 				if (newTabs.length > 0) {
+	// 					this.activeTab = newTabs[0].id;
+	// 				} else {
+	// 					this.activeTab = null;
+	// 				}
+	// 			}
+	// 		},
+	// 		// deep: true,
+	// 	},
+	// },
 };
 </script>
 
@@ -261,7 +275,7 @@ export default {
 .tab-container {
 	display: flex;
 	height: 100%;
-	min-height: 500px;
+	min-height: 400px;
 	background: #1e1e1e;
 	color: #e0e0e0;
 	border-radius: 8px;

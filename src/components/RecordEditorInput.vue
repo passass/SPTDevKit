@@ -1,3 +1,5 @@
+// src/components/RecordEditorInput.vue
+
 <template>
 	<div class="form-frame">
 		<div v-if="title" class="form-frame__title">
@@ -5,6 +7,14 @@
 		</div>
 
 		<div class="form-frame__fields">
+			<div v-if="recordData.schemaChooser" class="form-frame__chooser">
+				<label>Тип схемы:</label>
+				<SchemaChooserInput
+					:record-data="recordData"
+					@schemaСhoose="handleSchemaChoose"
+				/>
+			</div>
+			
 			<div
 				v-for="field in displayFields"
 				:key="field.key"
@@ -14,7 +24,7 @@
 				<div class="form-field__header">
 					<label :for="field.key">{{ field.label }}</label>
 					<button
-						v-if="field.isNavigable"
+						v-if="isNavigable(getData[field.key])"
 						class="navigate-btn"
 						@click="handleNavigate(field.key)"
 						title="Открыть вложенную структуру"
@@ -23,51 +33,57 @@
 					</button>
 				</div>
 
-				<!-- text / hidden -->
+				<LocalizationInput
+					v-if="field.type === 'localization'"
+					:localizationId="getData[field.key]"
+				/>
+
+				<ItemChoiceInput
+					v-if="field.type === 'itemChoice'"
+					v-model="getData[field.key]"
+					:field="field"
+				/>
+
 				<input
-					v-if="field.type === 'text' || field.type === 'hidden'"
+					v-else-if="field.type === 'text' || field.type === 'hidden'"
 					:id="field.key"
 					v-model="getData[field.key]"
 					type="text"
 					:placeholder="field.placeholder"
-					:disabled="!field.isEditable"
+					:disabled="!field.editable"
 				/>
 
-				<!-- number -->
 				<input
 					v-else-if="field.type === 'number'"
 					:id="field.key"
-					v-model.number="getData[field.key]"
+					v-model="getData[field.key]"
 					type="number"
 					:placeholder="field.placeholder"
-					:disabled="!field.isEditable"
+					:disabled="!field.editable"
 				/>
 
-				<!-- boolean -->
 				<input
 					v-else-if="field.type === 'boolean'"
 					:id="field.key"
 					v-model="getData[field.key]"
 					type="checkbox"
-					:disabled="!field.isEditable"
+					:disabled="!field.editable"
 				/>
 
-				<!-- textarea -->
 				<textarea
 					v-else-if="field.type === 'textarea'"
 					:id="field.key"
 					v-model="getData[field.key]"
 					rows="3"
 					:placeholder="field.placeholder"
-					:disabled="!field.isEditable"
-				></textarea>
+					:disabled="!field.editable"
+				/>
 
-				<!-- select -->
 				<select
 					v-else-if="field.type === 'select'"
 					:id="field.key"
 					v-model="getData[field.key]"
-					:disabled="!field.isEditable"
+					:disabled="!field.editable"
 				>
 					<option
 						v-for="option in field.options"
@@ -78,22 +94,23 @@
 					</option>
 				</select>
 
-				<!-- array -->
-				<div v-else-if="field.type === 'array'" class="object-summary">
-					{{ getArraySummary(field.value) }}
-				</div>
+				<ArrayInput
+					v-else-if="field.type === 'array' || field.type === 'stringArray' || field.type === 'arrayItemChoice'"
+					v-model="getData[field.key]"
+					:field="field"
+					:array-key="field.key"
+					:options="field.options || []"
+					:label-field="field.label || 'label'"
+				/>
 
-				<!-- object -->
 				<div v-else-if="field.type === 'object'" class="object-summary">
-					{{ getObjectSummary(field.value) }}
+					{{ getObjectSummary(getData[field.key]) }}
 				</div>
 
-				<!-- Описание под полем -->
 				<div v-if="field.description" class="field-description">
 					{{ field.description }}
 				</div>
 
-				<!-- Ошибка валидации -->
 				<div v-if="validationErrors[field.key]" class="field-error">
 					{{ validationErrors[field.key] }}
 				</div>
@@ -106,218 +123,63 @@
 	</div>
 </template>
 
-<script lang="tsx">
-import { inject, ref, watch, computed, reactive, toRefs } from "vue";
-import { RecordSchema, type FieldType } from "@/types/fields";
+// src/components/RecordEditorInput.vue
 
-interface DisplayField {
-	key: string;
-	label: string;
-	type: FieldType | string;
-	value: any;
-	isNavigable: boolean;
-	isEditable: boolean;
-	placeholder: string;
-	description: string;
-	options?: any[];
+<script setup lang="tsx">
+import { inject, ref, watch, computed, shallowRef, triggerRef, markRaw, type Ref } from "vue";
+import { 
+	RecordSchema,
+	Field
+} from "@/types/fields/fields";
+import ItemChoiceInput from "./inputs/ItemChoiceInput.vue";
+import LocalizationInput from "@/components/inputs/LocalizationInput.vue";
+import ArrayInput from "@/components/inputs/ArrayInput.vue";
+import { Navigator, isNavigable } from "@/utils/navigation.ts";
+import SchemaChooserInput from "@/components/inputs/SchemaChooserInput.vue";
+
+const props = defineProps<{
+	data: any;
+	title?: string;
+	validate?: boolean;
+}>();
+
+const emit = defineEmits<{
+	(e: "update", data: any): void;
+	(e: "validation", result: { valid: boolean; errors: Record<string, string> }): void;
+}>();
+
+const frameNavigator = inject<Navigator>("frameNavigator");
+const validationErrors = ref<Record<string, string>>({});
+
+const dataRef = computed<RecordSchema>(() => {
+	return props.data instanceof RecordSchema ? props.data : new RecordSchema(props.data)
+});
+
+const displayFields = computed<Field[]>(() => {
+	return dataRef.value.getDisplayFields();
+});
+
+const recordData = computed(() => dataRef.value);
+const getData = computed(() => recordData.value.getData());
+
+function getObjectSummary(value: Record<string, any>): string {
+	if (!value) return "{}";
+	const keys = Object.keys(value);
+	if (keys.length === 0) return "{}";
+	const preview = keys.slice(0, 3).join(", ");
+	return keys.length > 3
+		? `{ ${preview}... (${keys.length} полей) }`
+		: `{ ${preview} }`;
 }
 
-export default {
-	name: "RecordEditorInput",
-	
-	props: {
-		data: {
-			type: Object,
-			required: true,
-		},
-		title: {
-			type: String,
-			default: "",
-		},
-		validate: {
-			type: Boolean,
-			default: false,
-		},
-	},
+function handleNavigate(key: string) {
+	frameNavigator?.navigate?.(key);
+}
 
-	computed: {
-		getData(): Record<string, any> {
-			if (this.data instanceof RecordSchema)
-				return this.data.data;
-			return this.data;
-		},
-	},
-
-	emits: {
-		update: (data: any) => true,
-		validation: (result: { valid: boolean; errors: Record<string, string> }) => true,
-	},
-
-	setup(props: any, { emit }: any) {
-		const frameNavigator = inject<{ navigate?: (key: string) => void }>(
-			"frameNavigator",
-			{}
-		);
-		
-		const validationErrors = ref<Record<string, string>>({});
-		
-		// Создаем реактивный объект для полей
-		const fieldValues = reactive<Record<string, any>>({});
-
-		// Валидация всех полей
-		function validateAll() {
-			const data = props.data;
-			if (data instanceof RecordSchema) {
-				const result = data.validate();
-				validationErrors.value = result.errors;
-				emit('validation', result);
-				return result;
-			}
-			return { valid: true, errors: {} };
-		}
-
-		// Получаем displayFields
-		const displayFields = computed<DisplayField[]>(() => {
-			const data = props.data;
-			const fields: DisplayField[] = [];
-
-			if (data instanceof RecordSchema) {
-				for (const item of data.getDisplayFields()) {
-					const field = item.field;
-					const displayField: DisplayField = {
-						key: item.key,
-						label: field?.label ?? data.getLabel(item.key),
-						type: field?.type ?? data.resolveType(item.key),
-						value: item.value,
-						isNavigable: data.isNavigable(item.key),
-						isEditable: data.isEditable(item.key),
-						placeholder: data.getPlaceholder(item.key),
-						description: data.getDescription(item.key),
-						options: data.getOptions(item.key),
-					};
-					
-					// Синхронизируем значения с fieldValues
-					if (!(item.key in fieldValues)) {
-						fieldValues[item.key] = item.value;
-					}
-					
-					fields.push(displayField);
-				}
-				return fields;
-			}
-
-			// Fallback для обычных объектов
-			if (data && typeof data === 'object') {
-				for (const [key, value] of Object.entries(data)) {
-					const displayField: DisplayField = {
-						key,
-						label: formatLabel(key),
-						type: autoDetectType(value),
-						value: value,
-						isNavigable: isNavigableValue(value),
-						isEditable: true,
-						placeholder: "",
-						description: "",
-					};
-					
-					if (!(key in fieldValues)) {
-						fieldValues[key] = value;
-					}
-					
-					fields.push(displayField);
-				}
-			}
-
-			return fields;
-		});
-
-		// Вспомогательные функции
-		function autoDetectType(value: any): string {
-			if (value === null || value === undefined) return 'text';
-			if (Array.isArray(value)) return 'array';
-			if (typeof value === 'boolean') return 'boolean';
-			if (typeof value === 'number') return 'number';
-			if (typeof value === 'string' && value.length > 100) return 'textarea';
-			if (typeof value === 'object' || value instanceof RecordSchema) return 'object';
-			return 'text';
-		}
-		
-		function isNavigableValue(value: any): boolean {
-			return (
-				value !== null &&
-				typeof value === 'object' &&
-				!Array.isArray(value)
-			);
-		}
-		
-		function formatLabel(key: string): string {
-			return key
-				.replace(/([A-Z])/g, " $1")
-				.replace(/_/g, " ")
-				.replace(/^./, (str: string) => str.toUpperCase());
-		}
-
-		// Следим за изменениями data извне
-		watch(
-			() => props.data,
-			(newData) => {
-				if (newData instanceof RecordSchema) {
-					// Обновляем fieldValues из новых данных
-					const fields = newData.getDisplayFields();
-					for (const item of fields) {
-						if (item.key in fieldValues) {
-							fieldValues[item.key] = item.value;
-						}
-					}
-				} else if (newData && typeof newData === 'object') {
-					for (const [key, value] of Object.entries(newData)) {
-						if (key in fieldValues) {
-							fieldValues[key] = value;
-						}
-					}
-				}
-			},
-			{ deep: true }
-		);
-
-		return {
-			frameNavigator,
-			validationErrors,
-			fieldValues,
-			displayFields,
-			validateAll,
-		};
-	},
-
-	methods: {
-		getObjectSummary(value: Record<string, any>): string {
-			if (!value) return "{}";
-			const keys = Object.keys(value);
-			if (keys.length === 0) return "{}";
-			const preview = keys.slice(0, 3).join(", ");
-			return keys.length > 3
-				? `{ ${preview}... (${keys.length} полей) }`
-				: `{ ${preview} }`;
-		},
-		
-		getArraySummary(value: any[]): string {
-			if (!Array.isArray(value)) return "[]";
-			if (value.length === 0) return "[]";
-			const first = value[0];
-			if (typeof first === 'object' && !Array.isArray(first)) {
-				return `[ ${value.length} объектов ]`;
-			}
-			const preview = value.slice(0, 3).join(", ");
-			return value.length > 3
-				? `[ ${preview}... (${value.length} элементов) ]`
-				: `[ ${preview} ]`;
-		},
-		
-		handleNavigate(key: string) {
-			this.frameNavigator?.navigate?.(key);
-		},
-	},
-};
+function handleSchemaChoose(newInstance: RecordSchema) {
+	frameNavigator?.changeCurrentSchema(newInstance);
+	triggerRef(dataRef);
+}
 </script>
 
 <style scoped>
