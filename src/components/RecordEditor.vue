@@ -1,28 +1,25 @@
-<script lang="tsx">
+<script setup lang="tsx">
 	import RecordEditorInput from "./RecordEditorInput.vue";
 	import ListTabs from "./ListTabs.vue";
 	import type { Tab } from "@/tabs/tabs.ts";
 	import type { PropType } from "vue";
+	import { RecordSchema } from "@/types/fields/fields.ts";
+	import { type ClassType } from "@/utils/classUtils.ts";
+	import { type dataStoreType } from "@/stores/dataStore.ts";
 
-	export default {
-		components: {
-			ListTabs,
-			RecordEditorInput
-		},
-
-		props: {
-			itemsData: {
-				type: Array as PropType<Tab[]>,
-				required: true,
-			},
-		},
-	};
+	const props = defineProps<{
+		itemsData: Tab[]
+		schemaType?: ClassType<RecordSchema>
+		fileData?: dataStoreType<RecordSchema>
+	}>()
 </script>
 
 <template>
 	<ListTabs 
 	:isSearch="true"
-	:tabs="itemsData">
+	:schemaType="props.schemaType"
+	:fileData="props.fileData"
+	:tabs="props.itemsData">
 		<template #content="{ data }">
 			<RecordEditorInput :data="data" />
 		</template>

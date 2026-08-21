@@ -60,6 +60,8 @@ export class HiddenField extends Field {
 	type: FieldType = 'hidden';
 }
 
+export class UnneccesaryField extends Field {}
+
 function autoDetectType(value: any): FieldType {
 	if (value === null || value === undefined) return 'text';
 	if (Array.isArray(value)) return 'array';
@@ -198,7 +200,9 @@ export class RecordSchema {
 			if (typeof defVal === "function") {
 				lazyLoadFunctions.set(field.key, defVal)
 			} else if (defVal !== undefined) {
-				this.data[field.key] = defVal ?? null;
+				this.data[field.key] = defVal ?? null
+			} else if (field.type === "object" && field.nestedSchema) {
+				this.data[field.key] = new field.nestedSchema()
 			}
 		}
 
@@ -246,6 +250,10 @@ export class RecordSchema {
 			const field = fieldsMap.get(key)
 			if (!field) {
 				keysToDelete.push(key)
+				continue
+			}
+
+			if (field.type === "object") {
 				continue
 			}
 

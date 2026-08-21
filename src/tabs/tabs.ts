@@ -1,7 +1,10 @@
 // src/tabs/tabs.ts
+import type { RecordSchema } from '@/types/fields/fields';
+import type { ClassType } from '@/utils/classUtils';
 import type { Component } from 'vue'
 
 export type TabData = object;
+export type Tabs = Tab[];
 
 // ===== Вкладка =====
 export interface Tab {
@@ -14,6 +17,7 @@ export interface Tab {
   component?: Component
   props?: Record<string, any>
   footer?: string
+  schemaType?: ClassType<RecordSchema>
 
   dataTitle?: string
   data?: TabData

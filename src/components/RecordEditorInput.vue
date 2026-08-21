@@ -7,6 +7,19 @@
 		</div>
 
 		<div class="form-frame__fields">
+			<button v-if="(frameNavigator?.getPathStack()?.length ?? 0) === 0">
+				удалить
+			</button>
+
+			<div class="form-field" v-if="isShowUnneccesaryFieldsCheckmark">
+				<label :for="'ShowUnneccesaryFields'">Показывать неважные поля</label>
+				<input
+					v-model="isShowUnneccesaryFields"
+					:id="'ShowUnneccesaryFields'"
+					type="checkbox"
+				/>
+			</div>
+
 			<div v-if="recordData.schemaChooser" class="form-frame__chooser">
 				<label>Тип схемы:</label>
 				<SchemaChooserInput
@@ -19,7 +32,7 @@
 				v-for="field in displayFields"
 				:key="field.key"
 				class="form-field"
-				:class="{ 'field-hidden': field.type === 'hidden' }"
+				:class="{ 'field-hidden': field instanceof HiddenField || (field instanceof UnneccesaryField && !isShowUnneccesaryFields) }"
 			>
 				<div class="form-field__header">
 					<label :for="field.key">{{ field.label }}</label>
@@ -35,17 +48,18 @@
 
 				<LocalizationInput
 					v-if="field.type === 'localization'"
-					:localizationId="getData[field.key]"
+					v-model="getData[field.key]"
+					:field="field"
 				/>
 
-				<ItemChoiceInput
+				<AdvancedSelectInput
 					v-if="field.type === 'itemChoice'"
 					v-model="getData[field.key]"
 					:field="field"
 				/>
 
 				<input
-					v-else-if="field.type === 'text' || field.type === 'hidden'"
+					v-else-if="field.type === 'text' || field instanceof HiddenField"
 					:id="field.key"
 					v-model="getData[field.key]"
 					type="text"
@@ -90,7 +104,13 @@
 						:key="option"
 						:value="option"
 					>
-						{{ option }}
+						{{ gameLocalization.getText({
+							localeId: [
+								option,
+								`${option} Name`,
+								`${option} Nickname`
+							]
+						, locale: currentLocale}) }}
 					</option>
 				</select>
 
@@ -129,13 +149,19 @@
 import { inject, ref, watch, computed, shallowRef, triggerRef, markRaw, type Ref } from "vue";
 import { 
 	RecordSchema,
-	Field
+	Field,
+	UnneccesaryField,
+	HiddenField
 } from "@/types/fields/fields";
-import ItemChoiceInput from "./inputs/ItemChoiceInput.vue";
+import AdvancedSelectInput from "./inputs/AdvancedSelectInput.vue";
 import LocalizationInput from "@/components/inputs/LocalizationInput.vue";
 import ArrayInput from "@/components/inputs/ArrayInput.vue";
 import { Navigator, isNavigable } from "@/utils/navigation.ts";
 import SchemaChooserInput from "@/components/inputs/SchemaChooserInput.vue";
+import { gameLocalization } from "@/types/localization.ts";
+import { type locales } from "@/types/localization.ts";
+
+const currentLocale: Ref<locales> = inject<Ref<locales>>("currentLocale") ?? ref('en')
 
 const props = defineProps<{
 	data: any;
@@ -161,6 +187,10 @@ const displayFields = computed<Field[]>(() => {
 
 const recordData = computed(() => dataRef.value);
 const getData = computed(() => recordData.value.getData());
+const isShowUnneccesaryFields = ref<boolean>(false);
+const isShowUnneccesaryFieldsCheckmark = computed<boolean>(() => {
+	return displayFields.value.some((el) => el instanceof UnneccesaryField)
+})
 
 function getObjectSummary(value: Record<string, any>): string {
 	if (!value) return "{}";
@@ -209,7 +239,8 @@ function handleSchemaChoose(newInstance: RecordSchema) {
 }
 
 .form-field.field-hidden {
-	opacity: 0.4;
+	display: none;
+	/* opacity: 0.4; */
 }
 
 .form-field__header {

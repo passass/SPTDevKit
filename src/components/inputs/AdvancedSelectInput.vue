@@ -77,7 +77,10 @@ const items = computed(() => {
 	const result: Array<{ id: string; label: string; data: any }> = [];
 	
 	for (const [id, data] of itemMap) {
-		const name = gameLocalization.getText([`${id} Name`, `${id} name`, id], currentLocale.value);
+		const name = gameLocalization.getText({
+			localeId: [`${id} Name`, `${id} name`, id]
+			, locale: currentLocale.value
+		});
 		result.push({
 			id,
 			label: name ?? id,

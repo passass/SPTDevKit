@@ -40,7 +40,7 @@
 		<!-- Режим строкового массива: текстовое поле -->
 		<div v-if="isStringArray" class="array-input__editor">
 			<template v-if="selectedIndex !== null">
-				<ItemChoiceInput 
+				<AdvancedSelectInput 
 					v-if="field.type === 'arrayItemChoice'"
 					v-model="items[selectedIndex]"
 					:field="field"
@@ -77,7 +77,7 @@
 <script setup lang="ts">
 import { computed, inject, ref, watch } from "vue";
 import { RecordSchema, Field, ItemField } from "@/types/fields/fields";
-import ItemChoiceInput from "./ItemChoiceInput.vue";
+import AdvancedSelectInput from "./AdvancedSelectInput.vue";
 import { SchemaChoicer, type SchemaChoice } from "@/types/fields/fieldsSchemaChoicer.ts";
 import { getStaticField, type ClassType } from "@/utils/classUtils.ts";
 import { Navigator } from "@/utils/navigation.ts";

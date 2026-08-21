@@ -16,9 +16,7 @@ export class ItemField extends Field {
 	storeId!: string;
 }
 
-export class HiddenField extends Field {
-	type: FieldType = 'hidden';
-}
+export class HiddenField extends Field {}
 
 export class IdField extends Field {
 	type: FieldType = "text"

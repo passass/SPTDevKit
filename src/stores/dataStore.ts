@@ -277,8 +277,14 @@ export const useDataStore = defineStore("dataStore", () => {
 		return Array.isArray(config.filename) ? config.filename : [config.filename];
 	}
 
+	function getSchemaType(key: string): DataStoreConfig['schemaType'] | undefined {
+		return configs.value.get(key)?.schemaType;
+		
+	}
+
 	return {
 		dataMap,
+		getSchemaType,
 		configs,
 		loadingStatus,
 		errorStatus,

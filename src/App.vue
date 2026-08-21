@@ -11,7 +11,7 @@ const dataStore = useDataStore()
 dataStore.registerMultiple({
 	quests: { 
 		filename: ['quests.json'], 
-		schemaType: QuestSchema 
+		schemaType: QuestSchema
 	},
 	items: { 
 		filename: ['items.json'] 

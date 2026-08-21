@@ -31,6 +31,14 @@
 				</div>
 			</div>
 
+			<button
+				v-if="schemaType"
+				@click="createNewSchema"
+			>
+				Создать
+			</button>
+
+
 			<!-- Список вкладок -->
 			<div
 				v-for="tab in filteredTabs"
@@ -74,7 +82,10 @@
 <script lang="tsx">
 import ListTabsFrame from "./ListTabsFrame.vue";
 import type { Tab } from "@/tabs/tabs.ts";
+import { RecordSchema } from "@/types/fields/fields.ts";
 import type { PropType, Component } from "vue";
+import { type ClassType } from "@/utils/classUtils.ts";
+import { type dataStoreType } from "@/stores/dataStore.ts";
 
 export default {
 	name: "TabListBox",
@@ -105,6 +116,12 @@ export default {
 			type: Array as PropType<Tab[]>,
 			required: true,
 			default: () => [],
+		},
+		schemaType: {
+			type: Object as PropType<ClassType<RecordSchema>>
+		},
+		fileData: {
+			type: Object as PropType<dataStoreType<RecordSchema>>
 		},
 		// ✅ Новый проп для включения поиска
 		isSearch: {
@@ -160,6 +177,19 @@ export default {
 	},
 
 	methods: {
+		createNewSchema() {
+			if (!this.fileData || !this.schemaType) return;
+
+			const newInstance =	new this.schemaType() 
+			const newInstanceId: string = (
+				newInstance.getData()["_id"] 
+				?? newInstance.getData()["id"]
+			)
+
+			this.fileData.set(newInstanceId, newInstance)
+			this.selectTab(newInstanceId)
+		},
+
 		selectTab(tabId: string) {
 			if (this.isTabVisible(tabId)) {
 				if (this.activeTab !== tabId) {

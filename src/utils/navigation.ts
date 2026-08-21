@@ -190,7 +190,7 @@ export class Navigator {
 	}
 
 	getPathStack(): PathItem[] {
-		return [...this._pathStack];
+		return this._pathStack;
 	}
 
 	getDisplayData(): RecordSchema | undefined {

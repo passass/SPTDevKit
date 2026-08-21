@@ -1,6 +1,6 @@
 // src/types/fieldsQuests.ts
 
-import { RecordSchema, Field, LocalizationField } from "./fields";
+import { RecordSchema, Field, LocalizationField, UnneccesaryField, HiddenField } from "./fields";
 import { IdField } from "./fieldsClasses";
 import { QuestConditions } from "./fieldsQuestsConditions";
 
@@ -26,7 +26,8 @@ export class QuestSchema extends RecordSchema {
 			key: 'name',
 			label: '📄 Название (локализация)',
 			description: 'Ключ локализации для названия квеста',
-			order: 3
+			order: 3,
+			editable: false,
 		}),
 		LocalizationField.create({
 			key: 'description',
@@ -84,7 +85,7 @@ export class QuestSchema extends RecordSchema {
 		}),
 
 		// ===== СТАТУС И НАСТРОЙКИ =====
-		Field.create({
+		HiddenField.create({
 			key: 'status',
 			label: '📊 Статус',
 			description: 'Текущий статус квеста',
@@ -96,7 +97,21 @@ export class QuestSchema extends RecordSchema {
 			key: 'type',
 			label: '🎯 Тип квеста',
 			description: 'Тип квеста (Elimination, PickUp и т.д.)',
-			type: 'text',
+			type: 'select',
+			options: [
+				'Merchant'
+				, 'Standing'
+				, 'Experience'
+				, 'WeaponAssembly'
+				, 'Loyalty'
+				, 'PickUp'
+				, 'Multi'
+				, 'Skill'
+				, 'Discover'
+				, 'Elimination'
+				, 'Exploration'
+				, 'Completion'
+			],
 			order: 14
 		}),
 		Field.create({
@@ -112,9 +127,25 @@ export class QuestSchema extends RecordSchema {
 			key: 'location',
 			label: '📍 Локация',
 			description: 'Локация для выполнения квеста',
-			type: 'text',
+			type: 'select',
 			order: 16,
-			defaultValue: 'any'
+			defaultValue: 'any',
+			options: [
+				'5704e3c2d2720bac5b8b4567'
+				, '56f40101d2720b2a4d8b45d6'
+				, 'any'
+				, '653e6760052c01c1c805532f'
+				, '6733700029c367a3d40b02af'
+				, '59fc81d786f774390775787e'
+				, '5b0fc42d86f7744a585f9105'
+				, '5714dbc024597771384a510d'
+				, '55f2d3fd4bdc2d5f408b4567'
+				, 'marathon'
+				, '5704e554d2720bac5b8b456e'
+				, '5704e5fad2720bc05b8b4567'
+				, '5714dc692459777137212e12'
+				, '5704e4dad2720bb55b8b4567'
+			]
 		}),
 		Field.create({
 			key: 'instantComplete',
@@ -173,8 +204,21 @@ export class QuestSchema extends RecordSchema {
 			key: 'traderId',
 			label: '🏪 ID Торговца',
 			description: 'ID торговца, выдающего квест',
-			type: 'text',
-			order: 23
+			type: 'select',
+			order: 23,
+			options: [
+				'5935c25fb3acc3127c3d8cd9'
+				, '54cb57776803fa99248b456e'
+				, '54cb50c76803fa8b248b4571'
+				, '5a7c2eca46aef81a7ca2145d'
+				, '5c0647fdd443bc2504c2d371'
+				, '579dc571d53a0658a154fbec'
+				, '5ac3b934156ae10c4430e83c'
+				, '656f0f98d80a697f855d34b1'
+				, '58330581ace78e27b8b10cee'
+				, '6617beeaa9cfa777ca915b7c'
+				, '638f541a29ffd1183d187f57'
+			]
 		}),
 
 		// ===== ИЗОБРАЖЕНИЕ =====
@@ -195,7 +239,7 @@ export class QuestSchema extends RecordSchema {
 			order: 25,
 			defaultValue: true
 		}),
-		Field.create({
+		UnneccesaryField.create({
 			key: 'progressSource',
 			label: '📊 Источник прогресса',
 			description: 'Источник обновления прогресса',
@@ -203,7 +247,7 @@ export class QuestSchema extends RecordSchema {
 			order: 26,
 			defaultValue: 'eft'
 		}),
-		Field.create({
+		UnneccesaryField.create({
 			key: 'acceptanceAndFinishingSource',
 			label: '📊 Источник принятия',
 			description: 'Источник принятия и завершения',
@@ -211,7 +255,7 @@ export class QuestSchema extends RecordSchema {
 			order: 27,
 			defaultValue: 'eft'
 		}),
-		Field.create({
+		UnneccesaryField.create({
 			key: 'gameModes',
 			label: '🎮 Режимы игры',
 			description: 'Доступные режимы игры',
@@ -219,7 +263,7 @@ export class QuestSchema extends RecordSchema {
 			order: 28,
 			defaultValue: []
 		}),
-		Field.create({
+		UnneccesaryField.create({
 			key: 'arenaLocations',
 			label: '🏟️ Арены',
 			description: 'Локации арен',
@@ -227,7 +271,7 @@ export class QuestSchema extends RecordSchema {
 			order: 29,
 			defaultValue: []
 		}),
-		Field.create({
+		UnneccesaryField.create({
 			key: 'rankingModes',
 			label: '🏆 Рейтинговые режимы',
 			description: 'Режимы для рейтинга',

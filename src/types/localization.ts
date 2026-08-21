@@ -19,6 +19,13 @@ export const suffixes: Record<string, string> = {
 	uiLocalizationSuffix: '_ui_localization',
 }
 
+export interface localizationTextParams {
+	localeId: string | string[]
+	locale?: locales
+	suffixKey?: keyof typeof suffixes
+	default?: string
+}
+
 export class GameLocalization {
 	locales: Map<string, FileConfig<Record<string, string>>> = new Map()
 	dataStore: ReturnType<typeof useDataStore> | null = null
@@ -30,27 +37,43 @@ export class GameLocalization {
 				this.dataStore.register(`${locale}${suffix}`, {
 					filename: `${locale}${suffix}.json`
 				})
-				console.log('load file', `${locale}${suffix}.json`)
 			}
 		}
-		
+	}
+
+	updateLocaleText(params: localizationTextParams, newText: string) {
+		if (Array.isArray(params.localeId)) {
+			for (const _localeId of params.localeId) {
+				const newLocalizationTextParams: localizationTextParams = {...params}
+				newLocalizationTextParams.localeId = _localeId
+				
+				this.updateLocaleText(newLocalizationTextParams, newText)
+			}
+			return
+		}
+
+		const suffix = suffixes[params.suffixKey ?? "localizationSuffix"]
+		this.dataStore?.set(
+			`${params.locale}${suffix}`
+			, params.localeId
+			, newText
+		);
 	}
 
 	getUIText = (
 		localeId: string | string[]
 		, locale?: locales
-	) => this.getText(
-		localeId
-		, locale
-		, "uiLocalizationSuffix"
-	)
+	) => this.getText({
+		localeId: localeId
+		, locale: locale
+		, suffixKey: "uiLocalizationSuffix"
+	})
 
-	getText(
-		localeId: string | string[]
-		, locale?: locales
-		, suffixKey: keyof typeof suffixes = "localizationSuffix"
-	): string {
-		
+	getText(params: localizationTextParams): string {
+		let locale = params.locale
+		let suffixKey = params.suffixKey ?? "localizationSuffix"
+		let localeId = params.localeId
+
 		if (typeof locale !== 'string' || !availableLocales.includes(locale))
 			locale = 'en'
 
@@ -68,11 +91,10 @@ export class GameLocalization {
 			return localeId[0]
 		}
 
-		console.log("check for", `${locale}${suffix}`)
 		const translated = this.dataStore?.safeGet<string>(
 			[`${locale}${suffix}`, `en${suffix}`]
 			, localeId
-			, localeId
+			, params.default ?? localeId
 		)
 		return translated ?? '';
 	}

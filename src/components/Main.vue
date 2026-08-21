@@ -5,8 +5,9 @@ import type { Tab } from "@/tabs/tabs.ts";
 import { ref, type Component, type Ref, provide } from 'vue'
 import { choiceStrings, gameLocalization, type locales } from "@/types/localization";
 import ListTabsFrame from "./ListTabsFrame.vue";
-import type { RecordSchema, SchemaConstructor } from "@/types/fields.ts";
+import type { RecordSchema } from "@/types/fields/fields.ts";
 import { useDataStore, type dataStoreType } from "@/stores/dataStore.ts";
+import type { ClassType } from "@/utils/classUtils.ts";
 
 
 const dataStore = useDataStore()
@@ -14,50 +15,67 @@ const dataStore = useDataStore()
 const currentLocale: Ref<locales> = ref('ru')
 provide('currentLocale', currentLocale)
 
-function getRecordEditorComponent(dataId: string): Component {
+function getRecordEditorComponent(dataStoreId: string): Component {
 	return () => {
 		const itemsData: Tab[] = []
 				
-		const fileData: dataStoreType<SchemaConstructor> = dataStore.getMap(dataId) ?? {};
-		
+		const fileData: dataStoreType<RecordSchema> = dataStore.getMap(dataStoreId) ?? {};
+		const schemaType = dataStore.getSchemaType(dataStoreId)
+
+
 		for (const [itemId, itemData] of fileData.entries()) {
-			const localizedName: string = gameLocalization.getText([`${itemId} Name`, `${itemId} name`], currentLocale.value as locales)
+			const localizedName: string = gameLocalization.getText({
+				localeId: [`${itemId} Name`, `${itemId} name`]
+				, locale: currentLocale.value as locales
+			})
 
 			itemsData.push(
 				{
 					id: itemId,
 					label: localizedName,
 					title: localizedName,
-					data: itemData
+					data: itemData,
+					schemaType: schemaType
 				}
 			);
 		}
 
 		return <RecordEditor
+			fileData={fileData}
+			schemaType={schemaType}
 			itemsData={itemsData}
 		></RecordEditor>
 	}
+}
+
+function createTab(content: object, dataStoreId: string): Tab {
+	const res = {
+		id: `tab${dataStoreId}`,
+		badge: dataStore.getMap(dataStoreId).size,
+		schemaType: dataStore.getSchemaType(dataStoreId),
+		component: getRecordEditorComponent(dataStoreId),
+		...content
+	}
+
+	return res as Tab
 }
 
 const questsData = dataStore.getMap("quests")
 const itemsData = dataStore.getMap("items")
 
 const tabsContent = ref<Tab[]>([
-	{
-		id: "quests",
+	createTab({
 		label: "Квесты",
 		icon: "📋",
-		badge: questsData.size,
-
 		title: "Управление квестами",
-		component: getRecordEditorComponent('quests'),
-	},
+	}, 'quests'),
 	{
 		id: "items",
 		label: "Предметы",
 		icon: "📦",
 		badge: itemsData.size,
 		title: "Редактор предметов",
+		schemaType: dataStore.getSchemaType("items"),
 		component: getRecordEditorComponent('items'),
 	},
 	{
