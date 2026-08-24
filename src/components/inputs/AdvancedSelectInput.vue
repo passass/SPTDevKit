@@ -54,7 +54,7 @@
 import { ref, type Ref, computed, watch, nextTick, onMounted, onUnmounted, inject } from "vue";
 import { useDataStore } from "@/stores/dataStore";
 import { gameLocalization, type locales } from "@/types/localization";
-import { ItemField, type Field } from "@/types/fields/fields";
+import { AdvSelectField, type Field } from "@/types/fields/fields";
 
 const props = defineProps<{
 	modelValue: string | null;
@@ -73,7 +73,7 @@ const isOpen = ref(false);
 const selectedIndex = ref(-1);
 
 const items = computed(() => {
-	const itemMap = dataStore.getMap((props.field as ItemField)?.storeId ?? "items");
+	const itemMap = dataStore.getMap((props.field as AdvSelectField)?.storeId ?? "items");
 	const result: Array<{ id: string; label: string; data: any }> = [];
 	
 	for (const [id, data] of itemMap) {

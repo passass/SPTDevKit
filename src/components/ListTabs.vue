@@ -64,12 +64,16 @@
 			<ListTabsFrame
 				v-if="currentTab"
 				:tab="currentTab"
+				:list-tabs="this"
 				@refresh="refreshTab"
 				@close="closeTab"
 				@update="handleContentUpdate"
 			>
-				<template #content="{ data }">
-					<slot name="content" :data="data"></slot>
+				<template #content="{ data, listTabs }">
+					<slot name="content"
+					:data="data"
+					:list-tabs="listTabs"
+					></slot>
 				</template>
 			</ListTabsFrame>
 			<div v-else class="empty-state">
@@ -86,6 +90,7 @@ import { RecordSchema } from "@/types/fields/fields.ts";
 import type { PropType, Component } from "vue";
 import { type ClassType } from "@/utils/classUtils.ts";
 import { type dataStoreType } from "@/stores/dataStore.ts";
+import { useDataStore } from "@/stores/dataStore.ts";
 
 export default {
 	name: "TabListBox",
@@ -177,17 +182,30 @@ export default {
 	},
 
 	methods: {
+		deleteCurrentTab() {
+			const currentTab = this.currentTab
+			const dataStore = useDataStore()
+
+			if (currentTab?.dataStoreId) {
+				const data = dataStore.getMap(currentTab.dataStoreId)
+				
+				data.delete(currentTab?.id)
+				this.closeTab()
+			}
+			
+			
+		},
+
 		createNewSchema() {
 			if (!this.fileData || !this.schemaType) return;
 
-			const newInstance =	new this.schemaType() 
-			const newInstanceId: string = (
-				newInstance.getData()["_id"] 
-				?? newInstance.getData()["id"]
-			)
+			const newInstance =	new this.schemaType()
+			const newInstanceId = newInstance.getId()
 
-			this.fileData.set(newInstanceId, newInstance)
-			this.selectTab(newInstanceId)
+			if (newInstanceId) {
+				this.fileData.set(newInstanceId, newInstance)
+				this.selectTab(newInstanceId)
+			}
 		},
 
 		selectTab(tabId: string) {

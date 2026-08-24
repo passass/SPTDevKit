@@ -1,17 +1,17 @@
 // src/types/conditions/QuestCondition.ts
 
 import { BaseCondition } from "./BaseCondition";
-import { Field, ItemField } from "@/types/fields/fields";
+import { Field, AdvSelectField } from "@/types/fields/fields";
 
 export class QuestCondition extends BaseCondition {
 	static fields: Field[] = [
 		...BaseCondition.fields,
-		ItemField.create({
+		AdvSelectField.create({
 			key: 'target',
 			label: 'ID квеста',
 			order: 7,
 
-			type: 'itemChoice',
+			type: "advancedSelect",
 			storeId: "quests",
 		}),
 		Field.create({

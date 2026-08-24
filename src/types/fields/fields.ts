@@ -20,8 +20,8 @@ export type FieldType = 'text'
 	| 'numberArray'
 	| 'hidden'
 	| 'localization'
-	| 'itemChoice'
-	| 'arrayItemChoice';
+	| "advancedSelect"
+	| 'arrayAdvancedSelect';
 
 export class Field extends Data {
 	key!: string;
@@ -50,8 +50,8 @@ export class LocalizationField extends Field {
 	}
 }
 
-export class ItemField extends Field {
-	type: FieldType = 'arrayItemChoice';
+export class AdvSelectField extends Field {
+	type: FieldType = 'arrayAdvancedSelect';
 
 	storeId!: string;
 }
@@ -152,6 +152,7 @@ export type recordSchemaOtherData = {
 
 export class RecordSchema {
 	static fields: Field[] = [];
+
 	getFieldByKey(key: string) {
 		const fields = (this.constructor as typeof RecordSchema).fields || [];
 		return fields.find((el: Field) => el.key === key)
@@ -284,6 +285,13 @@ export class RecordSchema {
 	/** Получить данные */
 	getData(): SchemaData {
 		return this.data;
+	}
+
+	getId(): string | undefined {
+		return (
+			this.data["_id"] 
+			?? this.data["_id"]
+		)
 	}
 
 	/** Получить значение поля */

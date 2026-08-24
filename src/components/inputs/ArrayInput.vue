@@ -35,13 +35,21 @@
 			>
 				+
 			</button>
+
+			<button
+				class="array-input__btn"
+				@click="deleteItem"
+				title="Удалить элемент"
+			>
+				-
+			</button>
 		</div>
 
 		<!-- Режим строкового массива: текстовое поле -->
 		<div v-if="isStringArray" class="array-input__editor">
 			<template v-if="selectedIndex !== null">
 				<AdvancedSelectInput 
-					v-if="field.type === 'arrayItemChoice'"
+					v-if="field.type === 'arrayAdvancedSelect'"
 					v-model="items[selectedIndex]"
 					:field="field"
 				/>
@@ -76,7 +84,7 @@
 
 <script setup lang="ts">
 import { computed, inject, ref, watch } from "vue";
-import { RecordSchema, Field, ItemField } from "@/types/fields/fields";
+import { RecordSchema, Field, AdvSelectField } from "@/types/fields/fields";
 import AdvancedSelectInput from "./AdvancedSelectInput.vue";
 import { SchemaChoicer, type SchemaChoice } from "@/types/fields/fieldsSchemaChoicer.ts";
 import { getStaticField, type ClassType } from "@/utils/classUtils.ts";
@@ -114,7 +122,7 @@ const items = computed({
 const isStringArray = computed(() => {
 	if (items.value.length === 0) return false;
 	return ( 
-		props.field.type === "itemChoice"
+		props.field.type === "advancedSelect"
 		|| props.field.type === "stringArray"
 		|| (
 			Array.isArray(items.value) 
@@ -146,6 +154,16 @@ function nextItem() {
 function prevItem() {
 	if (selectedIndex.value === null || selectedIndex.value <= 0) return;
 	selectedIndex.value--;
+}
+
+function deleteItem() {
+	if (selectedIndex.value === null || selectedIndex.value < 0  || selectedIndex.value > items.value.length - 1) return;
+
+	items.value.splice(selectedIndex.value, 1)
+	
+	if (selectedIndex.value !== 0) {
+		selectedIndex.value--;
+	}
 }
 
 function addItem() {

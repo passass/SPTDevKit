@@ -10,8 +10,8 @@ export class LocalizationField extends Field {
 	}
 }
 
-export class ItemField extends Field {
-	type: FieldType = 'arrayItemChoice';
+export class AdvSelectField extends Field {
+	type: FieldType = 'arrayAdvancedSelect';
 
 	storeId!: string;
 }

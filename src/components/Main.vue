@@ -2,7 +2,7 @@
 import ListTabs from "@/components/ListTabs.vue";
 import RecordEditor from "@/components/RecordEditor.vue";
 import type { Tab } from "@/tabs/tabs.ts";
-import { ref, type Component, type Ref, provide } from 'vue'
+import { ref, type Component, type Ref, provide, computed } from 'vue'
 import { choiceStrings, gameLocalization, type locales } from "@/types/localization";
 import ListTabsFrame from "./ListTabsFrame.vue";
 import type { RecordSchema } from "@/types/fields/fields.ts";
@@ -35,7 +35,8 @@ function getRecordEditorComponent(dataStoreId: string): Component {
 					label: localizedName,
 					title: localizedName,
 					data: itemData,
-					schemaType: schemaType
+					schemaType: schemaType,
+					dataStoreId: dataStoreId,
 				}
 			);
 		}
@@ -51,7 +52,8 @@ function getRecordEditorComponent(dataStoreId: string): Component {
 function createTab(content: object, dataStoreId: string): Tab {
 	const res = {
 		id: `tab${dataStoreId}`,
-		badge: dataStore.getMap(dataStoreId).size,
+		dataStoreId: dataStoreId,
+		badge: computed(() => dataStore.getMap(dataStoreId).size) ,
 		schemaType: dataStore.getSchemaType(dataStoreId),
 		component: getRecordEditorComponent(dataStoreId),
 		...content
@@ -60,24 +62,17 @@ function createTab(content: object, dataStoreId: string): Tab {
 	return res as Tab
 }
 
-const questsData = dataStore.getMap("quests")
-const itemsData = dataStore.getMap("items")
-
 const tabsContent = ref<Tab[]>([
 	createTab({
 		label: "Квесты",
 		icon: "📋",
 		title: "Управление квестами",
 	}, 'quests'),
-	{
-		id: "items",
+	createTab({
 		label: "Предметы",
 		icon: "📦",
-		badge: itemsData.size,
 		title: "Редактор предметов",
-		schemaType: dataStore.getSchemaType("items"),
-		component: getRecordEditorComponent('items'),
-	},
+	}, 'items'),
 	{
 		id: "traders",
 		label: "Торговцы",
@@ -90,7 +85,6 @@ const tabsContent = ref<Tab[]>([
 		id: "settings",
 		label: "Настройки",
 		icon: "⚙️",
-		badge: null,
 
 		title: "Настройки приложения",
 	},

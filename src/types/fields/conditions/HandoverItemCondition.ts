@@ -1,18 +1,18 @@
 // src/types/conditions/HandoverItemCondition.ts
 
 import { BaseCondition } from "./BaseCondition";
-import { Field, HiddenField, ItemField } from "@/types/fields/fields";
+import { Field, HiddenField, AdvSelectField } from "@/types/fields/fields";
 
 export class HandoverItemCondition extends BaseCondition {
 	static fields: Field[] = [
 		...BaseCondition.fields,
-		ItemField.create({
+		AdvSelectField.create({
 			key: 'target',
 			label: 'Цель (ID предмета)',
 			order: 7,
 			defaultValue: [],
 			
-			type: 'arrayItemChoice',
+			type: 'arrayAdvancedSelect',
 			storeId: "items",
 		}),
 		Field.create({

@@ -40,7 +40,11 @@
 				@update="handleUpdate"
 			/>
 			<div v-else-if="displayData">
-				<slot name="content" :data="displayData"></slot>
+				<slot
+					name="content"
+					:data="displayData"
+					:list-tabs="listTabs"
+				></slot>
 			</div>
 			<div v-else class="empty-state">
 				<slot name="empty">
@@ -55,7 +59,6 @@
 import type { PropType } from "vue";
 import type { Tab } from "@/tabs/tabs.ts";
 import { Navigator, type PathItem } from "@/utils/navigation";
-import type { Any } from "json2typescript";
 
 export default {
 	name: "ListTabsFrame",
@@ -65,12 +68,15 @@ export default {
 			type: Object as PropType<Tab>,
 			required: true,
 		},
+		listTabs: {
+			type: Object
+		}
 	},
 
 	emits: {
 		refresh: () => true,
 		close: () => true,
-		update: (data: Any) => typeof data === "object" && data !== null,
+		update: (data: any) => typeof data === "object" && data !== null,
 	},
 
 	data() {

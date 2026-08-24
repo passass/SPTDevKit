@@ -20,8 +20,8 @@
 	:schemaType="props.schemaType"
 	:fileData="props.fileData"
 	:tabs="props.itemsData">
-		<template #content="{ data }">
-			<RecordEditorInput :data="data" />
+		<template #content="{ data, listTabs }">
+			<RecordEditorInput :data="data" :list-tabs="listTabs"/>
 		</template>
 	</ListTabs>
 </template>

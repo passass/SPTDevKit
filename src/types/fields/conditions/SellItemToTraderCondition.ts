@@ -1,14 +1,14 @@
 import { BaseCondition } from "./BaseCondition";
-import { Field, ItemField } from "@/types/fields/fields";
+import { Field, AdvSelectField } from "@/types/fields/fields";
 
 export class SellItemToTraderCondition extends BaseCondition {
 	static fields: Field[] = [
 		...BaseCondition.fields,
-		ItemField.create({
+		AdvSelectField.create({
 			key: 'target',
 			label: 'ID предметов',
 			order: 7,
-			type: 'arrayItemChoice',
+			type: 'arrayAdvancedSelect',
 			storeId: "items",
 		}),
 		Field.create({

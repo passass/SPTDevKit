@@ -7,7 +7,10 @@
 		</div>
 
 		<div class="form-frame__fields">
-			<button v-if="(frameNavigator?.getPathStack()?.length ?? 0) === 0">
+			<button 
+			v-if="(frameNavigator?.getPathStack()?.length ?? 0) === 0"
+			@click="listTabs.deleteCurrentTab()"
+			>
 				удалить
 			</button>
 
@@ -53,7 +56,7 @@
 				/>
 
 				<AdvancedSelectInput
-					v-if="field.type === 'itemChoice'"
+					v-if="field.type === 'advancedSelect'"
 					v-model="getData[field.key]"
 					:field="field"
 				/>
@@ -115,7 +118,7 @@
 				</select>
 
 				<ArrayInput
-					v-else-if="field.type === 'array' || field.type === 'stringArray' || field.type === 'arrayItemChoice'"
+					v-else-if="field.type === 'array' || field.type === 'stringArray' || field.type === 'arrayAdvancedSelect'"
 					v-model="getData[field.key]"
 					:field="field"
 					:array-key="field.key"
@@ -160,11 +163,14 @@ import { Navigator, isNavigable } from "@/utils/navigation.ts";
 import SchemaChooserInput from "@/components/inputs/SchemaChooserInput.vue";
 import { gameLocalization } from "@/types/localization.ts";
 import { type locales } from "@/types/localization.ts";
+import ListTabs from "./ListTabs.vue";
+
 
 const currentLocale: Ref<locales> = inject<Ref<locales>>("currentLocale") ?? ref('en')
 
 const props = defineProps<{
 	data: any;
+	listTabs: typeof ListTabs;
 	title?: string;
 	validate?: boolean;
 }>();

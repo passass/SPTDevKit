@@ -1,15 +1,18 @@
+import { AdvSelectField } from "../fieldsClasses";
 import { BaseCondition } from "./BaseCondition";
 import { Field } from "@/types/fields/fields";
 
 export class FindItemCondition extends BaseCondition {
 	static fields: Field[] = [
 		...BaseCondition.fields,
-		Field.create({
+		AdvSelectField.create({
 			key: 'target',
 			label: 'Цель (ID предметов)',
-			type: 'array',
 			order: 7,
-			defaultValue: []
+			defaultValue: [],
+
+			type: 'arrayAdvancedSelect',
+			storeId: "items",
 		}),
 		Field.create({
 			key: 'value',

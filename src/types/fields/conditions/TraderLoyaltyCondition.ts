@@ -1,5 +1,5 @@
 import { BaseCondition } from "./BaseCondition";
-import { Field, ItemField } from "@/types/fields/fields";
+import { Field, AdvSelectField } from "@/types/fields/fields";
 
 export class TraderLoyaltyCondition extends BaseCondition {
 	static fields: Field[] = [
