@@ -4,13 +4,21 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { useFileDataStore } from "./fileStore";
 import { QuestSchema } from "@/types/fields/fieldsQuests";
-import type { RecordSchema, SchemaData } from "@/types/fields/fields";
-import type { ClassType } from "@/utils/classUtils";
+import { idsFields, type RecordSchema, type SchemaData } from "@/types/fields/fields";
+import { getValueByPath, type ClassType } from "@/utils/classUtils";
+import { gameLocalization, type locales } from "@/types/localization";
 
+export interface DataStoreConfigFiles {
+	filename: string
+	tags?: string[]
+}
 export interface DataStoreConfig {
-	filename: string | string[];
+	file: DataStoreConfigFiles | DataStoreConfigFiles[];
 	schemaType?: ClassType<RecordSchema>;
 }
+export interface dataStoreExtraDataType {
+	tags?: string[]
+} 
 export type dataStoreType<T = any> = Map<string, T>
 
 export const useDataStore = defineStore("dataStore", () => {
@@ -18,6 +26,7 @@ export const useDataStore = defineStore("dataStore", () => {
 	
 	// Хранилище для всех данных: ключ -> Map<string, данные>
 	const dataMap = ref<Map<string, dataStoreType>>(new Map());
+	const extraDataMap = ref<Map<any, dataStoreExtraDataType>>(new Map()); 
 	
 	// Конфигурации для каждого ключа
 	const configs = ref<Map<string, DataStoreConfig>>(new Map());
@@ -43,6 +52,25 @@ export const useDataStore = defineStore("dataStore", () => {
 		}
 	}
 
+	function addFileToStore(key: string, file: DataStoreConfigFiles) {
+		const config = configs.value.get(key);
+		if (!config) {
+			throw new Error(`Store "${key}" not registered`);
+		}
+
+		const files = Array.isArray(config.file) ? config.file : [config.file];
+		
+		const exists = files.some(f => f.filename === file.filename);
+		if (exists) {
+			console.warn(`File "${file.filename}" already exists in store "${key}"`);
+			return;
+		}
+
+		files.push(file);
+
+		config.file = files
+	}
+
 	// Загрузка данных из одного или нескольких файлов
 	async function load(key: string) {
 		const config = configs.value.get(key);
@@ -54,25 +82,45 @@ export const useDataStore = defineStore("dataStore", () => {
 		errorStatus.value.set(key, null);
 
 		try {
-			const filenames = Array.isArray(config.filename) ? config.filename : [config.filename];
+			const files = Array.isArray(config.file) ? config.file : [config.file];
 			const store = dataMap.value.get(key)!;
 			store.clear();
 
 			const schemaType = config.schemaType;
 
-			for (const filename of filenames) {
+			for (const file of files) {
+				const filename = file.filename
+				const tags: string[] = getValueByPath(file, 'tags', []);
+
 				const fileData = await fileStore.read(filename);
 				const fileContent = fileData.data ?? fileData
+				const extraData = extraDataMap.value
 
 				if (fileContent && typeof fileContent === "object") {
-					for (const [id, itemData] of Object.entries(fileContent)) {
+					let entries: Record<string, any> = {};
+					if (tags.includes("oneObject")) {
+						const idField = idsFields.find((el) => el in fileContent)
+						if (idField) {
+							const idFieldValue: any = fileContent[idField]
+							if (idFieldValue)
+								entries[idFieldValue] = fileContent
+						}
+					} else {
+						entries = fileContent
+					} 
+
+					for (const [id, itemData] of Object.entries(entries)) {
 						if (!store.has(id)) {
 							let value: any;
 							if (schemaType && itemData && typeof itemData === "object") {
 								value = new schemaType(itemData);
+								value.storeId = key
 							} else {
 								value = itemData;
 							}
+							extraData.set(value, {
+								tags: file.tags
+							})
 							store.set(id, value);
 						} else {
 							console.warn(`Duplicate ID "${id}" found in file "${filename}", skipping...`);
@@ -86,6 +134,30 @@ export const useDataStore = defineStore("dataStore", () => {
 		} finally {
 			loadingStatus.value.set(key, false);
 		}
+	}
+
+	function getAllElementsLocalizated(storeId: string): Record<string, string> {
+		const res: Record<string, string> = {}
+		for (const [itemId, value] of getMap(storeId).entries()) {
+			res[itemId] = gameLocalization.getObjectLocalization({
+				instance: value,
+			})
+		}
+		return res
+	}
+
+	function getByTagInStore<T = any>(key: string, tag: string): Map<string, T> {
+		const store = getMap<T>(key);
+		const result: Map<string, T> = new Map();
+		
+		for (const [id, value] of store) {
+			const extra = extraDataMap.value.get(value);
+			if (extra?.tags?.includes(tag)) {
+				result.set(id, value);
+			}
+		}
+		
+		return result;
 	}
 
 	// Загрузка нескольких хранилищ
@@ -107,9 +179,9 @@ export const useDataStore = defineStore("dataStore", () => {
 			throw new Error(`Store "${key}" not registered`);
 		}
 		
-		const filenames = Array.isArray(config.filename) ? config.filename : [config.filename];
+		const filenames = Array.isArray(config.file) ? config.file : [config.file];
 		for (const filename of filenames) {
-			await fileStore.reload(filename);
+			await fileStore.reload(getValueByPath(filename, "filename", filename));
 		}
 		await load(key);
 	}
@@ -127,6 +199,14 @@ export const useDataStore = defineStore("dataStore", () => {
 			throw new Error(`Store "${key}" not found`);
 		}
 		return store as dataStoreType<T>;
+	}
+
+	function getExtraData(key: any): dataStoreExtraDataType | undefined {
+		return extraDataMap.value.get(key)
+	}
+
+	function setExtraData(key: any, value: dataStoreExtraDataType): void {
+		extraDataMap.value.set(key, value)
 	}
 
 	// Получить список всех значений
@@ -196,10 +276,10 @@ export const useDataStore = defineStore("dataStore", () => {
 		}
 
 		const store = getMap(key);
-		const filenames = Array.isArray(config.filename) ? config.filename : [config.filename];
+		const filenames = Array.isArray(config.file) ? config.file : [config.file];
 		
 		// Если несколько файлов, сохраняем в первый
-		const filename = filenames[0];
+		const filename = getValueByPath(filenames[0], "filename", filenames[0]);
 		
 		const result: Record<string, any> = {};
 		for (const [id, data] of store) {
@@ -274,7 +354,8 @@ export const useDataStore = defineStore("dataStore", () => {
 		if (!config) {
 			return [];
 		}
-		return Array.isArray(config.filename) ? config.filename : [config.filename];
+
+		return Array.isArray(config.file) ? config.file.map((el) => el.filename) : [config.file.filename];
 	}
 
 	function getSchemaType(key: string): DataStoreConfig['schemaType'] | undefined {
@@ -285,6 +366,9 @@ export const useDataStore = defineStore("dataStore", () => {
 	return {
 		dataMap,
 		getSchemaType,
+		addFileToStore,
+		getByTagInStore,
+		getAllElementsLocalizated,
 		configs,
 		loadingStatus,
 		errorStatus,
@@ -314,5 +398,8 @@ export const useDataStore = defineStore("dataStore", () => {
 		create,
 		getKeys,
 		getFilenames,
+		
+		getExtraData,
+		setExtraData,
 	};
 });

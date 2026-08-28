@@ -45,8 +45,43 @@
 			</button>
 		</div>
 
+		<!-- Режим optionsArray: select -->
+		<div v-if="isOptionsArray" class="array-input__editor">
+			<template v-if="selectedIndex !== null">
+				<select
+					v-model="items[selectedIndex]"
+					class="array-input__select"
+				>
+					<option
+						v-for="option in field.options"
+						:key="option"
+						:value="option"
+					>
+						{{ gameLocalization.getText({
+							localeId: [
+								option,
+								`${option} Name`,
+								`${option} Nickname`
+							]}) }}
+					</option>
+				</select>
+			</template>
+		</div>
+
+		<!-- Режим numberArray: числовое поле -->
+		<div v-else-if="isNumberArray" class="array-input__editor">
+			<template v-if="selectedIndex !== null">
+				<input
+					type="number"
+					v-model.number="items[selectedIndex]"
+					placeholder="Введите число"
+					class="array-input__field"
+				/>
+			</template>
+		</div>
+
 		<!-- Режим строкового массива: текстовое поле -->
-		<div v-if="isStringArray" class="array-input__editor">
+		<div v-else-if="isStringArray" class="array-input__editor">
 			<template v-if="selectedIndex !== null">
 				<AdvancedSelectInput 
 					v-if="field.type === 'arrayAdvancedSelect'"
@@ -83,12 +118,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, ref, watch } from "vue";
+import { computed, inject, ref, type Ref, watch } from "vue";
 import { RecordSchema, Field, AdvSelectField } from "@/types/fields/fields";
 import AdvancedSelectInput from "./AdvancedSelectInput.vue";
 import { SchemaChoicer, type SchemaChoice } from "@/types/fields/fieldsSchemaChoicer.ts";
 import { getStaticField, type ClassType } from "@/utils/classUtils.ts";
 import { Navigator } from "@/utils/navigation.ts";
+import { gameLocalization, type locales } from "@/types/localization.ts";
 
 type InputType = any[]
 const frameNavigator = inject<Navigator>("frameNavigator");
@@ -120,15 +156,30 @@ const items = computed({
 
 // Определяем, является ли массив массивом строк
 const isStringArray = computed(() => {
-	if (items.value.length === 0) return false;
 	return ( 
 		props.field.type === "advancedSelect"
 		|| props.field.type === "stringArray"
 		|| (
-			Array.isArray(items.value) 
+			Array.isArray(items.value)
+			&& items.value.length > 0 
 			&& items.value.every(item => typeof item === 'string')
 		)
 	);
+});
+
+const isNumberArray = computed(() => {
+	return (
+		props.field.type === "numberArray"
+		|| (
+			Array.isArray(items.value)
+			&& items.value.length > 0
+			&& items.value.every(item => typeof item === 'number')
+		)
+	);
+});
+
+const isOptionsArray = computed(() => {
+	return props.field.type === "optionsArray" && Array.isArray(props.field.options);
 });
 
 const selectedItem = computed(() => {
@@ -167,11 +218,19 @@ function deleteItem() {
 }
 
 function addItem() {
-	if (isStringArray.value) {
+	if (isOptionsArray.value) {
+		const defaultOption = props.field.options?.[0] ?? "";
+		items.value.push(defaultOption);
+		selectedIndex.value = items.value.length - 1;
+	} else if (isNumberArray.value) {
+		items.value.push(0);
+		selectedIndex.value = items.value.length - 1;
+	} else if (isStringArray.value) {
 		items.value.push("")
 		selectedIndex.value = items.value.length - 1;
 	} else {
 		const arrayItemSchema = props.field.arrayItemSchema
+		
 		if (arrayItemSchema) {
 			if (SchemaChoicer.isPrototypeOf(arrayItemSchema)) {
 				const choosedSchema = getStaticField<SchemaChoice[]>(arrayItemSchema, 'schemas')?.[0]
@@ -185,6 +244,10 @@ function addItem() {
 					frameNavigator?.navigate([props.arrayKey, items.value.length-1])
 					return
 				}
+			} else if (RecordSchema.isPrototypeOf(arrayItemSchema)) {
+				items.value.push(new arrayItemSchema({}))
+				frameNavigator?.navigate([props.arrayKey, items.value.length-1])
+				return
 			}
 		}
 
@@ -194,12 +257,6 @@ function addItem() {
 			frameNavigator?.navigate([props.arrayKey, items.value.length-1])
 		}
 	}
-}
-
-function updateStringItem(event: Event) {
-	const value = (event.target as HTMLInputElement).value;
-	if (selectedIndex.value === null) return;
-	items.value[selectedIndex.value] = value;
 }
 
 function handleNavigate() {
@@ -313,6 +370,34 @@ watch(
 }
 
 .array-input__field:focus {
+	outline: none;
+	border-color: #42b883;
+}
+
+.array-input__field[type="number"] {
+	-moz-appearance: textfield;
+}
+
+.array-input__field[type="number"]::-webkit-outer-spin-button,
+.array-input__field[type="number"]::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+
+.array-input__select {
+	width: 100%;
+	padding: 8px 10px;
+	background: #222222;
+	border: 1px solid #3d3d3d;
+	border-radius: 4px;
+	color: #e0e0e0;
+	font-size: 13px;
+	font-family: inherit;
+	box-sizing: border-box;
+	cursor: pointer;
+}
+
+.array-input__select:focus {
 	outline: none;
 	border-color: #42b883;
 }

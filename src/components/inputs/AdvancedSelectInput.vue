@@ -65,7 +65,6 @@ const emit = defineEmits<{
 	(e: "update:modelValue", value: string | null): void;
 }>();
 
-const currentLocale: Ref<locales> = inject<Ref<locales>>("currentLocale") ?? ref('en')
 const dataStore = useDataStore();
 const searchInput = ref<HTMLInputElement | null>(null);
 const searchQuery = ref("");
@@ -73,14 +72,15 @@ const isOpen = ref(false);
 const selectedIndex = ref(-1);
 
 const items = computed(() => {
-	const itemMap = dataStore.getMap((props.field as AdvSelectField)?.storeId ?? "items");
+	const field: AdvSelectField = props.field as AdvSelectField 
+	const itemMap = dataStore.getMap(
+		field?.storeId ?? "items"
+	);
+
 	const result: Array<{ id: string; label: string; data: any }> = [];
 	
 	for (const [id, data] of itemMap) {
-		const name = gameLocalization.getText({
-			localeId: [`${id} Name`, `${id} name`, id]
-			, locale: currentLocale.value
-		});
+		const name = gameLocalization.getObjectLocalization({instance: data})
 		result.push({
 			id,
 			label: name ?? id,

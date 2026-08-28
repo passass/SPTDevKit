@@ -37,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, ref, type Ref } from "vue";
+import { computed, inject, ref, type ComputedRef, type Ref } from "vue";
 import {
 	gameLocalization,
 	availableLocales,
@@ -57,9 +57,7 @@ const props = withDefaults(
 	},
 );
 
-const currentLocale: locales = inject<Ref<string>>("currentLocale", ref("ru"))
-	.value as locales;
-const selectedLocale = ref(currentLocale);
+const selectedLocale = ref(gameLocalization.currentLocale.value);
 
 const emit = defineEmits<{
 	(e: "update:modelValue", value: string | null): void;
@@ -71,15 +69,18 @@ const handleIdChange = (event: Event) => {
 	emit("update:modelValue", value);
 };
 
-const params = computed(() => {
+const params: ComputedRef<localizationTextParams> = computed(() => {
 	return {
 		localeId: props.modelValue,
 		locale: selectedLocale.value,
+		notCheckForDefaultLocalization: true,
 	};
 })
 
 const localizedText = computed({
-	get: () => gameLocalization.getText(params.value),
+	get: () => {
+		return gameLocalization.getText(params.value)
+	},
 	set: (val: string) => {
 		gameLocalization.updateLocaleText(params.value, val)
 	},

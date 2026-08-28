@@ -1,10 +1,11 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
-// import ListTabs from './components/ListTabs.vue'
 
-const pinia = createPinia() // Создаём экземпляр
+
+const pinia = createPinia()
 const app = createApp(App)
 
-app.use(pinia) // Подключаем к приложению
+
+app.use(pinia)
 app.mount('#app')

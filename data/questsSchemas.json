@@ -1,0 +1,6174 @@
+{
+  "__type": "all_schemas",
+  "all_schemas": [
+    {
+      "__type": "split_path",
+      "path": "*.conditions.AvailableForFinish",
+      "split_key": "conditionType",
+      "fields": {
+        "PlaceBeacon": {
+          "conditionType": {
+            "__type": "field",
+            "key": "conditionType",
+            "data_type": "str"
+          },
+          "dynamicLocale": {
+            "__type": "field",
+            "key": "dynamicLocale",
+            "data_type": "bool",
+            "unneccesary": true,
+            "order": 200
+          },
+          "globalQuestCounterId": {
+            "__type": "field",
+            "key": "globalQuestCounterId",
+            "data_type": "str",
+            "unneccesary": true,
+            "order": 200
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "parentId": {
+            "__type": "field",
+            "key": "parentId",
+            "data_type": "str"
+          },
+          "plantTime": {
+            "__type": "field",
+            "key": "plantTime",
+            "data_type": "int"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "stringArray"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "int"
+          },
+          "visibilityConditions": {
+            "__type": "split_path_child",
+            "rel_path": "visibilityConditions",
+            "split_key_value": "visibilityConditions"
+          },
+          "zoneId": {
+            "__type": "field",
+            "key": "zoneId",
+            "data_type": "str"
+          }
+        },
+        "CounterCreator": {
+          "completeInSeconds": {
+            "__type": "field",
+            "key": "completeInSeconds",
+            "data_type": "int"
+          },
+          "conditionType": {
+            "__type": "field",
+            "key": "conditionType",
+            "data_type": "str"
+          },
+          "counter": {
+            "__type": "nested_schema",
+            "nested_schema": {
+              "conditions": {
+                "__type": "field",
+                "key": "conditions",
+                "data_type": "list",
+                "array_nested": {
+                  "bodyPart": {
+                    "__type": "field",
+                    "key": "bodyPart",
+                    "data_type": "optionsArray",
+                    "options": [
+                      "Head",
+                      "Stomach"
+                    ]
+                  },
+                  "compareMethod": {
+                    "__type": "field",
+                    "key": "compareMethod",
+                    "data_type": "str",
+                    "options": [
+                      "==",
+                      ">",
+                      "<",
+                      ">=",
+                      "<="
+                    ]
+                  },
+                  "conditionType": {
+                    "__type": "field",
+                    "key": "conditionType",
+                    "data_type": "str"
+                  },
+                  "daytime": {
+                    "from": {
+                      "__type": "field",
+                      "key": "from",
+                      "data_type": "int"
+                    },
+                    "to": {
+                      "__type": "field",
+                      "key": "to",
+                      "data_type": "int"
+                    }
+                  },
+                  "distance": {
+                    "compareMethod": {
+                      "__type": "field",
+                      "key": "compareMethod",
+                      "data_type": "str",
+                      "options": [
+                        "==",
+                        ">",
+                        "<",
+                        ">=",
+                        "<="
+                      ]
+                    },
+                    "value": {
+                      "__type": "field",
+                      "key": "value",
+                      "data_type": "int"
+                    }
+                  },
+                  "dynamicLocale": {
+                    "__type": "field",
+                    "key": "dynamicLocale",
+                    "data_type": "bool",
+                    "unneccesary": true,
+                    "order": 200
+                  },
+                  "enemyEquipmentExclusive": {
+                    "__type": "field",
+                    "key": "enemyEquipmentExclusive",
+                    "data_type": "stringstringArray"
+                  },
+                  "enemyEquipmentInclusive": {
+                    "__type": "field",
+                    "key": "enemyEquipmentInclusive",
+                    "data_type": "stringstringArray"
+                  },
+                  "enemyHealthEffects": {
+                    "__type": "field",
+                    "key": "enemyHealthEffects",
+                    "data_type": "list",
+                    "array_nested": {
+                      "bodyParts": {
+                        "__type": "field",
+                        "key": "bodyParts",
+                        "data_type": "optionsArray",
+                        "options": [
+                          "Head",
+                          "Stomach"
+                        ]
+                      },
+                      "effects": {
+                        "__type": "field",
+                        "key": "effects",
+                        "data_type": "stringArray"
+                      }
+                    }
+                  },
+                  "id": {
+                    "__type": "field",
+                    "key": "id",
+                    "data_type": "str"
+                  },
+                  "resetOnSessionEnd": {
+                    "__type": "field",
+                    "key": "resetOnSessionEnd",
+                    "data_type": "bool"
+                  },
+                  "savageRole": {
+                    "__type": "field",
+                    "key": "savageRole",
+                    "data_type": "stringArray"
+                  },
+                  "target": {
+                    "__type": "field",
+                    "key": "target",
+                    "data_type": "str"
+                  },
+                  "value": {
+                    "__type": "field",
+                    "key": "value",
+                    "data_type": "int"
+                  },
+                  "weapon": {
+                    "__type": "field",
+                    "key": "weapon",
+                    "data_type": "stringArray"
+                  },
+                  "weaponCaliber": {
+                    "__type": "field",
+                    "key": "weaponCaliber",
+                    "data_type": "stringArray"
+                  },
+                  "weaponModsExclusive": {
+                    "__type": "field",
+                    "key": "weaponModsExclusive",
+                    "data_type": "stringstringArray"
+                  },
+                  "weaponModsInclusive": {
+                    "__type": "field",
+                    "key": "weaponModsInclusive",
+                    "data_type": "stringstringArray"
+                  },
+                  "status": {
+                    "__type": "field",
+                    "key": "status",
+                    "data_type": "stringArray"
+                  },
+                  "IncludeNotEquippedItems": {
+                    "__type": "field",
+                    "key": "IncludeNotEquippedItems",
+                    "data_type": "bool"
+                  },
+                  "equipmentExclusive": {
+                    "__type": "field",
+                    "key": "equipmentExclusive",
+                    "data_type": "stringstringArray"
+                  },
+                  "equipmentInclusive": {
+                    "__type": "field",
+                    "key": "equipmentInclusive",
+                    "data_type": "stringstringArray"
+                  },
+                  "bodyPartsWithEffects": {
+                    "__type": "field",
+                    "key": "bodyPartsWithEffects",
+                    "data_type": "list",
+                    "array_nested": {
+                      "bodyParts": {
+                        "__type": "field",
+                        "key": "bodyParts",
+                        "data_type": "optionsArray",
+                        "options": [
+                          "Head",
+                          "Stomach"
+                        ]
+                      },
+                      "effects": {
+                        "__type": "field",
+                        "key": "effects",
+                        "data_type": "stringArray"
+                      }
+                    }
+                  },
+                  "energy": {
+                    "compareMethod": {
+                      "__type": "field",
+                      "key": "compareMethod",
+                      "data_type": "str",
+                      "options": [
+                        "==",
+                        ">",
+                        "<",
+                        ">=",
+                        "<="
+                      ]
+                    },
+                    "value": {
+                      "__type": "field",
+                      "key": "value",
+                      "data_type": "int"
+                    }
+                  },
+                  "hydration": {
+                    "compareMethod": {
+                      "__type": "field",
+                      "key": "compareMethod",
+                      "data_type": "str",
+                      "options": [
+                        "==",
+                        ">",
+                        "<",
+                        ">=",
+                        "<="
+                      ]
+                    },
+                    "value": {
+                      "__type": "field",
+                      "key": "value",
+                      "data_type": "int"
+                    }
+                  },
+                  "time": {
+                    "compareMethod": {
+                      "__type": "field",
+                      "key": "compareMethod",
+                      "data_type": "str",
+                      "options": [
+                        "==",
+                        ">",
+                        "<",
+                        ">=",
+                        "<="
+                      ]
+                    },
+                    "value": {
+                      "__type": "field",
+                      "key": "value",
+                      "data_type": "int"
+                    }
+                  },
+                  "zoneIds": {
+                    "__type": "field",
+                    "key": "zoneIds",
+                    "data_type": "stringArray"
+                  },
+                  "exitName": {
+                    "__type": "field",
+                    "key": "exitName",
+                    "data_type": "str"
+                  }
+                }
+              },
+              "id": {
+                "__type": "field",
+                "key": "id",
+                "data_type": "str"
+              }
+            }
+          },
+          "doNotResetIfCounterCompleted": {
+            "__type": "field",
+            "key": "doNotResetIfCounterCompleted",
+            "data_type": "bool"
+          },
+          "dynamicLocale": {
+            "__type": "field",
+            "key": "dynamicLocale",
+            "data_type": "bool",
+            "unneccesary": true,
+            "order": 200
+          },
+          "globalQuestCounterId": {
+            "__type": "field",
+            "key": "globalQuestCounterId",
+            "data_type": "str",
+            "unneccesary": true,
+            "order": 200
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "isNecessary": {
+            "__type": "field",
+            "key": "isNecessary",
+            "data_type": "bool"
+          },
+          "isResetOnConditionFailed": {
+            "__type": "field",
+            "key": "isResetOnConditionFailed",
+            "data_type": "bool"
+          },
+          "oneSessionOnly": {
+            "__type": "field",
+            "key": "oneSessionOnly",
+            "data_type": "bool"
+          },
+          "parentId": {
+            "__type": "field",
+            "key": "parentId",
+            "data_type": "str"
+          },
+          "type": {
+            "__type": "field",
+            "key": "type",
+            "data_type": "str"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "int"
+          },
+          "visibilityConditions": {
+            "__type": "split_path_child",
+            "rel_path": "visibilityConditions",
+            "split_key_value": "visibilityConditions"
+          }
+        },
+        "LeaveItemAtLocation": {
+          "conditionType": {
+            "__type": "field",
+            "key": "conditionType",
+            "data_type": "str"
+          },
+          "dogtagLevel": {
+            "__type": "field",
+            "key": "dogtagLevel",
+            "data_type": "int"
+          },
+          "dynamicLocale": {
+            "__type": "field",
+            "key": "dynamicLocale",
+            "data_type": "bool",
+            "unneccesary": true,
+            "order": 200
+          },
+          "globalQuestCounterId": {
+            "__type": "field",
+            "key": "globalQuestCounterId",
+            "data_type": "str",
+            "unneccesary": true,
+            "order": 200
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "isEncoded": {
+            "__type": "field",
+            "key": "isEncoded",
+            "data_type": "bool"
+          },
+          "maxDurability": {
+            "__type": "field",
+            "key": "maxDurability",
+            "data_type": "int"
+          },
+          "minDurability": {
+            "__type": "field",
+            "key": "minDurability",
+            "data_type": "int"
+          },
+          "onlyFoundInRaid": {
+            "__type": "field",
+            "key": "onlyFoundInRaid",
+            "data_type": "bool"
+          },
+          "parentId": {
+            "__type": "field",
+            "key": "parentId",
+            "data_type": "str"
+          },
+          "plantTime": {
+            "__type": "field",
+            "key": "plantTime",
+            "data_type": "int"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "stringArray"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "int"
+          },
+          "visibilityConditions": {
+            "__type": "split_path_child",
+            "rel_path": "visibilityConditions",
+            "split_key_value": "visibilityConditions"
+          },
+          "zoneId": {
+            "__type": "field",
+            "key": "zoneId",
+            "data_type": "str"
+          }
+        },
+        "Skill": {
+          "compareMethod": {
+            "__type": "field",
+            "key": "compareMethod",
+            "data_type": "str",
+            "options": [
+              "==",
+              ">",
+              "<",
+              ">=",
+              "<="
+            ]
+          },
+          "conditionType": {
+            "__type": "field",
+            "key": "conditionType",
+            "data_type": "str"
+          },
+          "dynamicLocale": {
+            "__type": "field",
+            "key": "dynamicLocale",
+            "data_type": "bool",
+            "unneccesary": true,
+            "order": 200
+          },
+          "globalQuestCounterId": {
+            "__type": "field",
+            "key": "globalQuestCounterId",
+            "data_type": "str",
+            "unneccesary": true,
+            "order": 200
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "parentId": {
+            "__type": "field",
+            "key": "parentId",
+            "data_type": "str"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "str"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "int"
+          },
+          "visibilityConditions": {
+            "__type": "split_path_child",
+            "rel_path": "visibilityConditions",
+            "split_key_value": "visibilityConditions"
+          }
+        },
+        "TraderStanding": {
+          "compareMethod": {
+            "__type": "field",
+            "key": "compareMethod",
+            "data_type": "str",
+            "options": [
+              "==",
+              ">",
+              "<",
+              ">=",
+              "<="
+            ]
+          },
+          "conditionType": {
+            "__type": "field",
+            "key": "conditionType",
+            "data_type": "str"
+          },
+          "dynamicLocale": {
+            "__type": "field",
+            "key": "dynamicLocale",
+            "data_type": "bool",
+            "unneccesary": true,
+            "order": 200
+          },
+          "globalQuestCounterId": {
+            "__type": "field",
+            "key": "globalQuestCounterId",
+            "data_type": "str",
+            "unneccesary": true,
+            "order": 200
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "parentId": {
+            "__type": "field",
+            "key": "parentId",
+            "data_type": "str"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "str"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "int"
+          },
+          "visibilityConditions": {
+            "__type": "split_path_child",
+            "rel_path": "visibilityConditions",
+            "split_key_value": "visibilityConditions"
+          }
+        },
+        "FindItem": {
+          "conditionType": {
+            "__type": "field",
+            "key": "conditionType",
+            "data_type": "str"
+          },
+          "countInRaid": {
+            "__type": "field",
+            "key": "countInRaid",
+            "data_type": "bool"
+          },
+          "dogtagLevel": {
+            "__type": "field",
+            "key": "dogtagLevel",
+            "data_type": "int"
+          },
+          "dynamicLocale": {
+            "__type": "field",
+            "key": "dynamicLocale",
+            "data_type": "bool",
+            "unneccesary": true,
+            "order": 200
+          },
+          "globalQuestCounterId": {
+            "__type": "field",
+            "key": "globalQuestCounterId",
+            "data_type": "str",
+            "unneccesary": true,
+            "order": 200
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "isEncoded": {
+            "__type": "field",
+            "key": "isEncoded",
+            "data_type": "bool"
+          },
+          "maxDurability": {
+            "__type": "field",
+            "key": "maxDurability",
+            "data_type": "int"
+          },
+          "minDurability": {
+            "__type": "field",
+            "key": "minDurability",
+            "data_type": "int"
+          },
+          "onlyFoundInRaid": {
+            "__type": "field",
+            "key": "onlyFoundInRaid",
+            "data_type": "bool"
+          },
+          "parentId": {
+            "__type": "field",
+            "key": "parentId",
+            "data_type": "str"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "stringArray"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "int"
+          },
+          "visibilityConditions": {
+            "__type": "split_path_child",
+            "rel_path": "visibilityConditions",
+            "split_key_value": "visibilityConditions"
+          }
+        },
+        "VisitPlace": {
+          "conditionType": {
+            "__type": "field",
+            "key": "conditionType",
+            "data_type": "str"
+          },
+          "dynamicLocale": {
+            "__type": "field",
+            "key": "dynamicLocale",
+            "data_type": "bool",
+            "unneccesary": true,
+            "order": 200
+          },
+          "globalQuestCounterId": {
+            "__type": "field",
+            "key": "globalQuestCounterId",
+            "data_type": "str",
+            "unneccesary": true,
+            "order": 200
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "parentId": {
+            "__type": "field",
+            "key": "parentId",
+            "data_type": "str"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "str"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "int"
+          },
+          "visibilityConditions": {
+            "__type": "split_path_child",
+            "rel_path": "visibilityConditions",
+            "split_key_value": "visibilityConditions"
+          }
+        },
+        "WeaponAssembly": {
+          "baseAccuracy": {
+            "__type": "nested_schema",
+            "nested_schema": {
+              "compareMethod": {
+                "__type": "field",
+                "key": "compareMethod",
+                "data_type": "str",
+                "options": [
+                  "==",
+                  ">",
+                  "<",
+                  ">=",
+                  "<="
+                ]
+              },
+              "value": {
+                "__type": "field",
+                "key": "value",
+                "data_type": "int"
+              }
+            }
+          },
+          "conditionType": {
+            "__type": "field",
+            "key": "conditionType",
+            "data_type": "str"
+          },
+          "containsItems": {
+            "__type": "field",
+            "key": "containsItems",
+            "data_type": "stringArray"
+          },
+          "durability": {
+            "__type": "nested_schema",
+            "nested_schema": {
+              "compareMethod": {
+                "__type": "field",
+                "key": "compareMethod",
+                "data_type": "str",
+                "options": [
+                  "==",
+                  ">",
+                  "<",
+                  ">=",
+                  "<="
+                ]
+              },
+              "value": {
+                "__type": "field",
+                "key": "value",
+                "data_type": "int"
+              }
+            }
+          },
+          "dynamicLocale": {
+            "__type": "field",
+            "key": "dynamicLocale",
+            "data_type": "bool",
+            "unneccesary": true,
+            "order": 200
+          },
+          "effectiveDistance": {
+            "__type": "nested_schema",
+            "nested_schema": {
+              "compareMethod": {
+                "__type": "field",
+                "key": "compareMethod",
+                "data_type": "str",
+                "options": [
+                  "==",
+                  ">",
+                  "<",
+                  ">=",
+                  "<="
+                ]
+              },
+              "value": {
+                "__type": "field",
+                "key": "value",
+                "data_type": "int"
+              }
+            }
+          },
+          "emptyTacticalSlot": {
+            "__type": "nested_schema",
+            "nested_schema": {
+              "compareMethod": {
+                "__type": "field",
+                "key": "compareMethod",
+                "data_type": "str",
+                "options": [
+                  "==",
+                  ">",
+                  "<",
+                  ">=",
+                  "<="
+                ]
+              },
+              "value": {
+                "__type": "field",
+                "key": "value",
+                "data_type": "int"
+              }
+            }
+          },
+          "ergonomics": {
+            "__type": "nested_schema",
+            "nested_schema": {
+              "compareMethod": {
+                "__type": "field",
+                "key": "compareMethod",
+                "data_type": "str",
+                "options": [
+                  "==",
+                  ">",
+                  "<",
+                  ">=",
+                  "<="
+                ]
+              },
+              "value": {
+                "__type": "field",
+                "key": "value",
+                "data_type": "int"
+              }
+            }
+          },
+          "globalQuestCounterId": {
+            "__type": "field",
+            "key": "globalQuestCounterId",
+            "data_type": "str",
+            "unneccesary": true,
+            "order": 200
+          },
+          "hasItemFromCategory": {
+            "__type": "field",
+            "key": "hasItemFromCategory",
+            "data_type": "stringArray"
+          },
+          "height": {
+            "__type": "nested_schema",
+            "nested_schema": {
+              "compareMethod": {
+                "__type": "field",
+                "key": "compareMethod",
+                "data_type": "str",
+                "options": [
+                  "==",
+                  ">",
+                  "<",
+                  ">=",
+                  "<="
+                ]
+              },
+              "value": {
+                "__type": "field",
+                "key": "value",
+                "data_type": "int"
+              }
+            }
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "magazineCapacity": {
+            "__type": "nested_schema",
+            "nested_schema": {
+              "compareMethod": {
+                "__type": "field",
+                "key": "compareMethod",
+                "data_type": "str",
+                "options": [
+                  "==",
+                  ">",
+                  "<",
+                  ">=",
+                  "<="
+                ]
+              },
+              "value": {
+                "__type": "field",
+                "key": "value",
+                "data_type": "int"
+              }
+            }
+          },
+          "muzzleVelocity": {
+            "__type": "nested_schema",
+            "nested_schema": {
+              "compareMethod": {
+                "__type": "field",
+                "key": "compareMethod",
+                "data_type": "str",
+                "options": [
+                  "==",
+                  ">",
+                  "<",
+                  ">=",
+                  "<="
+                ]
+              },
+              "value": {
+                "__type": "field",
+                "key": "value",
+                "data_type": "int"
+              }
+            }
+          },
+          "parentId": {
+            "__type": "field",
+            "key": "parentId",
+            "data_type": "str"
+          },
+          "recoil": {
+            "__type": "nested_schema",
+            "nested_schema": {
+              "compareMethod": {
+                "__type": "field",
+                "key": "compareMethod",
+                "data_type": "str",
+                "options": [
+                  "==",
+                  ">",
+                  "<",
+                  ">=",
+                  "<="
+                ]
+              },
+              "value": {
+                "__type": "field",
+                "key": "value",
+                "data_type": "int"
+              }
+            }
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "stringArray"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "int"
+          },
+          "visibilityConditions": {
+            "__type": "split_path_child",
+            "rel_path": "visibilityConditions",
+            "split_key_value": "visibilityConditions"
+          },
+          "weight": {
+            "__type": "nested_schema",
+            "nested_schema": {
+              "compareMethod": {
+                "__type": "field",
+                "key": "compareMethod",
+                "data_type": "str",
+                "options": [
+                  "==",
+                  ">",
+                  "<",
+                  ">=",
+                  "<="
+                ]
+              },
+              "value": {
+                "__type": "field",
+                "key": "value",
+                "data_type": "int"
+              }
+            }
+          },
+          "width": {
+            "__type": "nested_schema",
+            "nested_schema": {
+              "compareMethod": {
+                "__type": "field",
+                "key": "compareMethod",
+                "data_type": "str",
+                "options": [
+                  "==",
+                  ">",
+                  "<",
+                  ">=",
+                  "<="
+                ]
+              },
+              "value": {
+                "__type": "field",
+                "key": "value",
+                "data_type": "int"
+              }
+            }
+          }
+        },
+        "TraderLoyalty": {
+          "compareMethod": {
+            "__type": "field",
+            "key": "compareMethod",
+            "data_type": "str",
+            "options": [
+              "==",
+              ">",
+              "<",
+              ">=",
+              "<="
+            ]
+          },
+          "conditionType": {
+            "__type": "field",
+            "key": "conditionType",
+            "data_type": "str"
+          },
+          "dynamicLocale": {
+            "__type": "field",
+            "key": "dynamicLocale",
+            "data_type": "bool",
+            "unneccesary": true,
+            "order": 200
+          },
+          "globalQuestCounterId": {
+            "__type": "field",
+            "key": "globalQuestCounterId",
+            "data_type": "str",
+            "unneccesary": true,
+            "order": 200
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "parentId": {
+            "__type": "field",
+            "key": "parentId",
+            "data_type": "str"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "str"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "int"
+          },
+          "visibilityConditions": {
+            "__type": "split_path_child",
+            "rel_path": "visibilityConditions",
+            "split_key_value": "visibilityConditions"
+          }
+        },
+        "HideoutArea": {
+          "areaType": {
+            "__type": "field",
+            "key": "areaType",
+            "data_type": "int"
+          },
+          "compareMethod": {
+            "__type": "field",
+            "key": "compareMethod",
+            "data_type": "str",
+            "options": [
+              "==",
+              ">",
+              "<",
+              ">=",
+              "<="
+            ]
+          },
+          "conditionType": {
+            "__type": "field",
+            "key": "conditionType",
+            "data_type": "str"
+          },
+          "dynamicLocale": {
+            "__type": "field",
+            "key": "dynamicLocale",
+            "data_type": "bool",
+            "unneccesary": true,
+            "order": 200
+          },
+          "globalQuestCounterId": {
+            "__type": "field",
+            "key": "globalQuestCounterId",
+            "data_type": "str",
+            "unneccesary": true,
+            "order": 200
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "parentId": {
+            "__type": "field",
+            "key": "parentId",
+            "data_type": "str"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "int"
+          },
+          "visibilityConditions": {
+            "__type": "split_path_child",
+            "rel_path": "visibilityConditions",
+            "split_key_value": "visibilityConditions"
+          }
+        },
+        "HandoverItem": {
+          "conditionType": {
+            "__type": "field",
+            "key": "conditionType",
+            "data_type": "str"
+          },
+          "dogtagLevel": {
+            "__type": "field",
+            "key": "dogtagLevel",
+            "data_type": "int"
+          },
+          "dynamicLocale": {
+            "__type": "field",
+            "key": "dynamicLocale",
+            "data_type": "bool",
+            "unneccesary": true,
+            "order": 200
+          },
+          "globalQuestCounterId": {
+            "__type": "field",
+            "key": "globalQuestCounterId",
+            "data_type": "str",
+            "unneccesary": true,
+            "order": 200
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "isEncoded": {
+            "__type": "field",
+            "key": "isEncoded",
+            "data_type": "bool"
+          },
+          "maxDurability": {
+            "__type": "field",
+            "key": "maxDurability",
+            "data_type": "int"
+          },
+          "minDurability": {
+            "__type": "field",
+            "key": "minDurability",
+            "data_type": "int"
+          },
+          "onlyFoundInRaid": {
+            "__type": "field",
+            "key": "onlyFoundInRaid",
+            "data_type": "bool"
+          },
+          "parentId": {
+            "__type": "field",
+            "key": "parentId",
+            "data_type": "str"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "stringArray"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "int"
+          },
+          "visibilityConditions": {
+            "__type": "split_path_child",
+            "rel_path": "visibilityConditions",
+            "split_key_value": "visibilityConditions"
+          }
+        },
+        "GlobalVariableValue": {
+          "compareMethod": {
+            "__type": "field",
+            "key": "compareMethod",
+            "data_type": "str",
+            "options": [
+              "==",
+              ">",
+              "<",
+              ">=",
+              "<="
+            ]
+          },
+          "conditionType": {
+            "__type": "field",
+            "key": "conditionType",
+            "data_type": "str"
+          },
+          "dynamicLocale": {
+            "__type": "field",
+            "key": "dynamicLocale",
+            "data_type": "bool",
+            "unneccesary": true,
+            "order": 200
+          },
+          "globalQuestCounterId": {
+            "__type": "field",
+            "key": "globalQuestCounterId",
+            "data_type": "str",
+            "unneccesary": true,
+            "order": 200
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "parentId": {
+            "__type": "field",
+            "key": "parentId",
+            "data_type": "str"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "str"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "int"
+          },
+          "visibilityConditions": {
+            "__type": "split_path_child",
+            "rel_path": "visibilityConditions",
+            "split_key_value": "visibilityConditions"
+          }
+        },
+        "SellItemToTrader": {
+          "conditionType": {
+            "__type": "field",
+            "key": "conditionType",
+            "data_type": "str"
+          },
+          "dogtagLevel": {
+            "__type": "field",
+            "key": "dogtagLevel",
+            "data_type": "int"
+          },
+          "dynamicLocale": {
+            "__type": "field",
+            "key": "dynamicLocale",
+            "data_type": "bool",
+            "unneccesary": true,
+            "order": 200
+          },
+          "globalQuestCounterId": {
+            "__type": "field",
+            "key": "globalQuestCounterId",
+            "data_type": "str",
+            "unneccesary": true,
+            "order": 200
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "isEncoded": {
+            "__type": "field",
+            "key": "isEncoded",
+            "data_type": "bool"
+          },
+          "maxDurability": {
+            "__type": "field",
+            "key": "maxDurability",
+            "data_type": "int"
+          },
+          "minDurability": {
+            "__type": "field",
+            "key": "minDurability",
+            "data_type": "int"
+          },
+          "onlyFoundInRaid": {
+            "__type": "field",
+            "key": "onlyFoundInRaid",
+            "data_type": "bool"
+          },
+          "parentId": {
+            "__type": "field",
+            "key": "parentId",
+            "data_type": "str"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "stringArray"
+          },
+          "traderId": {
+            "__type": "field",
+            "key": "traderId",
+            "data_type": "str"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "int"
+          },
+          "visibilityConditions": {
+            "__type": "split_path_child",
+            "rel_path": "visibilityConditions",
+            "split_key_value": "visibilityConditions"
+          }
+        },
+        "Quest": {
+          "availableAfter": {
+            "__type": "field",
+            "key": "availableAfter",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "conditionType": {
+            "__type": "field",
+            "key": "conditionType",
+            "data_type": "str"
+          },
+          "dispersion": {
+            "__type": "field",
+            "key": "dispersion",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "dynamicLocale": {
+            "__type": "field",
+            "key": "dynamicLocale",
+            "data_type": "bool",
+            "unneccesary": true,
+            "order": 200
+          },
+          "globalQuestCounterId": {
+            "__type": "field",
+            "key": "globalQuestCounterId",
+            "data_type": "str",
+            "unneccesary": true,
+            "order": 200
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "parentId": {
+            "__type": "field",
+            "key": "parentId",
+            "data_type": "str"
+          },
+          "status": {
+            "__type": "field",
+            "key": "status",
+            "data_type": "numberArray"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "str"
+          },
+          "visibilityConditions": {
+            "__type": "split_path_child",
+            "rel_path": "visibilityConditions",
+            "split_key_value": "visibilityConditions"
+          }
+        }
+      },
+      "childs": {
+        "CounterCreator": {
+          "__type": "split_path_child",
+          "rel_path": "counter.conditions",
+          "split_key_value": "CounterCreator",
+          "value": {
+            "__type": "split_path",
+            "path": "*",
+            "split_key": "conditionType",
+            "fields": {
+              "conditionType": {
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "target": {
+                  "__type": "field",
+                  "key": "target",
+                  "data_type": "stringArray"
+                },
+                "status": {
+                  "__type": "field",
+                  "key": "status",
+                  "data_type": "stringArray"
+                },
+                "IncludeNotEquippedItems": {
+                  "__type": "field",
+                  "key": "IncludeNotEquippedItems",
+                  "data_type": "bool"
+                },
+                "equipmentExclusive": {
+                  "__type": "field",
+                  "key": "equipmentExclusive",
+                  "data_type": "stringstringArray"
+                },
+                "equipmentInclusive": {
+                  "__type": "field",
+                  "key": "equipmentInclusive",
+                  "data_type": "stringstringArray"
+                },
+                "bodyPart": {
+                  "__type": "field",
+                  "key": "bodyPart",
+                  "data_type": "optionsArray",
+                  "options": [
+                    "Head",
+                    "Stomach"
+                  ]
+                },
+                "compareMethod": {
+                  "__type": "field",
+                  "key": "compareMethod",
+                  "data_type": "str",
+                  "options": [
+                    "==",
+                    ">",
+                    "<",
+                    ">=",
+                    "<="
+                  ]
+                },
+                "daytime": {
+                  "__type": "nested_schema",
+                  "nested_schema": {
+                    "from": {
+                      "__type": "field",
+                      "key": "from",
+                      "data_type": "int"
+                    },
+                    "to": {
+                      "__type": "field",
+                      "key": "to",
+                      "data_type": "int"
+                    }
+                  }
+                },
+                "distance": {
+                  "__type": "nested_schema",
+                  "nested_schema": {
+                    "compareMethod": {
+                      "__type": "field",
+                      "key": "compareMethod",
+                      "data_type": "str",
+                      "options": [
+                        "==",
+                        ">",
+                        "<",
+                        ">=",
+                        "<="
+                      ]
+                    },
+                    "value": {
+                      "__type": "field",
+                      "key": "value",
+                      "data_type": "int"
+                    }
+                  }
+                },
+                "enemyEquipmentExclusive": {
+                  "__type": "field",
+                  "key": "enemyEquipmentExclusive",
+                  "data_type": "list"
+                },
+                "enemyEquipmentInclusive": {
+                  "__type": "field",
+                  "key": "enemyEquipmentInclusive",
+                  "data_type": "list"
+                },
+                "enemyHealthEffects": {
+                  "__type": "field",
+                  "key": "enemyHealthEffects",
+                  "data_type": "list"
+                },
+                "resetOnSessionEnd": {
+                  "__type": "field",
+                  "key": "resetOnSessionEnd",
+                  "data_type": "bool"
+                },
+                "savageRole": {
+                  "__type": "field",
+                  "key": "savageRole",
+                  "data_type": "list"
+                },
+                "value": {
+                  "__type": "field",
+                  "key": "value",
+                  "data_type": "int"
+                },
+                "weapon": {
+                  "__type": "field",
+                  "key": "weapon",
+                  "data_type": "stringArray"
+                },
+                "weaponCaliber": {
+                  "__type": "field",
+                  "key": "weaponCaliber",
+                  "data_type": "list"
+                },
+                "weaponModsExclusive": {
+                  "__type": "field",
+                  "key": "weaponModsExclusive",
+                  "data_type": "list"
+                },
+                "weaponModsInclusive": {
+                  "__type": "field",
+                  "key": "weaponModsInclusive",
+                  "data_type": "stringstringArray"
+                },
+                "zoneIds": {
+                  "__type": "field",
+                  "key": "zoneIds",
+                  "data_type": "stringArray"
+                },
+                "bodyPartsWithEffects": {
+                  "__type": "field",
+                  "key": "bodyPartsWithEffects",
+                  "data_type": "list",
+                  "array_nested": {
+                    "bodyParts": {
+                      "__type": "field",
+                      "key": "bodyParts",
+                      "data_type": "optionsArray",
+                      "options": [
+                        "Head",
+                        "Stomach"
+                      ]
+                    },
+                    "effects": {
+                      "__type": "field",
+                      "key": "effects",
+                      "data_type": "stringArray"
+                    }
+                  }
+                },
+                "energy": {
+                  "__type": "nested_schema",
+                  "nested_schema": {
+                    "compareMethod": {
+                      "__type": "field",
+                      "key": "compareMethod",
+                      "data_type": "str",
+                      "options": [
+                        "==",
+                        ">",
+                        "<",
+                        ">=",
+                        "<="
+                      ]
+                    },
+                    "value": {
+                      "__type": "field",
+                      "key": "value",
+                      "data_type": "int"
+                    }
+                  }
+                },
+                "hydration": {
+                  "__type": "nested_schema",
+                  "nested_schema": {
+                    "compareMethod": {
+                      "__type": "field",
+                      "key": "compareMethod",
+                      "data_type": "str",
+                      "options": [
+                        "==",
+                        ">",
+                        "<",
+                        ">=",
+                        "<="
+                      ]
+                    },
+                    "value": {
+                      "__type": "field",
+                      "key": "value",
+                      "data_type": "int"
+                    }
+                  }
+                },
+                "time": {
+                  "__type": "nested_schema",
+                  "nested_schema": {
+                    "compareMethod": {
+                      "__type": "field",
+                      "key": "compareMethod",
+                      "data_type": "str",
+                      "options": [
+                        "==",
+                        ">",
+                        "<",
+                        ">=",
+                        "<="
+                      ]
+                    },
+                    "value": {
+                      "__type": "field",
+                      "key": "value",
+                      "data_type": "int"
+                    }
+                  }
+                },
+                "exitName": {
+                  "__type": "field",
+                  "key": "exitName",
+                  "data_type": "str"
+                }
+              },
+              "LaunchFlare": {
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "target": {
+                  "__type": "field",
+                  "key": "target",
+                  "data_type": "str"
+                }
+              },
+              "ExitName": {
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "exitName": {
+                  "__type": "field",
+                  "key": "exitName",
+                  "data_type": "str"
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                }
+              },
+              "InZone": {
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "zoneIds": {
+                  "__type": "field",
+                  "key": "zoneIds",
+                  "data_type": "stringArray"
+                }
+              },
+              "ArenaPlayerInTeamPlace": {
+                "compareMethod": {
+                  "__type": "field",
+                  "key": "compareMethod",
+                  "data_type": "str",
+                  "options": [
+                    "==",
+                    ">",
+                    "<",
+                    ">=",
+                    "<="
+                  ]
+                },
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "value": {
+                  "__type": "field",
+                  "key": "value",
+                  "data_type": "int"
+                }
+              },
+              "ExitStatus": {
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "status": {
+                  "__type": "field",
+                  "key": "status",
+                  "data_type": "stringArray"
+                }
+              },
+              "Equipment": {
+                "IncludeNotEquippedItems": {
+                  "__type": "field",
+                  "key": "IncludeNotEquippedItems",
+                  "data_type": "bool"
+                },
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "equipmentExclusive": {
+                  "__type": "field",
+                  "key": "equipmentExclusive",
+                  "data_type": "stringstringArray"
+                },
+                "equipmentInclusive": {
+                  "__type": "field",
+                  "key": "equipmentInclusive",
+                  "data_type": "stringstringArray"
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                }
+              },
+              "Time": {
+                "compareMethod": {
+                  "__type": "field",
+                  "key": "compareMethod",
+                  "data_type": "str",
+                  "options": [
+                    "==",
+                    ">",
+                    "<",
+                    ">=",
+                    "<="
+                  ]
+                },
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "value": {
+                  "__type": "field",
+                  "key": "value",
+                  "data_type": "int"
+                }
+              },
+              "Kills": {
+                "bodyPart": {
+                  "__type": "field",
+                  "key": "bodyPart",
+                  "data_type": "optionsArray",
+                  "options": [
+                    "Head",
+                    "Stomach"
+                  ]
+                },
+                "compareMethod": {
+                  "__type": "field",
+                  "key": "compareMethod",
+                  "data_type": "str",
+                  "options": [
+                    "==",
+                    ">",
+                    "<",
+                    ">=",
+                    "<="
+                  ]
+                },
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "daytime": {
+                  "__type": "nested_schema",
+                  "nested_schema": {
+                    "from": {
+                      "__type": "field",
+                      "key": "from",
+                      "data_type": "int"
+                    },
+                    "to": {
+                      "__type": "field",
+                      "key": "to",
+                      "data_type": "int"
+                    }
+                  }
+                },
+                "distance": {
+                  "__type": "nested_schema",
+                  "nested_schema": {
+                    "compareMethod": {
+                      "__type": "field",
+                      "key": "compareMethod",
+                      "data_type": "str",
+                      "options": [
+                        "==",
+                        ">",
+                        "<",
+                        ">=",
+                        "<="
+                      ]
+                    },
+                    "value": {
+                      "__type": "field",
+                      "key": "value",
+                      "data_type": "int"
+                    }
+                  }
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "enemyEquipmentExclusive": {
+                  "__type": "field",
+                  "key": "enemyEquipmentExclusive",
+                  "data_type": "stringstringArray"
+                },
+                "enemyEquipmentInclusive": {
+                  "__type": "field",
+                  "key": "enemyEquipmentInclusive",
+                  "data_type": "stringstringArray"
+                },
+                "enemyHealthEffects": {
+                  "__type": "field",
+                  "key": "enemyHealthEffects",
+                  "data_type": "list",
+                  "array_nested": {
+                    "bodyParts": {
+                      "__type": "field",
+                      "key": "bodyParts",
+                      "data_type": "optionsArray",
+                      "options": [
+                        "Head",
+                        "Stomach"
+                      ]
+                    },
+                    "effects": {
+                      "__type": "field",
+                      "key": "effects",
+                      "data_type": "stringArray"
+                    }
+                  }
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "resetOnSessionEnd": {
+                  "__type": "field",
+                  "key": "resetOnSessionEnd",
+                  "data_type": "bool"
+                },
+                "savageRole": {
+                  "__type": "field",
+                  "key": "savageRole",
+                  "data_type": "stringArray"
+                },
+                "target": {
+                  "__type": "field",
+                  "key": "target",
+                  "data_type": "str"
+                },
+                "value": {
+                  "__type": "field",
+                  "key": "value",
+                  "data_type": "int"
+                },
+                "weapon": {
+                  "__type": "field",
+                  "key": "weapon",
+                  "data_type": "stringArray"
+                },
+                "weaponCaliber": {
+                  "__type": "field",
+                  "key": "weaponCaliber",
+                  "data_type": "stringArray"
+                },
+                "weaponModsExclusive": {
+                  "__type": "field",
+                  "key": "weaponModsExclusive",
+                  "data_type": "stringstringArray"
+                },
+                "weaponModsInclusive": {
+                  "__type": "field",
+                  "key": "weaponModsInclusive",
+                  "data_type": "stringstringArray"
+                }
+              },
+              "Shots": {
+                "bodyPart": {
+                  "__type": "field",
+                  "key": "bodyPart",
+                  "data_type": "optionsArray",
+                  "options": [
+                    "Head",
+                    "Stomach"
+                  ]
+                },
+                "compareMethod": {
+                  "__type": "field",
+                  "key": "compareMethod",
+                  "data_type": "str",
+                  "options": [
+                    "==",
+                    ">",
+                    "<",
+                    ">=",
+                    "<="
+                  ]
+                },
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "daytime": {
+                  "__type": "nested_schema",
+                  "nested_schema": {
+                    "from": {
+                      "__type": "field",
+                      "key": "from",
+                      "data_type": "int"
+                    },
+                    "to": {
+                      "__type": "field",
+                      "key": "to",
+                      "data_type": "int"
+                    }
+                  }
+                },
+                "distance": {
+                  "__type": "nested_schema",
+                  "nested_schema": {
+                    "compareMethod": {
+                      "__type": "field",
+                      "key": "compareMethod",
+                      "data_type": "str",
+                      "options": [
+                        "==",
+                        ">",
+                        "<",
+                        ">=",
+                        "<="
+                      ]
+                    },
+                    "value": {
+                      "__type": "field",
+                      "key": "value",
+                      "data_type": "int"
+                    }
+                  }
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "enemyEquipmentExclusive": {
+                  "__type": "field",
+                  "key": "enemyEquipmentExclusive",
+                  "data_type": "list"
+                },
+                "enemyEquipmentInclusive": {
+                  "__type": "field",
+                  "key": "enemyEquipmentInclusive",
+                  "data_type": "list"
+                },
+                "enemyHealthEffects": {
+                  "__type": "field",
+                  "key": "enemyHealthEffects",
+                  "data_type": "list"
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "resetOnSessionEnd": {
+                  "__type": "field",
+                  "key": "resetOnSessionEnd",
+                  "data_type": "bool"
+                },
+                "savageRole": {
+                  "__type": "field",
+                  "key": "savageRole",
+                  "data_type": "list"
+                },
+                "target": {
+                  "__type": "field",
+                  "key": "target",
+                  "data_type": "str"
+                },
+                "value": {
+                  "__type": "field",
+                  "key": "value",
+                  "data_type": "int"
+                },
+                "weapon": {
+                  "__type": "field",
+                  "key": "weapon",
+                  "data_type": "stringArray"
+                },
+                "weaponCaliber": {
+                  "__type": "field",
+                  "key": "weaponCaliber",
+                  "data_type": "list"
+                },
+                "weaponModsExclusive": {
+                  "__type": "field",
+                  "key": "weaponModsExclusive",
+                  "data_type": "list"
+                },
+                "weaponModsInclusive": {
+                  "__type": "field",
+                  "key": "weaponModsInclusive",
+                  "data_type": "list"
+                }
+              },
+              "Location": {
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "target": {
+                  "__type": "field",
+                  "key": "target",
+                  "data_type": "stringArray"
+                }
+              },
+              "HealthEffect": {
+                "bodyPartsWithEffects": {
+                  "__type": "field",
+                  "key": "bodyPartsWithEffects",
+                  "data_type": "list",
+                  "array_nested": {
+                    "bodyParts": {
+                      "__type": "field",
+                      "key": "bodyParts",
+                      "data_type": "optionsArray",
+                      "options": [
+                        "Head",
+                        "Stomach"
+                      ]
+                    },
+                    "effects": {
+                      "__type": "field",
+                      "key": "effects",
+                      "data_type": "stringArray"
+                    }
+                  }
+                },
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "energy": {
+                  "__type": "nested_schema",
+                  "nested_schema": {
+                    "compareMethod": {
+                      "__type": "field",
+                      "key": "compareMethod",
+                      "data_type": "str",
+                      "options": [
+                        "==",
+                        ">",
+                        "<",
+                        ">=",
+                        "<="
+                      ]
+                    },
+                    "value": {
+                      "__type": "field",
+                      "key": "value",
+                      "data_type": "int"
+                    }
+                  }
+                },
+                "hydration": {
+                  "__type": "nested_schema",
+                  "nested_schema": {
+                    "compareMethod": {
+                      "__type": "field",
+                      "key": "compareMethod",
+                      "data_type": "str",
+                      "options": [
+                        "==",
+                        ">",
+                        "<",
+                        ">=",
+                        "<="
+                      ]
+                    },
+                    "value": {
+                      "__type": "field",
+                      "key": "value",
+                      "data_type": "int"
+                    }
+                  }
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "time": {
+                  "__type": "nested_schema",
+                  "nested_schema": {
+                    "compareMethod": {
+                      "__type": "field",
+                      "key": "compareMethod",
+                      "data_type": "str",
+                      "options": [
+                        "==",
+                        ">",
+                        "<",
+                        ">=",
+                        "<="
+                      ]
+                    },
+                    "value": {
+                      "__type": "field",
+                      "key": "value",
+                      "data_type": "int"
+                    }
+                  }
+                }
+              },
+              "HealthBuff": {
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "target": {
+                  "__type": "field",
+                  "key": "target",
+                  "data_type": "stringArray"
+                }
+              },
+              "UnderArtilleryFire": {
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                }
+              },
+              "ArenaMatchPlace": {
+                "compareMethod": {
+                  "__type": "field",
+                  "key": "compareMethod",
+                  "data_type": "str",
+                  "options": [
+                    "==",
+                    ">",
+                    "<",
+                    ">=",
+                    "<="
+                  ]
+                },
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "value": {
+                  "__type": "field",
+                  "key": "value",
+                  "data_type": "int"
+                }
+              },
+              "ArenaGameMode": {
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "target": {
+                  "__type": "field",
+                  "key": "target",
+                  "data_type": "stringArray"
+                }
+              },
+              "VisitPlace": {
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "target": {
+                  "__type": "field",
+                  "key": "target",
+                  "data_type": "str"
+                },
+                "value": {
+                  "__type": "field",
+                  "key": "value",
+                  "data_type": "int"
+                }
+              }
+            },
+            "childs": {}
+          }
+        },
+        "visibilityConditions": {
+          "__type": "split_path_child",
+          "rel_path": "visibilityConditions",
+          "split_key_value": "visibilityConditions",
+          "value": {
+            "__type": "split_path",
+            "path": "*",
+            "split_key": "conditionType",
+            "fields": {
+              "CompleteCondition": {
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "target": {
+                  "__type": "field",
+                  "key": "target",
+                  "data_type": "str"
+                }
+              },
+              "conditionType": {
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "target": {
+                  "__type": "field",
+                  "key": "target",
+                  "data_type": "str"
+                }
+              }
+            },
+            "childs": {}
+          }
+        }
+      }
+    },
+    {
+      "__type": "split_path",
+      "path": "*.conditions.AvailableForStart",
+      "split_key": "conditionType",
+      "fields": {
+        "TraderLoyalty": {
+          "compareMethod": {
+            "__type": "field",
+            "key": "compareMethod",
+            "data_type": "str",
+            "options": [
+              "==",
+              ">",
+              "<",
+              ">=",
+              "<="
+            ]
+          },
+          "conditionType": {
+            "__type": "field",
+            "key": "conditionType",
+            "data_type": "str"
+          },
+          "dynamicLocale": {
+            "__type": "field",
+            "key": "dynamicLocale",
+            "data_type": "bool",
+            "unneccesary": true,
+            "order": 200
+          },
+          "globalQuestCounterId": {
+            "__type": "field",
+            "key": "globalQuestCounterId",
+            "data_type": "str",
+            "unneccesary": true,
+            "order": 200
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "parentId": {
+            "__type": "field",
+            "key": "parentId",
+            "data_type": "str"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "str"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "int"
+          },
+          "visibilityConditions": {
+            "__type": "split_path_child",
+            "rel_path": "visibilityConditions",
+            "split_key_value": "visibilityConditions"
+          }
+        },
+        "Level": {
+          "compareMethod": {
+            "__type": "field",
+            "key": "compareMethod",
+            "data_type": "str",
+            "options": [
+              "==",
+              ">",
+              "<",
+              ">=",
+              "<="
+            ]
+          },
+          "conditionType": {
+            "__type": "field",
+            "key": "conditionType",
+            "data_type": "str"
+          },
+          "dynamicLocale": {
+            "__type": "field",
+            "key": "dynamicLocale",
+            "data_type": "bool",
+            "unneccesary": true,
+            "order": 200
+          },
+          "globalQuestCounterId": {
+            "__type": "field",
+            "key": "globalQuestCounterId",
+            "data_type": "str",
+            "unneccesary": true,
+            "order": 200
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "parentId": {
+            "__type": "field",
+            "key": "parentId",
+            "data_type": "str"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "int"
+          },
+          "visibilityConditions": {
+            "__type": "split_path_child",
+            "rel_path": "visibilityConditions",
+            "split_key_value": "visibilityConditions"
+          }
+        },
+        "TraderStanding": {
+          "compareMethod": {
+            "__type": "field",
+            "key": "compareMethod",
+            "data_type": "str",
+            "options": [
+              "==",
+              ">",
+              "<",
+              ">=",
+              "<="
+            ]
+          },
+          "conditionType": {
+            "__type": "field",
+            "key": "conditionType",
+            "data_type": "str"
+          },
+          "dynamicLocale": {
+            "__type": "field",
+            "key": "dynamicLocale",
+            "data_type": "bool",
+            "unneccesary": true,
+            "order": 200
+          },
+          "globalQuestCounterId": {
+            "__type": "field",
+            "key": "globalQuestCounterId",
+            "data_type": "str",
+            "unneccesary": true,
+            "order": 200
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "parentId": {
+            "__type": "field",
+            "key": "parentId",
+            "data_type": "str"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "str"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "int"
+          },
+          "visibilityConditions": {
+            "__type": "split_path_child",
+            "rel_path": "visibilityConditions",
+            "split_key_value": "visibilityConditions"
+          }
+        },
+        "Quest": {
+          "availableAfter": {
+            "__type": "field",
+            "key": "availableAfter",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "conditionType": {
+            "__type": "field",
+            "key": "conditionType",
+            "data_type": "str"
+          },
+          "dispersion": {
+            "__type": "field",
+            "key": "dispersion",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "dynamicLocale": {
+            "__type": "field",
+            "key": "dynamicLocale",
+            "data_type": "bool",
+            "unneccesary": true,
+            "order": 200
+          },
+          "globalQuestCounterId": {
+            "__type": "field",
+            "key": "globalQuestCounterId",
+            "data_type": "str",
+            "unneccesary": true,
+            "order": 200
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "parentId": {
+            "__type": "field",
+            "key": "parentId",
+            "data_type": "str"
+          },
+          "status": {
+            "__type": "field",
+            "key": "status",
+            "data_type": "numberArray"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "str"
+          },
+          "visibilityConditions": {
+            "__type": "split_path_child",
+            "rel_path": "visibilityConditions",
+            "split_key_value": "visibilityConditions"
+          }
+        }
+      },
+      "childs": {
+        "CounterCreator": {
+          "__type": "split_path_child",
+          "rel_path": "counter.conditions",
+          "split_key_value": "CounterCreator",
+          "value": null
+        },
+        "visibilityConditions": {
+          "__type": "split_path_child",
+          "rel_path": "visibilityConditions",
+          "split_key_value": "visibilityConditions",
+          "value": {
+            "__type": "split_path",
+            "path": "*",
+            "split_key": "conditionType",
+            "fields": {
+              "CompleteCondition": {
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "target": {
+                  "__type": "field",
+                  "key": "target",
+                  "data_type": "str"
+                }
+              },
+              "conditionType": {
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "target": {
+                  "__type": "field",
+                  "key": "target",
+                  "data_type": "str"
+                }
+              }
+            },
+            "childs": {}
+          }
+        }
+      }
+    },
+    {
+      "__type": "split_path",
+      "path": "*.conditions.Fail",
+      "split_key": "conditionType",
+      "fields": {
+        "LeaveItemAtLocation": {
+          "conditionType": {
+            "__type": "field",
+            "key": "conditionType",
+            "data_type": "str"
+          },
+          "dogtagLevel": {
+            "__type": "field",
+            "key": "dogtagLevel",
+            "data_type": "int"
+          },
+          "dynamicLocale": {
+            "__type": "field",
+            "key": "dynamicLocale",
+            "data_type": "bool",
+            "unneccesary": true,
+            "order": 200
+          },
+          "globalQuestCounterId": {
+            "__type": "field",
+            "key": "globalQuestCounterId",
+            "data_type": "str",
+            "unneccesary": true,
+            "order": 200
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "isEncoded": {
+            "__type": "field",
+            "key": "isEncoded",
+            "data_type": "bool"
+          },
+          "maxDurability": {
+            "__type": "field",
+            "key": "maxDurability",
+            "data_type": "int"
+          },
+          "minDurability": {
+            "__type": "field",
+            "key": "minDurability",
+            "data_type": "int"
+          },
+          "onlyFoundInRaid": {
+            "__type": "field",
+            "key": "onlyFoundInRaid",
+            "data_type": "bool"
+          },
+          "parentId": {
+            "__type": "field",
+            "key": "parentId",
+            "data_type": "str"
+          },
+          "plantTime": {
+            "__type": "field",
+            "key": "plantTime",
+            "data_type": "int"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "arrayAdvancedSelect",
+            "storeId": "items"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "int"
+          },
+          "visibilityConditions": {
+            "__type": "split_path_child",
+            "rel_path": "visibilityConditions",
+            "split_key_value": "visibilityConditions"
+          },
+          "zoneId": {
+            "__type": "field",
+            "key": "zoneId",
+            "data_type": "str"
+          }
+        },
+        "CounterCreator": {
+          "completeInSeconds": {
+            "__type": "field",
+            "key": "completeInSeconds",
+            "data_type": "int"
+          },
+          "conditionType": {
+            "__type": "field",
+            "key": "conditionType",
+            "data_type": "str"
+          },
+          "counter": {
+            "__type": "nested_schema",
+            "nested_schema": {
+              "conditions": {
+                "__type": "field",
+                "key": "conditions",
+                "data_type": "list",
+                "array_nested": {
+                  "conditionType": {
+                    "__type": "field",
+                    "key": "conditionType",
+                    "data_type": "str"
+                  },
+                  "dynamicLocale": {
+                    "__type": "field",
+                    "key": "dynamicLocale",
+                    "data_type": "bool",
+                    "unneccesary": true,
+                    "order": 200
+                  },
+                  "id": {
+                    "__type": "field",
+                    "key": "id",
+                    "data_type": "str"
+                  },
+                  "status": {
+                    "__type": "field",
+                    "key": "status",
+                    "data_type": "stringArray"
+                  },
+                  "bodyPart": {
+                    "__type": "field",
+                    "key": "bodyPart",
+                    "data_type": "optionsArray",
+                    "options": [
+                      "Head",
+                      "Stomach"
+                    ]
+                  },
+                  "compareMethod": {
+                    "__type": "field",
+                    "key": "compareMethod",
+                    "data_type": "str",
+                    "options": [
+                      "==",
+                      ">",
+                      "<",
+                      ">=",
+                      "<="
+                    ]
+                  },
+                  "daytime": {
+                    "from": {
+                      "__type": "field",
+                      "key": "from",
+                      "data_type": "int"
+                    },
+                    "to": {
+                      "__type": "field",
+                      "key": "to",
+                      "data_type": "int"
+                    }
+                  },
+                  "distance": {
+                    "compareMethod": {
+                      "__type": "field",
+                      "key": "compareMethod",
+                      "data_type": "str",
+                      "options": [
+                        "==",
+                        ">",
+                        "<",
+                        ">=",
+                        "<="
+                      ]
+                    },
+                    "value": {
+                      "__type": "field",
+                      "key": "value",
+                      "data_type": "int"
+                    }
+                  },
+                  "enemyEquipmentExclusive": {
+                    "__type": "field",
+                    "key": "enemyEquipmentExclusive",
+                    "data_type": "stringstringArray"
+                  },
+                  "enemyEquipmentInclusive": {
+                    "__type": "field",
+                    "key": "enemyEquipmentInclusive",
+                    "data_type": "list"
+                  },
+                  "enemyHealthEffects": {
+                    "__type": "field",
+                    "key": "enemyHealthEffects",
+                    "data_type": "list"
+                  },
+                  "resetOnSessionEnd": {
+                    "__type": "field",
+                    "key": "resetOnSessionEnd",
+                    "data_type": "bool"
+                  },
+                  "savageRole": {
+                    "__type": "field",
+                    "key": "savageRole",
+                    "data_type": "stringArray"
+                  },
+                  "target": {
+                    "__type": "field",
+                    "key": "target",
+                    "data_type": "str"
+                  },
+                  "value": {
+                    "__type": "field",
+                    "key": "value",
+                    "data_type": "int"
+                  },
+                  "weapon": {
+                    "__type": "field",
+                    "key": "weapon",
+                    "data_type": "list"
+                  },
+                  "weaponCaliber": {
+                    "__type": "field",
+                    "key": "weaponCaliber",
+                    "data_type": "list"
+                  },
+                  "weaponModsExclusive": {
+                    "__type": "field",
+                    "key": "weaponModsExclusive",
+                    "data_type": "list"
+                  },
+                  "weaponModsInclusive": {
+                    "__type": "field",
+                    "key": "weaponModsInclusive",
+                    "data_type": "list"
+                  },
+                  "IncludeNotEquippedItems": {
+                    "__type": "field",
+                    "key": "IncludeNotEquippedItems",
+                    "data_type": "bool"
+                  },
+                  "equipmentExclusive": {
+                    "__type": "field",
+                    "key": "equipmentExclusive",
+                    "data_type": "stringstringArray"
+                  },
+                  "equipmentInclusive": {
+                    "__type": "field",
+                    "key": "equipmentInclusive",
+                    "data_type": "stringstringArray"
+                  }
+                }
+              },
+              "id": {
+                "__type": "field",
+                "key": "id",
+                "data_type": "str"
+              }
+            }
+          },
+          "doNotResetIfCounterCompleted": {
+            "__type": "field",
+            "key": "doNotResetIfCounterCompleted",
+            "data_type": "bool"
+          },
+          "dynamicLocale": {
+            "__type": "field",
+            "key": "dynamicLocale",
+            "data_type": "bool",
+            "unneccesary": true,
+            "order": 200
+          },
+          "globalQuestCounterId": {
+            "__type": "field",
+            "key": "globalQuestCounterId",
+            "data_type": "str",
+            "unneccesary": true,
+            "order": 200
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "isNecessary": {
+            "__type": "field",
+            "key": "isNecessary",
+            "data_type": "bool"
+          },
+          "isResetOnConditionFailed": {
+            "__type": "field",
+            "key": "isResetOnConditionFailed",
+            "data_type": "bool"
+          },
+          "oneSessionOnly": {
+            "__type": "field",
+            "key": "oneSessionOnly",
+            "data_type": "bool"
+          },
+          "parentId": {
+            "__type": "field",
+            "key": "parentId",
+            "data_type": "str"
+          },
+          "type": {
+            "__type": "field",
+            "key": "type",
+            "data_type": "str"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "int"
+          },
+          "visibilityConditions": {
+            "__type": "split_path_child",
+            "rel_path": "visibilityConditions",
+            "split_key_value": "visibilityConditions"
+          }
+        },
+        "TraderStanding": {
+          "compareMethod": {
+            "__type": "field",
+            "key": "compareMethod",
+            "data_type": "str",
+            "options": [
+              "==",
+              ">",
+              "<",
+              ">=",
+              "<="
+            ]
+          },
+          "conditionType": {
+            "__type": "field",
+            "key": "conditionType",
+            "data_type": "str"
+          },
+          "dynamicLocale": {
+            "__type": "field",
+            "key": "dynamicLocale",
+            "data_type": "bool",
+            "unneccesary": true,
+            "order": 200
+          },
+          "globalQuestCounterId": {
+            "__type": "field",
+            "key": "globalQuestCounterId",
+            "data_type": "str",
+            "unneccesary": true,
+            "order": 200
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "parentId": {
+            "__type": "field",
+            "key": "parentId",
+            "data_type": "str"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "str"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "int"
+          },
+          "visibilityConditions": {
+            "__type": "split_path_child",
+            "rel_path": "visibilityConditions",
+            "split_key_value": "visibilityConditions"
+          }
+        },
+        "Quest": {
+          "availableAfter": {
+            "__type": "field",
+            "key": "availableAfter",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "conditionType": {
+            "__type": "field",
+            "key": "conditionType",
+            "data_type": "str"
+          },
+          "dispersion": {
+            "__type": "field",
+            "key": "dispersion",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "dynamicLocale": {
+            "__type": "field",
+            "key": "dynamicLocale",
+            "data_type": "bool",
+            "unneccesary": true,
+            "order": 200
+          },
+          "globalQuestCounterId": {
+            "__type": "field",
+            "key": "globalQuestCounterId",
+            "data_type": "str",
+            "unneccesary": true,
+            "order": 200
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "parentId": {
+            "__type": "field",
+            "key": "parentId",
+            "data_type": "str"
+          },
+          "status": {
+            "__type": "field",
+            "key": "status",
+            "data_type": "numberArray"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "str"
+          },
+          "visibilityConditions": {
+            "__type": "split_path_child",
+            "rel_path": "visibilityConditions",
+            "split_key_value": "visibilityConditions"
+          }
+        }
+      },
+      "childs": {
+        "CounterCreator": {
+          "__type": "split_path_child",
+          "rel_path": "counter.conditions",
+          "split_key_value": "CounterCreator",
+          "value": {
+            "__type": "split_path",
+            "path": "*",
+            "split_key": "conditionType",
+            "fields": {
+              "conditionType": {
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "target": {
+                  "__type": "field",
+                  "key": "target",
+                  "data_type": "stringArray"
+                },
+                "IncludeNotEquippedItems": {
+                  "__type": "field",
+                  "key": "IncludeNotEquippedItems",
+                  "data_type": "bool"
+                },
+                "equipmentExclusive": {
+                  "__type": "field",
+                  "key": "equipmentExclusive",
+                  "data_type": "stringstringArray"
+                },
+                "equipmentInclusive": {
+                  "__type": "field",
+                  "key": "equipmentInclusive",
+                  "data_type": "stringstringArray"
+                }
+              },
+              "Location": {
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "target": {
+                  "__type": "field",
+                  "key": "target",
+                  "data_type": "stringArray"
+                }
+              },
+              "ArenaMatchPlace": {
+                "compareMethod": {
+                  "__type": "field",
+                  "key": "compareMethod",
+                  "data_type": "str",
+                  "options": [
+                    "==",
+                    ">",
+                    "<",
+                    ">=",
+                    "<="
+                  ]
+                },
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "value": {
+                  "__type": "field",
+                  "key": "value",
+                  "data_type": "int"
+                }
+              },
+              "Equipment": {
+                "IncludeNotEquippedItems": {
+                  "__type": "field",
+                  "key": "IncludeNotEquippedItems",
+                  "data_type": "bool"
+                },
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "equipmentExclusive": {
+                  "__type": "field",
+                  "key": "equipmentExclusive",
+                  "data_type": "stringstringArray"
+                },
+                "equipmentInclusive": {
+                  "__type": "field",
+                  "key": "equipmentInclusive",
+                  "data_type": "stringstringArray"
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                }
+              },
+              "ArenaGameMode": {
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "target": {
+                  "__type": "field",
+                  "key": "target",
+                  "data_type": "stringArray"
+                }
+              },
+              "UseItem": {
+                "compareMethod": {
+                  "__type": "field",
+                  "key": "compareMethod",
+                  "data_type": "str",
+                  "options": [
+                    "==",
+                    ">",
+                    "<",
+                    ">=",
+                    "<="
+                  ]
+                },
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "target": {
+                  "__type": "field",
+                  "key": "target",
+                  "data_type": "arrayAdvancedSelect",
+                  "storeId": "items"
+                },
+                "value": {
+                  "__type": "field",
+                  "key": "value",
+                  "data_type": "int"
+                }
+              },
+              "ExitStatus": {
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "status": {
+                  "__type": "field",
+                  "key": "status",
+                  "data_type": "stringArray"
+                }
+              },
+              "Kills": {
+                "bodyPart": {
+                  "__type": "field",
+                  "key": "bodyPart",
+                  "data_type": "optionsArray",
+                  "options": [
+                    "Head",
+                    "Stomach"
+                  ]
+                },
+                "compareMethod": {
+                  "__type": "field",
+                  "key": "compareMethod",
+                  "data_type": "str",
+                  "options": [
+                    "==",
+                    ">",
+                    "<",
+                    ">=",
+                    "<="
+                  ]
+                },
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "daytime": {
+                  "__type": "nested_schema",
+                  "nested_schema": {
+                    "from": {
+                      "__type": "field",
+                      "key": "from",
+                      "data_type": "int"
+                    },
+                    "to": {
+                      "__type": "field",
+                      "key": "to",
+                      "data_type": "int"
+                    }
+                  }
+                },
+                "distance": {
+                  "__type": "nested_schema",
+                  "nested_schema": {
+                    "compareMethod": {
+                      "__type": "field",
+                      "key": "compareMethod",
+                      "data_type": "str",
+                      "options": [
+                        "==",
+                        ">",
+                        "<",
+                        ">=",
+                        "<="
+                      ]
+                    },
+                    "value": {
+                      "__type": "field",
+                      "key": "value",
+                      "data_type": "int"
+                    }
+                  }
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "enemyEquipmentExclusive": {
+                  "__type": "field",
+                  "key": "enemyEquipmentExclusive",
+                  "data_type": "stringstringArray"
+                },
+                "enemyEquipmentInclusive": {
+                  "__type": "field",
+                  "key": "enemyEquipmentInclusive",
+                  "data_type": "list"
+                },
+                "enemyHealthEffects": {
+                  "__type": "field",
+                  "key": "enemyHealthEffects",
+                  "data_type": "list"
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "resetOnSessionEnd": {
+                  "__type": "field",
+                  "key": "resetOnSessionEnd",
+                  "data_type": "bool"
+                },
+                "savageRole": {
+                  "__type": "field",
+                  "key": "savageRole",
+                  "data_type": "stringArray"
+                },
+                "target": {
+                  "__type": "field",
+                  "key": "target",
+                  "data_type": "str"
+                },
+                "value": {
+                  "__type": "field",
+                  "key": "value",
+                  "data_type": "int"
+                },
+                "weapon": {
+                  "__type": "field",
+                  "key": "weapon",
+                  "data_type": "list"
+                },
+                "weaponCaliber": {
+                  "__type": "field",
+                  "key": "weaponCaliber",
+                  "data_type": "list"
+                },
+                "weaponModsExclusive": {
+                  "__type": "field",
+                  "key": "weaponModsExclusive",
+                  "data_type": "list"
+                },
+                "weaponModsInclusive": {
+                  "__type": "field",
+                  "key": "weaponModsInclusive",
+                  "data_type": "list"
+                }
+              },
+              "Shots": {
+                "bodyPart": {
+                  "__type": "field",
+                  "key": "bodyPart",
+                  "data_type": "optionsArray",
+                  "options": [
+                    "Head",
+                    "Stomach"
+                  ]
+                },
+                "compareMethod": {
+                  "__type": "field",
+                  "key": "compareMethod",
+                  "data_type": "str",
+                  "options": [
+                    "==",
+                    ">",
+                    "<",
+                    ">=",
+                    "<="
+                  ]
+                },
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "daytime": {
+                  "__type": "nested_schema",
+                  "nested_schema": {
+                    "from": {
+                      "__type": "field",
+                      "key": "from",
+                      "data_type": "int"
+                    },
+                    "to": {
+                      "__type": "field",
+                      "key": "to",
+                      "data_type": "int"
+                    }
+                  }
+                },
+                "distance": {
+                  "__type": "nested_schema",
+                  "nested_schema": {
+                    "compareMethod": {
+                      "__type": "field",
+                      "key": "compareMethod",
+                      "data_type": "str",
+                      "options": [
+                        "==",
+                        ">",
+                        "<",
+                        ">=",
+                        "<="
+                      ]
+                    },
+                    "value": {
+                      "__type": "field",
+                      "key": "value",
+                      "data_type": "int"
+                    }
+                  }
+                },
+                "dynamicLocale": {
+                  "__type": "field",
+                  "key": "dynamicLocale",
+                  "data_type": "bool",
+                  "unneccesary": true,
+                  "order": 200
+                },
+                "enemyEquipmentExclusive": {
+                  "__type": "field",
+                  "key": "enemyEquipmentExclusive",
+                  "data_type": "list"
+                },
+                "enemyEquipmentInclusive": {
+                  "__type": "field",
+                  "key": "enemyEquipmentInclusive",
+                  "data_type": "list"
+                },
+                "enemyHealthEffects": {
+                  "__type": "field",
+                  "key": "enemyHealthEffects",
+                  "data_type": "list"
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "resetOnSessionEnd": {
+                  "__type": "field",
+                  "key": "resetOnSessionEnd",
+                  "data_type": "bool"
+                },
+                "savageRole": {
+                  "__type": "field",
+                  "key": "savageRole",
+                  "data_type": "stringArray"
+                },
+                "target": {
+                  "__type": "field",
+                  "key": "target",
+                  "data_type": "str"
+                },
+                "value": {
+                  "__type": "field",
+                  "key": "value",
+                  "data_type": "int"
+                },
+                "weapon": {
+                  "__type": "field",
+                  "key": "weapon",
+                  "data_type": "list"
+                },
+                "weaponCaliber": {
+                  "__type": "field",
+                  "key": "weaponCaliber",
+                  "data_type": "list"
+                },
+                "weaponModsExclusive": {
+                  "__type": "field",
+                  "key": "weaponModsExclusive",
+                  "data_type": "list"
+                },
+                "weaponModsInclusive": {
+                  "__type": "field",
+                  "key": "weaponModsInclusive",
+                  "data_type": "list"
+                }
+              }
+            },
+            "childs": {}
+          }
+        },
+        "visibilityConditions": {
+          "__type": "split_path_child",
+          "rel_path": "visibilityConditions",
+          "split_key_value": "visibilityConditions",
+          "value": {
+            "__type": "split_path",
+            "path": "*",
+            "split_key": "conditionType",
+            "fields": {
+              "CompleteCondition": {
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "target": {
+                  "__type": "field",
+                  "key": "target",
+                  "data_type": "str"
+                }
+              },
+              "conditionType": {
+                "conditionType": {
+                  "__type": "field",
+                  "key": "conditionType",
+                  "data_type": "str"
+                },
+                "id": {
+                  "__type": "field",
+                  "key": "id",
+                  "data_type": "str"
+                },
+                "target": {
+                  "__type": "field",
+                  "key": "target",
+                  "data_type": "str"
+                }
+              }
+            },
+            "childs": {}
+          }
+        }
+      }
+    },
+    {
+      "__type": "split_path",
+      "path": "*.rewards.Fail",
+      "split_key": "type",
+      "fields": {
+        "TraderStanding": {
+          "availableInGameEditions": {
+            "__type": "field",
+            "key": "availableInGameEditions",
+            "data_type": "list",
+            "hidden": true
+          },
+          "gameMode": {
+            "__type": "field",
+            "key": "gameMode",
+            "data_type": "stringArray",
+            "hidden": true
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "isHidden": {
+            "__type": "field",
+            "key": "isHidden",
+            "data_type": "bool"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "str"
+          },
+          "type": {
+            "__type": "field",
+            "key": "type",
+            "data_type": "str"
+          },
+          "unknown": {
+            "__type": "field",
+            "key": "unknown",
+            "data_type": "bool"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "float"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "illustrationConfig": {
+            "__type": "nested_schema",
+            "nested_schema": {
+              "bigImage": {
+                "__type": "field",
+                "key": "bigImage",
+                "data_type": "str"
+              },
+              "image": {
+                "__type": "field",
+                "key": "image",
+                "data_type": "str"
+              },
+              "isBigImage": {
+                "__type": "field",
+                "key": "isBigImage",
+                "data_type": "bool"
+              }
+            },
+            "hidden": true
+          }
+        }
+      },
+      "childs": {}
+    },
+    {
+      "__type": "split_path",
+      "path": "*.rewards.Started",
+      "split_key": "type",
+      "fields": {
+        "ProductionScheme": {
+          "availableInGameEditions": {
+            "__type": "field",
+            "key": "availableInGameEditions",
+            "data_type": "list",
+            "hidden": true
+          },
+          "gameMode": {
+            "__type": "field",
+            "key": "gameMode",
+            "data_type": "stringArray",
+            "hidden": true
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "isHidden": {
+            "__type": "field",
+            "key": "isHidden",
+            "data_type": "bool"
+          },
+          "items": {
+            "__type": "field",
+            "key": "items",
+            "data_type": "list",
+            "array_nested": {
+              "_id": {
+                "__type": "field",
+                "key": "_id",
+                "data_type": "str"
+              },
+              "_tpl": {
+                "__type": "field",
+                "key": "_tpl",
+                "data_type": "advancedSelect",
+                "storeId": "items"
+              },
+              "upd": {
+                "SpawnedInSession": {
+                  "__type": "field",
+                  "key": "SpawnedInSession",
+                  "data_type": "bool"
+                },
+                "StackObjectsCount": {
+                  "__type": "field",
+                  "key": "StackObjectsCount",
+                  "data_type": "int"
+                },
+                "FireMode": {
+                  "FireMode": {
+                    "__type": "field",
+                    "key": "FireMode",
+                    "data_type": "str"
+                  }
+                },
+                "Foldable": {
+                  "Folded": {
+                    "__type": "field",
+                    "key": "Folded",
+                    "data_type": "bool"
+                  }
+                },
+                "Repairable": {
+                  "Durability": {
+                    "__type": "field",
+                    "key": "Durability",
+                    "data_type": "int"
+                  },
+                  "MaxDurability": {
+                    "__type": "field",
+                    "key": "MaxDurability",
+                    "data_type": "int"
+                  }
+                }
+              },
+              "parentId": {
+                "__type": "field",
+                "key": "parentId",
+                "data_type": "str"
+              },
+              "slotId": {
+                "__type": "field",
+                "key": "slotId",
+                "data_type": "options",
+                "options": [
+                  "",
+                  "Helmet_top",
+                  "mod_magazine",
+                  "Helmet_back",
+                  "mod_sight_rear",
+                  "Helmet_ears",
+                  "mod_tactical",
+                  "mod_pistol_grip",
+                  "mod_stock",
+                  "mod_muzzle",
+                  "mod_reciever",
+                  "mod_bipod",
+                  "mod_gas_block",
+                  "cartridges",
+                  "mod_mount",
+                  "mod_scope",
+                  "mod_handguard",
+                  "helmet_top",
+                  "helmet_back",
+                  "helmet_ears",
+                  "mod_mount_001",
+                  "mod_pistolgrip",
+                  "mod_stock_001",
+                  "mod_barrel",
+                  "mod_sight_front",
+                  "mod_stock_000",
+                  "mod_charge",
+                  "mod_muzzle_000",
+                  "mod_foregrip",
+                  "Soft_armor_front",
+                  "Soft_armor_back",
+                  "Soft_armor_left",
+                  "soft_armor_right",
+                  "mod_mount_002",
+                  "mod_flashlight",
+                  "mod_tactical_001",
+                  "mod_mount_000",
+                  "Front_plate",
+                  "Back_plate",
+                  "Collar",
+                  "Groin",
+                  "Groin_back",
+                  "mod_mount_004",
+                  "mod_mount_003",
+                  "mod_stock_axis",
+                  "mod_scope_000",
+                  "mod_scope_001",
+                  "mod_trigger",
+                  "mod_hammer",
+                  "mod_catch",
+                  "mod_stock_002",
+                  "mod_tactical_002",
+                  "mod_tactical_000",
+                  "patron_in_weapon"
+                ]
+              }
+            }
+          },
+          "loyaltyLevel": {
+            "__type": "field",
+            "key": "loyaltyLevel",
+            "data_type": "int"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "str"
+          },
+          "traderId": {
+            "__type": "field",
+            "key": "traderId",
+            "data_type": "int"
+          },
+          "type": {
+            "__type": "field",
+            "key": "type",
+            "data_type": "str"
+          },
+          "unknown": {
+            "__type": "field",
+            "key": "unknown",
+            "data_type": "bool"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "illustrationConfig": {
+            "__type": "nested_schema",
+            "nested_schema": {
+              "bigImage": {
+                "__type": "field",
+                "key": "bigImage",
+                "data_type": "str"
+              },
+              "image": {
+                "__type": "field",
+                "key": "image",
+                "data_type": "str"
+              },
+              "isBigImage": {
+                "__type": "field",
+                "key": "isBigImage",
+                "data_type": "bool"
+              }
+            },
+            "hidden": true
+          }
+        },
+        "Item": {
+          "availableInGameEditions": {
+            "__type": "field",
+            "key": "availableInGameEditions",
+            "data_type": "list",
+            "hidden": true
+          },
+          "findInRaid": {
+            "__type": "field",
+            "key": "findInRaid",
+            "data_type": "bool"
+          },
+          "gameMode": {
+            "__type": "field",
+            "key": "gameMode",
+            "data_type": "stringArray",
+            "hidden": true
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "isEncoded": {
+            "__type": "field",
+            "key": "isEncoded",
+            "data_type": "bool"
+          },
+          "isHidden": {
+            "__type": "field",
+            "key": "isHidden",
+            "data_type": "bool"
+          },
+          "items": {
+            "__type": "field",
+            "key": "items",
+            "data_type": "list",
+            "array_nested": {
+              "_id": {
+                "__type": "field",
+                "key": "_id",
+                "data_type": "str"
+              },
+              "_tpl": {
+                "__type": "field",
+                "key": "_tpl",
+                "data_type": "advancedSelect",
+                "storeId": "items"
+              },
+              "upd": {
+                "SpawnedInSession": {
+                  "__type": "field",
+                  "key": "SpawnedInSession",
+                  "data_type": "bool"
+                },
+                "StackObjectsCount": {
+                  "__type": "field",
+                  "key": "StackObjectsCount",
+                  "data_type": "int"
+                },
+                "FireMode": {
+                  "FireMode": {
+                    "__type": "field",
+                    "key": "FireMode",
+                    "data_type": "str"
+                  }
+                },
+                "Foldable": {
+                  "Folded": {
+                    "__type": "field",
+                    "key": "Folded",
+                    "data_type": "bool"
+                  }
+                },
+                "Repairable": {
+                  "Durability": {
+                    "__type": "field",
+                    "key": "Durability",
+                    "data_type": "int"
+                  },
+                  "MaxDurability": {
+                    "__type": "field",
+                    "key": "MaxDurability",
+                    "data_type": "int"
+                  }
+                }
+              },
+              "parentId": {
+                "__type": "field",
+                "key": "parentId",
+                "data_type": "str"
+              },
+              "slotId": {
+                "__type": "field",
+                "key": "slotId",
+                "data_type": "options",
+                "options": [
+                  "",
+                  "Helmet_top",
+                  "mod_magazine",
+                  "Helmet_back",
+                  "mod_sight_rear",
+                  "Helmet_ears",
+                  "mod_tactical",
+                  "mod_pistol_grip",
+                  "mod_stock",
+                  "mod_muzzle",
+                  "mod_reciever",
+                  "mod_bipod",
+                  "mod_gas_block",
+                  "cartridges",
+                  "mod_mount",
+                  "mod_scope",
+                  "mod_handguard",
+                  "helmet_top",
+                  "helmet_back",
+                  "helmet_ears",
+                  "mod_mount_001",
+                  "mod_pistolgrip",
+                  "mod_stock_001",
+                  "mod_barrel",
+                  "mod_sight_front",
+                  "mod_stock_000",
+                  "mod_charge",
+                  "mod_muzzle_000",
+                  "mod_foregrip",
+                  "Soft_armor_front",
+                  "Soft_armor_back",
+                  "Soft_armor_left",
+                  "soft_armor_right",
+                  "mod_mount_002",
+                  "mod_flashlight",
+                  "mod_tactical_001",
+                  "mod_mount_000",
+                  "Front_plate",
+                  "Back_plate",
+                  "Collar",
+                  "Groin",
+                  "Groin_back",
+                  "mod_mount_004",
+                  "mod_mount_003",
+                  "mod_stock_axis",
+                  "mod_scope_000",
+                  "mod_scope_001",
+                  "mod_trigger",
+                  "mod_hammer",
+                  "mod_catch",
+                  "mod_stock_002",
+                  "mod_tactical_002",
+                  "mod_tactical_000",
+                  "patron_in_weapon"
+                ]
+              }
+            }
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "str"
+          },
+          "type": {
+            "__type": "field",
+            "key": "type",
+            "data_type": "str"
+          },
+          "unknown": {
+            "__type": "field",
+            "key": "unknown",
+            "data_type": "bool"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "int"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "illustrationConfig": {
+            "__type": "nested_schema",
+            "nested_schema": {
+              "bigImage": {
+                "__type": "field",
+                "key": "bigImage",
+                "data_type": "str"
+              },
+              "image": {
+                "__type": "field",
+                "key": "image",
+                "data_type": "str"
+              },
+              "isBigImage": {
+                "__type": "field",
+                "key": "isBigImage",
+                "data_type": "bool"
+              }
+            },
+            "hidden": true
+          }
+        },
+        "AssortmentUnlock": {
+          "availableInGameEditions": {
+            "__type": "field",
+            "key": "availableInGameEditions",
+            "data_type": "list",
+            "hidden": true
+          },
+          "gameMode": {
+            "__type": "field",
+            "key": "gameMode",
+            "data_type": "stringArray",
+            "hidden": true
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "isHidden": {
+            "__type": "field",
+            "key": "isHidden",
+            "data_type": "bool"
+          },
+          "items": {
+            "__type": "field",
+            "key": "items",
+            "data_type": "list",
+            "array_nested": {
+              "_id": {
+                "__type": "field",
+                "key": "_id",
+                "data_type": "str"
+              },
+              "_tpl": {
+                "__type": "field",
+                "key": "_tpl",
+                "data_type": "advancedSelect",
+                "storeId": "items"
+              },
+              "upd": {
+                "SpawnedInSession": {
+                  "__type": "field",
+                  "key": "SpawnedInSession",
+                  "data_type": "bool"
+                },
+                "StackObjectsCount": {
+                  "__type": "field",
+                  "key": "StackObjectsCount",
+                  "data_type": "int"
+                },
+                "FireMode": {
+                  "FireMode": {
+                    "__type": "field",
+                    "key": "FireMode",
+                    "data_type": "str"
+                  }
+                },
+                "Foldable": {
+                  "Folded": {
+                    "__type": "field",
+                    "key": "Folded",
+                    "data_type": "bool"
+                  }
+                },
+                "Repairable": {
+                  "Durability": {
+                    "__type": "field",
+                    "key": "Durability",
+                    "data_type": "int"
+                  },
+                  "MaxDurability": {
+                    "__type": "field",
+                    "key": "MaxDurability",
+                    "data_type": "int"
+                  }
+                }
+              },
+              "parentId": {
+                "__type": "field",
+                "key": "parentId",
+                "data_type": "str"
+              },
+              "slotId": {
+                "__type": "field",
+                "key": "slotId",
+                "data_type": "options",
+                "options": [
+                  "",
+                  "Helmet_top",
+                  "mod_magazine",
+                  "Helmet_back",
+                  "mod_sight_rear",
+                  "Helmet_ears",
+                  "mod_tactical",
+                  "mod_pistol_grip",
+                  "mod_stock",
+                  "mod_muzzle",
+                  "mod_reciever",
+                  "mod_bipod",
+                  "mod_gas_block",
+                  "cartridges",
+                  "mod_mount",
+                  "mod_scope",
+                  "mod_handguard",
+                  "helmet_top",
+                  "helmet_back",
+                  "helmet_ears",
+                  "mod_mount_001",
+                  "mod_pistolgrip",
+                  "mod_stock_001",
+                  "mod_barrel",
+                  "mod_sight_front",
+                  "mod_stock_000",
+                  "mod_charge",
+                  "mod_muzzle_000",
+                  "mod_foregrip",
+                  "Soft_armor_front",
+                  "Soft_armor_back",
+                  "Soft_armor_left",
+                  "soft_armor_right",
+                  "mod_mount_002",
+                  "mod_flashlight",
+                  "mod_tactical_001",
+                  "mod_mount_000",
+                  "Front_plate",
+                  "Back_plate",
+                  "Collar",
+                  "Groin",
+                  "Groin_back",
+                  "mod_mount_004",
+                  "mod_mount_003",
+                  "mod_stock_axis",
+                  "mod_scope_000",
+                  "mod_scope_001",
+                  "mod_trigger",
+                  "mod_hammer",
+                  "mod_catch",
+                  "mod_stock_002",
+                  "mod_tactical_002",
+                  "mod_tactical_000",
+                  "patron_in_weapon"
+                ]
+              }
+            }
+          },
+          "loyaltyLevel": {
+            "__type": "field",
+            "key": "loyaltyLevel",
+            "data_type": "int"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "str"
+          },
+          "traderId": {
+            "__type": "field",
+            "key": "traderId",
+            "data_type": "str"
+          },
+          "type": {
+            "__type": "field",
+            "key": "type",
+            "data_type": "str"
+          },
+          "unknown": {
+            "__type": "field",
+            "key": "unknown",
+            "data_type": "bool"
+          },
+          "illustrationConfig": {
+            "__type": "nested_schema",
+            "nested_schema": {
+              "bigImage": {
+                "__type": "field",
+                "key": "bigImage",
+                "data_type": "str"
+              },
+              "image": {
+                "__type": "field",
+                "key": "image",
+                "data_type": "str"
+              },
+              "isBigImage": {
+                "__type": "field",
+                "key": "isBigImage",
+                "data_type": "bool"
+              }
+            },
+            "hidden": true
+          }
+        }
+      },
+      "childs": {}
+    },
+    {
+      "__type": "split_path",
+      "path": "*.rewards.Success",
+      "split_key": "type",
+      "fields": {
+        "Item": {
+          "availableInGameEditions": {
+            "__type": "field",
+            "key": "availableInGameEditions",
+            "data_type": "stringArray",
+            "hidden": true
+          },
+          "findInRaid": {
+            "__type": "field",
+            "key": "findInRaid",
+            "data_type": "bool"
+          },
+          "gameMode": {
+            "__type": "field",
+            "key": "gameMode",
+            "data_type": "stringArray",
+            "hidden": true
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "isEncoded": {
+            "__type": "field",
+            "key": "isEncoded",
+            "data_type": "bool"
+          },
+          "isHidden": {
+            "__type": "field",
+            "key": "isHidden",
+            "data_type": "bool"
+          },
+          "items": {
+            "__type": "field",
+            "key": "items",
+            "data_type": "list",
+            "array_nested": {
+              "_id": {
+                "__type": "field",
+                "key": "_id",
+                "data_type": "str"
+              },
+              "_tpl": {
+                "__type": "field",
+                "key": "_tpl",
+                "data_type": "advancedSelect",
+                "storeId": "items"
+              },
+              "upd": {
+                "SpawnedInSession": {
+                  "__type": "field",
+                  "key": "SpawnedInSession",
+                  "data_type": "bool"
+                },
+                "StackObjectsCount": {
+                  "__type": "field",
+                  "key": "StackObjectsCount",
+                  "data_type": "int"
+                },
+                "FireMode": {
+                  "FireMode": {
+                    "__type": "field",
+                    "key": "FireMode",
+                    "data_type": "str"
+                  }
+                },
+                "Foldable": {
+                  "Folded": {
+                    "__type": "field",
+                    "key": "Folded",
+                    "data_type": "bool"
+                  }
+                },
+                "Repairable": {
+                  "Durability": {
+                    "__type": "field",
+                    "key": "Durability",
+                    "data_type": "int"
+                  },
+                  "MaxDurability": {
+                    "__type": "field",
+                    "key": "MaxDurability",
+                    "data_type": "int"
+                  }
+                }
+              },
+              "parentId": {
+                "__type": "field",
+                "key": "parentId",
+                "data_type": "str"
+              },
+              "slotId": {
+                "__type": "field",
+                "key": "slotId",
+                "data_type": "options",
+                "options": [
+                  "",
+                  "Helmet_top",
+                  "mod_magazine",
+                  "Helmet_back",
+                  "mod_sight_rear",
+                  "Helmet_ears",
+                  "mod_tactical",
+                  "mod_pistol_grip",
+                  "mod_stock",
+                  "mod_muzzle",
+                  "mod_reciever",
+                  "mod_bipod",
+                  "mod_gas_block",
+                  "cartridges",
+                  "mod_mount",
+                  "mod_scope",
+                  "mod_handguard",
+                  "helmet_top",
+                  "helmet_back",
+                  "helmet_ears",
+                  "mod_mount_001",
+                  "mod_pistolgrip",
+                  "mod_stock_001",
+                  "mod_barrel",
+                  "mod_sight_front",
+                  "mod_stock_000",
+                  "mod_charge",
+                  "mod_muzzle_000",
+                  "mod_foregrip",
+                  "Soft_armor_front",
+                  "Soft_armor_back",
+                  "Soft_armor_left",
+                  "soft_armor_right",
+                  "mod_mount_002",
+                  "mod_flashlight",
+                  "mod_tactical_001",
+                  "mod_mount_000",
+                  "Front_plate",
+                  "Back_plate",
+                  "Collar",
+                  "Groin",
+                  "Groin_back",
+                  "mod_mount_004",
+                  "mod_mount_003",
+                  "mod_stock_axis",
+                  "mod_scope_000",
+                  "mod_scope_001",
+                  "mod_trigger",
+                  "mod_hammer",
+                  "mod_catch",
+                  "mod_stock_002",
+                  "mod_tactical_002",
+                  "mod_tactical_000",
+                  "patron_in_weapon",
+                  "",
+                  "Helmet_top",
+                  "mod_magazine",
+                  "Helmet_back",
+                  "mod_sight_rear",
+                  "Helmet_ears",
+                  "mod_tactical",
+                  "mod_pistol_grip",
+                  "mod_stock",
+                  "mod_muzzle",
+                  "mod_reciever",
+                  "mod_bipod",
+                  "mod_gas_block",
+                  "cartridges",
+                  "mod_mount",
+                  "mod_scope",
+                  "mod_handguard",
+                  "helmet_top",
+                  "helmet_back",
+                  "helmet_ears",
+                  "mod_mount_001",
+                  "mod_pistolgrip",
+                  "mod_stock_001",
+                  "mod_barrel",
+                  "mod_sight_front",
+                  "mod_stock_000",
+                  "mod_charge",
+                  "mod_muzzle_000",
+                  "mod_foregrip",
+                  "Soft_armor_front",
+                  "Soft_armor_back",
+                  "Soft_armor_left",
+                  "soft_armor_right",
+                  "mod_mount_002",
+                  "mod_flashlight",
+                  "mod_tactical_001",
+                  "mod_mount_000",
+                  "Front_plate",
+                  "Back_plate",
+                  "Collar",
+                  "Groin",
+                  "Groin_back",
+                  "mod_mount_004",
+                  "mod_mount_003",
+                  "mod_stock_axis",
+                  "mod_scope_000",
+                  "mod_scope_001",
+                  "mod_trigger",
+                  "mod_hammer",
+                  "mod_catch",
+                  "mod_stock_002",
+                  "mod_tactical_002",
+                  "mod_tactical_000",
+                  "patron_in_weapon",
+                  "",
+                  "Helmet_top",
+                  "mod_magazine",
+                  "Helmet_back",
+                  "mod_sight_rear",
+                  "Helmet_ears",
+                  "mod_tactical",
+                  "mod_pistol_grip",
+                  "mod_stock",
+                  "mod_muzzle",
+                  "mod_reciever",
+                  "mod_bipod",
+                  "mod_gas_block",
+                  "cartridges",
+                  "mod_mount",
+                  "mod_scope",
+                  "mod_handguard",
+                  "helmet_top",
+                  "helmet_back",
+                  "helmet_ears",
+                  "mod_mount_001",
+                  "mod_pistolgrip",
+                  "mod_stock_001",
+                  "mod_barrel",
+                  "mod_sight_front",
+                  "mod_stock_000",
+                  "mod_charge",
+                  "mod_muzzle_000",
+                  "mod_foregrip",
+                  "Soft_armor_front",
+                  "Soft_armor_back",
+                  "Soft_armor_left",
+                  "soft_armor_right",
+                  "mod_mount_002",
+                  "mod_flashlight",
+                  "mod_tactical_001",
+                  "mod_mount_000",
+                  "Front_plate",
+                  "Back_plate",
+                  "Collar",
+                  "Groin",
+                  "Groin_back",
+                  "mod_mount_004",
+                  "mod_mount_003",
+                  "mod_stock_axis",
+                  "mod_scope_000",
+                  "mod_scope_001",
+                  "mod_trigger",
+                  "mod_hammer",
+                  "mod_catch",
+                  "mod_stock_002",
+                  "mod_tactical_002",
+                  "mod_tactical_000",
+                  "patron_in_weapon",
+                  "",
+                  "Helmet_top",
+                  "mod_magazine",
+                  "Helmet_back",
+                  "mod_sight_rear",
+                  "Helmet_ears",
+                  "mod_tactical",
+                  "mod_pistol_grip",
+                  "mod_stock",
+                  "mod_muzzle",
+                  "mod_reciever",
+                  "mod_bipod",
+                  "mod_gas_block",
+                  "cartridges",
+                  "mod_mount",
+                  "mod_scope",
+                  "mod_handguard",
+                  "helmet_top",
+                  "helmet_back",
+                  "helmet_ears",
+                  "mod_mount_001",
+                  "mod_pistolgrip",
+                  "mod_stock_001",
+                  "mod_barrel",
+                  "mod_sight_front",
+                  "mod_stock_000",
+                  "mod_charge",
+                  "mod_muzzle_000",
+                  "mod_foregrip",
+                  "Soft_armor_front",
+                  "Soft_armor_back",
+                  "Soft_armor_left",
+                  "soft_armor_right",
+                  "mod_mount_002",
+                  "mod_flashlight",
+                  "mod_tactical_001",
+                  "mod_mount_000",
+                  "Front_plate",
+                  "Back_plate",
+                  "Collar",
+                  "Groin",
+                  "Groin_back",
+                  "mod_mount_004",
+                  "mod_mount_003",
+                  "mod_stock_axis",
+                  "mod_scope_000",
+                  "mod_scope_001",
+                  "mod_trigger",
+                  "mod_hammer",
+                  "mod_catch",
+                  "mod_stock_002",
+                  "mod_tactical_002",
+                  "mod_tactical_000",
+                  "patron_in_weapon"
+                ]
+              }
+            }
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "str"
+          },
+          "type": {
+            "__type": "field",
+            "key": "type",
+            "data_type": "str"
+          },
+          "unknown": {
+            "__type": "field",
+            "key": "unknown",
+            "data_type": "bool"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "int"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "illustrationConfig": {
+            "__type": "nested_schema",
+            "nested_schema": {
+              "bigImage": {
+                "__type": "field",
+                "key": "bigImage",
+                "data_type": "str"
+              },
+              "image": {
+                "__type": "field",
+                "key": "image",
+                "data_type": "str"
+              },
+              "isBigImage": {
+                "__type": "field",
+                "key": "isBigImage",
+                "data_type": "bool"
+              }
+            },
+            "hidden": true
+          }
+        },
+        "Pockets": {
+          "availableInGameEditions": {
+            "__type": "field",
+            "key": "availableInGameEditions",
+            "data_type": "stringArray",
+            "hidden": true
+          },
+          "gameMode": {
+            "__type": "field",
+            "key": "gameMode",
+            "data_type": "stringArray",
+            "hidden": true
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "isHidden": {
+            "__type": "field",
+            "key": "isHidden",
+            "data_type": "bool"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "str"
+          },
+          "type": {
+            "__type": "field",
+            "key": "type",
+            "data_type": "str"
+          },
+          "unknown": {
+            "__type": "field",
+            "key": "unknown",
+            "data_type": "bool"
+          }
+        },
+        "TraderUnlock": {
+          "availableInGameEditions": {
+            "__type": "field",
+            "key": "availableInGameEditions",
+            "data_type": "list",
+            "hidden": true
+          },
+          "gameMode": {
+            "__type": "field",
+            "key": "gameMode",
+            "data_type": "stringArray",
+            "hidden": true
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "isHidden": {
+            "__type": "field",
+            "key": "isHidden",
+            "data_type": "bool"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "str"
+          },
+          "type": {
+            "__type": "field",
+            "key": "type",
+            "data_type": "str"
+          },
+          "unknown": {
+            "__type": "field",
+            "key": "unknown",
+            "data_type": "bool"
+          }
+        },
+        "TraderStandingRestore": {
+          "availableInGameEditions": {
+            "__type": "field",
+            "key": "availableInGameEditions",
+            "data_type": "list",
+            "hidden": true
+          },
+          "gameMode": {
+            "__type": "field",
+            "key": "gameMode",
+            "data_type": "stringArray",
+            "hidden": true
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "isHidden": {
+            "__type": "field",
+            "key": "isHidden",
+            "data_type": "bool"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "str"
+          },
+          "type": {
+            "__type": "field",
+            "key": "type",
+            "data_type": "str"
+          },
+          "unknown": {
+            "__type": "field",
+            "key": "unknown",
+            "data_type": "bool"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "int"
+          }
+        },
+        "Skill": {
+          "availableInGameEditions": {
+            "__type": "field",
+            "key": "availableInGameEditions",
+            "data_type": "list",
+            "hidden": true
+          },
+          "gameMode": {
+            "__type": "field",
+            "key": "gameMode",
+            "data_type": "stringArray",
+            "hidden": true
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "isHidden": {
+            "__type": "field",
+            "key": "isHidden",
+            "data_type": "bool"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "str"
+          },
+          "type": {
+            "__type": "field",
+            "key": "type",
+            "data_type": "str"
+          },
+          "unknown": {
+            "__type": "field",
+            "key": "unknown",
+            "data_type": "bool"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "int"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          }
+        },
+        "TraderStanding": {
+          "availableInGameEditions": {
+            "__type": "field",
+            "key": "availableInGameEditions",
+            "data_type": "list",
+            "hidden": true
+          },
+          "gameMode": {
+            "__type": "field",
+            "key": "gameMode",
+            "data_type": "stringArray",
+            "hidden": true
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "isHidden": {
+            "__type": "field",
+            "key": "isHidden",
+            "data_type": "bool"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "str"
+          },
+          "type": {
+            "__type": "field",
+            "key": "type",
+            "data_type": "str"
+          },
+          "unknown": {
+            "__type": "field",
+            "key": "unknown",
+            "data_type": "bool"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "float"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "illustrationConfig": {
+            "__type": "nested_schema",
+            "nested_schema": {
+              "bigImage": {
+                "__type": "field",
+                "key": "bigImage",
+                "data_type": "str"
+              },
+              "image": {
+                "__type": "field",
+                "key": "image",
+                "data_type": "str"
+              },
+              "isBigImage": {
+                "__type": "field",
+                "key": "isBigImage",
+                "data_type": "bool"
+              }
+            },
+            "hidden": true
+          }
+        },
+        "ProductionScheme": {
+          "availableInGameEditions": {
+            "__type": "field",
+            "key": "availableInGameEditions",
+            "data_type": "stringArray",
+            "hidden": true
+          },
+          "gameMode": {
+            "__type": "field",
+            "key": "gameMode",
+            "data_type": "stringArray",
+            "hidden": true
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "isHidden": {
+            "__type": "field",
+            "key": "isHidden",
+            "data_type": "bool"
+          },
+          "items": {
+            "__type": "field",
+            "key": "items",
+            "data_type": "list",
+            "array_nested": {
+              "_id": {
+                "__type": "field",
+                "key": "_id",
+                "data_type": "str"
+              },
+              "_tpl": {
+                "__type": "field",
+                "key": "_tpl",
+                "data_type": "advancedSelect",
+                "storeId": "items"
+              },
+              "upd": {
+                "SpawnedInSession": {
+                  "__type": "field",
+                  "key": "SpawnedInSession",
+                  "data_type": "bool"
+                },
+                "StackObjectsCount": {
+                  "__type": "field",
+                  "key": "StackObjectsCount",
+                  "data_type": "int"
+                },
+                "FireMode": {
+                  "FireMode": {
+                    "__type": "field",
+                    "key": "FireMode",
+                    "data_type": "str"
+                  }
+                },
+                "Foldable": {
+                  "Folded": {
+                    "__type": "field",
+                    "key": "Folded",
+                    "data_type": "bool"
+                  }
+                },
+                "Repairable": {
+                  "Durability": {
+                    "__type": "field",
+                    "key": "Durability",
+                    "data_type": "int"
+                  },
+                  "MaxDurability": {
+                    "__type": "field",
+                    "key": "MaxDurability",
+                    "data_type": "int"
+                  }
+                }
+              },
+              "parentId": {
+                "__type": "field",
+                "key": "parentId",
+                "data_type": "str"
+              },
+              "slotId": {
+                "__type": "field",
+                "key": "slotId",
+                "data_type": "options",
+                "options": [
+                  "",
+                  "Helmet_top",
+                  "mod_magazine",
+                  "Helmet_back",
+                  "mod_sight_rear",
+                  "Helmet_ears",
+                  "mod_tactical",
+                  "mod_pistol_grip",
+                  "mod_stock",
+                  "mod_muzzle",
+                  "mod_reciever",
+                  "mod_bipod",
+                  "mod_gas_block",
+                  "cartridges",
+                  "mod_mount",
+                  "mod_scope",
+                  "mod_handguard",
+                  "helmet_top",
+                  "helmet_back",
+                  "helmet_ears",
+                  "mod_mount_001",
+                  "mod_pistolgrip",
+                  "mod_stock_001",
+                  "mod_barrel",
+                  "mod_sight_front",
+                  "mod_stock_000",
+                  "mod_charge",
+                  "mod_muzzle_000",
+                  "mod_foregrip",
+                  "Soft_armor_front",
+                  "Soft_armor_back",
+                  "Soft_armor_left",
+                  "soft_armor_right",
+                  "mod_mount_002",
+                  "mod_flashlight",
+                  "mod_tactical_001",
+                  "mod_mount_000",
+                  "Front_plate",
+                  "Back_plate",
+                  "Collar",
+                  "Groin",
+                  "Groin_back",
+                  "mod_mount_004",
+                  "mod_mount_003",
+                  "mod_stock_axis",
+                  "mod_scope_000",
+                  "mod_scope_001",
+                  "mod_trigger",
+                  "mod_hammer",
+                  "mod_catch",
+                  "mod_stock_002",
+                  "mod_tactical_002",
+                  "mod_tactical_000",
+                  "patron_in_weapon",
+                  "",
+                  "Helmet_top",
+                  "mod_magazine",
+                  "Helmet_back",
+                  "mod_sight_rear",
+                  "Helmet_ears",
+                  "mod_tactical",
+                  "mod_pistol_grip",
+                  "mod_stock",
+                  "mod_muzzle",
+                  "mod_reciever",
+                  "mod_bipod",
+                  "mod_gas_block",
+                  "cartridges",
+                  "mod_mount",
+                  "mod_scope",
+                  "mod_handguard",
+                  "helmet_top",
+                  "helmet_back",
+                  "helmet_ears",
+                  "mod_mount_001",
+                  "mod_pistolgrip",
+                  "mod_stock_001",
+                  "mod_barrel",
+                  "mod_sight_front",
+                  "mod_stock_000",
+                  "mod_charge",
+                  "mod_muzzle_000",
+                  "mod_foregrip",
+                  "Soft_armor_front",
+                  "Soft_armor_back",
+                  "Soft_armor_left",
+                  "soft_armor_right",
+                  "mod_mount_002",
+                  "mod_flashlight",
+                  "mod_tactical_001",
+                  "mod_mount_000",
+                  "Front_plate",
+                  "Back_plate",
+                  "Collar",
+                  "Groin",
+                  "Groin_back",
+                  "mod_mount_004",
+                  "mod_mount_003",
+                  "mod_stock_axis",
+                  "mod_scope_000",
+                  "mod_scope_001",
+                  "mod_trigger",
+                  "mod_hammer",
+                  "mod_catch",
+                  "mod_stock_002",
+                  "mod_tactical_002",
+                  "mod_tactical_000",
+                  "patron_in_weapon",
+                  "",
+                  "Helmet_top",
+                  "mod_magazine",
+                  "Helmet_back",
+                  "mod_sight_rear",
+                  "Helmet_ears",
+                  "mod_tactical",
+                  "mod_pistol_grip",
+                  "mod_stock",
+                  "mod_muzzle",
+                  "mod_reciever",
+                  "mod_bipod",
+                  "mod_gas_block",
+                  "cartridges",
+                  "mod_mount",
+                  "mod_scope",
+                  "mod_handguard",
+                  "helmet_top",
+                  "helmet_back",
+                  "helmet_ears",
+                  "mod_mount_001",
+                  "mod_pistolgrip",
+                  "mod_stock_001",
+                  "mod_barrel",
+                  "mod_sight_front",
+                  "mod_stock_000",
+                  "mod_charge",
+                  "mod_muzzle_000",
+                  "mod_foregrip",
+                  "Soft_armor_front",
+                  "Soft_armor_back",
+                  "Soft_armor_left",
+                  "soft_armor_right",
+                  "mod_mount_002",
+                  "mod_flashlight",
+                  "mod_tactical_001",
+                  "mod_mount_000",
+                  "Front_plate",
+                  "Back_plate",
+                  "Collar",
+                  "Groin",
+                  "Groin_back",
+                  "mod_mount_004",
+                  "mod_mount_003",
+                  "mod_stock_axis",
+                  "mod_scope_000",
+                  "mod_scope_001",
+                  "mod_trigger",
+                  "mod_hammer",
+                  "mod_catch",
+                  "mod_stock_002",
+                  "mod_tactical_002",
+                  "mod_tactical_000",
+                  "patron_in_weapon",
+                  "",
+                  "Helmet_top",
+                  "mod_magazine",
+                  "Helmet_back",
+                  "mod_sight_rear",
+                  "Helmet_ears",
+                  "mod_tactical",
+                  "mod_pistol_grip",
+                  "mod_stock",
+                  "mod_muzzle",
+                  "mod_reciever",
+                  "mod_bipod",
+                  "mod_gas_block",
+                  "cartridges",
+                  "mod_mount",
+                  "mod_scope",
+                  "mod_handguard",
+                  "helmet_top",
+                  "helmet_back",
+                  "helmet_ears",
+                  "mod_mount_001",
+                  "mod_pistolgrip",
+                  "mod_stock_001",
+                  "mod_barrel",
+                  "mod_sight_front",
+                  "mod_stock_000",
+                  "mod_charge",
+                  "mod_muzzle_000",
+                  "mod_foregrip",
+                  "Soft_armor_front",
+                  "Soft_armor_back",
+                  "Soft_armor_left",
+                  "soft_armor_right",
+                  "mod_mount_002",
+                  "mod_flashlight",
+                  "mod_tactical_001",
+                  "mod_mount_000",
+                  "Front_plate",
+                  "Back_plate",
+                  "Collar",
+                  "Groin",
+                  "Groin_back",
+                  "mod_mount_004",
+                  "mod_mount_003",
+                  "mod_stock_axis",
+                  "mod_scope_000",
+                  "mod_scope_001",
+                  "mod_trigger",
+                  "mod_hammer",
+                  "mod_catch",
+                  "mod_stock_002",
+                  "mod_tactical_002",
+                  "mod_tactical_000",
+                  "patron_in_weapon"
+                ]
+              }
+            }
+          },
+          "loyaltyLevel": {
+            "__type": "field",
+            "key": "loyaltyLevel",
+            "data_type": "int"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "str"
+          },
+          "traderId": {
+            "__type": "field",
+            "key": "traderId",
+            "data_type": "int"
+          },
+          "type": {
+            "__type": "field",
+            "key": "type",
+            "data_type": "str"
+          },
+          "unknown": {
+            "__type": "field",
+            "key": "unknown",
+            "data_type": "bool"
+          }
+        },
+        "CustomizationDirect": {
+          "availableInGameEditions": {
+            "__type": "field",
+            "key": "availableInGameEditions",
+            "data_type": "list",
+            "hidden": true
+          },
+          "gameMode": {
+            "__type": "field",
+            "key": "gameMode",
+            "data_type": "stringArray",
+            "hidden": true
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "isHidden": {
+            "__type": "field",
+            "key": "isHidden",
+            "data_type": "bool"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "str"
+          },
+          "type": {
+            "__type": "field",
+            "key": "type",
+            "data_type": "str"
+          },
+          "unknown": {
+            "__type": "field",
+            "key": "unknown",
+            "data_type": "bool"
+          }
+        },
+        "AssortmentUnlock": {
+          "availableInGameEditions": {
+            "__type": "field",
+            "key": "availableInGameEditions",
+            "data_type": "list",
+            "hidden": true
+          },
+          "gameMode": {
+            "__type": "field",
+            "key": "gameMode",
+            "data_type": "stringArray",
+            "hidden": true
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "isHidden": {
+            "__type": "field",
+            "key": "isHidden",
+            "data_type": "bool"
+          },
+          "items": {
+            "__type": "field",
+            "key": "items",
+            "data_type": "list",
+            "array_nested": {
+              "_id": {
+                "__type": "field",
+                "key": "_id",
+                "data_type": "str"
+              },
+              "_tpl": {
+                "__type": "field",
+                "key": "_tpl",
+                "data_type": "advancedSelect",
+                "storeId": "items"
+              },
+              "upd": {
+                "SpawnedInSession": {
+                  "__type": "field",
+                  "key": "SpawnedInSession",
+                  "data_type": "bool"
+                },
+                "StackObjectsCount": {
+                  "__type": "field",
+                  "key": "StackObjectsCount",
+                  "data_type": "int"
+                },
+                "FireMode": {
+                  "FireMode": {
+                    "__type": "field",
+                    "key": "FireMode",
+                    "data_type": "str"
+                  }
+                },
+                "Foldable": {
+                  "Folded": {
+                    "__type": "field",
+                    "key": "Folded",
+                    "data_type": "bool"
+                  }
+                },
+                "Repairable": {
+                  "Durability": {
+                    "__type": "field",
+                    "key": "Durability",
+                    "data_type": "int"
+                  },
+                  "MaxDurability": {
+                    "__type": "field",
+                    "key": "MaxDurability",
+                    "data_type": "int"
+                  }
+                }
+              },
+              "parentId": {
+                "__type": "field",
+                "key": "parentId",
+                "data_type": "str"
+              },
+              "slotId": {
+                "__type": "field",
+                "key": "slotId",
+                "data_type": "options",
+                "options": [
+                  "",
+                  "Helmet_top",
+                  "mod_magazine",
+                  "Helmet_back",
+                  "mod_sight_rear",
+                  "Helmet_ears",
+                  "mod_tactical",
+                  "mod_pistol_grip",
+                  "mod_stock",
+                  "mod_muzzle",
+                  "mod_reciever",
+                  "mod_bipod",
+                  "mod_gas_block",
+                  "cartridges",
+                  "mod_mount",
+                  "mod_scope",
+                  "mod_handguard",
+                  "helmet_top",
+                  "helmet_back",
+                  "helmet_ears",
+                  "mod_mount_001",
+                  "mod_pistolgrip",
+                  "mod_stock_001",
+                  "mod_barrel",
+                  "mod_sight_front",
+                  "mod_stock_000",
+                  "mod_charge",
+                  "mod_muzzle_000",
+                  "mod_foregrip",
+                  "Soft_armor_front",
+                  "Soft_armor_back",
+                  "Soft_armor_left",
+                  "soft_armor_right",
+                  "mod_mount_002",
+                  "mod_flashlight",
+                  "mod_tactical_001",
+                  "mod_mount_000",
+                  "Front_plate",
+                  "Back_plate",
+                  "Collar",
+                  "Groin",
+                  "Groin_back",
+                  "mod_mount_004",
+                  "mod_mount_003",
+                  "mod_stock_axis",
+                  "mod_scope_000",
+                  "mod_scope_001",
+                  "mod_trigger",
+                  "mod_hammer",
+                  "mod_catch",
+                  "mod_stock_002",
+                  "mod_tactical_002",
+                  "mod_tactical_000",
+                  "patron_in_weapon",
+                  "",
+                  "Helmet_top",
+                  "mod_magazine",
+                  "Helmet_back",
+                  "mod_sight_rear",
+                  "Helmet_ears",
+                  "mod_tactical",
+                  "mod_pistol_grip",
+                  "mod_stock",
+                  "mod_muzzle",
+                  "mod_reciever",
+                  "mod_bipod",
+                  "mod_gas_block",
+                  "cartridges",
+                  "mod_mount",
+                  "mod_scope",
+                  "mod_handguard",
+                  "helmet_top",
+                  "helmet_back",
+                  "helmet_ears",
+                  "mod_mount_001",
+                  "mod_pistolgrip",
+                  "mod_stock_001",
+                  "mod_barrel",
+                  "mod_sight_front",
+                  "mod_stock_000",
+                  "mod_charge",
+                  "mod_muzzle_000",
+                  "mod_foregrip",
+                  "Soft_armor_front",
+                  "Soft_armor_back",
+                  "Soft_armor_left",
+                  "soft_armor_right",
+                  "mod_mount_002",
+                  "mod_flashlight",
+                  "mod_tactical_001",
+                  "mod_mount_000",
+                  "Front_plate",
+                  "Back_plate",
+                  "Collar",
+                  "Groin",
+                  "Groin_back",
+                  "mod_mount_004",
+                  "mod_mount_003",
+                  "mod_stock_axis",
+                  "mod_scope_000",
+                  "mod_scope_001",
+                  "mod_trigger",
+                  "mod_hammer",
+                  "mod_catch",
+                  "mod_stock_002",
+                  "mod_tactical_002",
+                  "mod_tactical_000",
+                  "patron_in_weapon",
+                  "",
+                  "Helmet_top",
+                  "mod_magazine",
+                  "Helmet_back",
+                  "mod_sight_rear",
+                  "Helmet_ears",
+                  "mod_tactical",
+                  "mod_pistol_grip",
+                  "mod_stock",
+                  "mod_muzzle",
+                  "mod_reciever",
+                  "mod_bipod",
+                  "mod_gas_block",
+                  "cartridges",
+                  "mod_mount",
+                  "mod_scope",
+                  "mod_handguard",
+                  "helmet_top",
+                  "helmet_back",
+                  "helmet_ears",
+                  "mod_mount_001",
+                  "mod_pistolgrip",
+                  "mod_stock_001",
+                  "mod_barrel",
+                  "mod_sight_front",
+                  "mod_stock_000",
+                  "mod_charge",
+                  "mod_muzzle_000",
+                  "mod_foregrip",
+                  "Soft_armor_front",
+                  "Soft_armor_back",
+                  "Soft_armor_left",
+                  "soft_armor_right",
+                  "mod_mount_002",
+                  "mod_flashlight",
+                  "mod_tactical_001",
+                  "mod_mount_000",
+                  "Front_plate",
+                  "Back_plate",
+                  "Collar",
+                  "Groin",
+                  "Groin_back",
+                  "mod_mount_004",
+                  "mod_mount_003",
+                  "mod_stock_axis",
+                  "mod_scope_000",
+                  "mod_scope_001",
+                  "mod_trigger",
+                  "mod_hammer",
+                  "mod_catch",
+                  "mod_stock_002",
+                  "mod_tactical_002",
+                  "mod_tactical_000",
+                  "patron_in_weapon",
+                  "",
+                  "Helmet_top",
+                  "mod_magazine",
+                  "Helmet_back",
+                  "mod_sight_rear",
+                  "Helmet_ears",
+                  "mod_tactical",
+                  "mod_pistol_grip",
+                  "mod_stock",
+                  "mod_muzzle",
+                  "mod_reciever",
+                  "mod_bipod",
+                  "mod_gas_block",
+                  "cartridges",
+                  "mod_mount",
+                  "mod_scope",
+                  "mod_handguard",
+                  "helmet_top",
+                  "helmet_back",
+                  "helmet_ears",
+                  "mod_mount_001",
+                  "mod_pistolgrip",
+                  "mod_stock_001",
+                  "mod_barrel",
+                  "mod_sight_front",
+                  "mod_stock_000",
+                  "mod_charge",
+                  "mod_muzzle_000",
+                  "mod_foregrip",
+                  "Soft_armor_front",
+                  "Soft_armor_back",
+                  "Soft_armor_left",
+                  "soft_armor_right",
+                  "mod_mount_002",
+                  "mod_flashlight",
+                  "mod_tactical_001",
+                  "mod_mount_000",
+                  "Front_plate",
+                  "Back_plate",
+                  "Collar",
+                  "Groin",
+                  "Groin_back",
+                  "mod_mount_004",
+                  "mod_mount_003",
+                  "mod_stock_axis",
+                  "mod_scope_000",
+                  "mod_scope_001",
+                  "mod_trigger",
+                  "mod_hammer",
+                  "mod_catch",
+                  "mod_stock_002",
+                  "mod_tactical_002",
+                  "mod_tactical_000",
+                  "patron_in_weapon"
+                ]
+              }
+            }
+          },
+          "loyaltyLevel": {
+            "__type": "field",
+            "key": "loyaltyLevel",
+            "data_type": "int"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "str"
+          },
+          "traderId": {
+            "__type": "field",
+            "key": "traderId",
+            "data_type": "str"
+          },
+          "type": {
+            "__type": "field",
+            "key": "type",
+            "data_type": "str"
+          },
+          "unknown": {
+            "__type": "field",
+            "key": "unknown",
+            "data_type": "bool"
+          },
+          "illustrationConfig": {
+            "__type": "nested_schema",
+            "nested_schema": {
+              "bigImage": {
+                "__type": "field",
+                "key": "bigImage",
+                "data_type": "str"
+              },
+              "image": {
+                "__type": "field",
+                "key": "image",
+                "data_type": "str"
+              },
+              "isBigImage": {
+                "__type": "field",
+                "key": "isBigImage",
+                "data_type": "bool"
+              }
+            },
+            "hidden": true
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          }
+        },
+        "Achievement": {
+          "availableInGameEditions": {
+            "__type": "field",
+            "key": "availableInGameEditions",
+            "data_type": "list",
+            "hidden": true
+          },
+          "gameMode": {
+            "__type": "field",
+            "key": "gameMode",
+            "data_type": "stringArray",
+            "hidden": true
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "isHidden": {
+            "__type": "field",
+            "key": "isHidden",
+            "data_type": "bool"
+          },
+          "target": {
+            "__type": "field",
+            "key": "target",
+            "data_type": "str"
+          },
+          "type": {
+            "__type": "field",
+            "key": "type",
+            "data_type": "str"
+          },
+          "unknown": {
+            "__type": "field",
+            "key": "unknown",
+            "data_type": "bool"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "illustrationConfig": {
+            "__type": "nested_schema",
+            "nested_schema": {
+              "bigImage": {
+                "__type": "field",
+                "key": "bigImage",
+                "data_type": "str"
+              },
+              "image": {
+                "__type": "field",
+                "key": "image",
+                "data_type": "str"
+              },
+              "isBigImage": {
+                "__type": "field",
+                "key": "isBigImage",
+                "data_type": "bool"
+              }
+            },
+            "hidden": true
+          }
+        },
+        "NotificationPopup": {
+          "availableInGameEditions": {
+            "__type": "field",
+            "key": "availableInGameEditions",
+            "data_type": "list",
+            "hidden": true
+          },
+          "gameMode": {
+            "__type": "field",
+            "key": "gameMode",
+            "data_type": "stringArray",
+            "hidden": true
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "illustrationConfig": {
+            "__type": "nested_schema",
+            "nested_schema": {
+              "bigImage": {
+                "__type": "field",
+                "key": "bigImage",
+                "data_type": "str"
+              },
+              "image": {
+                "__type": "field",
+                "key": "image",
+                "data_type": "str"
+              },
+              "isBigImage": {
+                "__type": "field",
+                "key": "isBigImage",
+                "data_type": "bool"
+              }
+            },
+            "hidden": true
+          },
+          "isHidden": {
+            "__type": "field",
+            "key": "isHidden",
+            "data_type": "bool"
+          },
+          "message": {
+            "__type": "field",
+            "key": "message",
+            "data_type": "str"
+          },
+          "type": {
+            "__type": "field",
+            "key": "type",
+            "data_type": "str"
+          },
+          "unknown": {
+            "__type": "field",
+            "key": "unknown",
+            "data_type": "bool"
+          }
+        },
+        "WebPromoCode": {
+          "availableInGameEditions": {
+            "__type": "field",
+            "key": "availableInGameEditions",
+            "data_type": "list",
+            "hidden": true
+          },
+          "gameMode": {
+            "__type": "field",
+            "key": "gameMode",
+            "data_type": "stringArray",
+            "hidden": true
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "illustrationConfig": {
+            "__type": "nested_schema",
+            "nested_schema": {
+              "bigImage": {
+                "__type": "field",
+                "key": "bigImage",
+                "data_type": "str"
+              },
+              "image": {
+                "__type": "field",
+                "key": "image",
+                "data_type": "str"
+              },
+              "isBigImage": {
+                "__type": "field",
+                "key": "isBigImage",
+                "data_type": "bool"
+              }
+            },
+            "hidden": true
+          },
+          "isHidden": {
+            "__type": "field",
+            "key": "isHidden",
+            "data_type": "bool"
+          },
+          "type": {
+            "__type": "field",
+            "key": "type",
+            "data_type": "str"
+          },
+          "unknown": {
+            "__type": "field",
+            "key": "unknown",
+            "data_type": "bool"
+          }
+        },
+        "Experience": {
+          "availableInGameEditions": {
+            "__type": "field",
+            "key": "availableInGameEditions",
+            "data_type": "list",
+            "hidden": true
+          },
+          "gameMode": {
+            "__type": "field",
+            "key": "gameMode",
+            "data_type": "stringArray",
+            "hidden": true
+          },
+          "id": {
+            "__type": "field",
+            "key": "id",
+            "data_type": "str"
+          },
+          "isHidden": {
+            "__type": "field",
+            "key": "isHidden",
+            "data_type": "bool"
+          },
+          "type": {
+            "__type": "field",
+            "key": "type",
+            "data_type": "str"
+          },
+          "unknown": {
+            "__type": "field",
+            "key": "unknown",
+            "data_type": "bool"
+          },
+          "value": {
+            "__type": "field",
+            "key": "value",
+            "data_type": "int"
+          },
+          "index": {
+            "__type": "field",
+            "key": "index",
+            "data_type": "int",
+            "unneccesary": true,
+            "order": 200
+          },
+          "illustrationConfig": {
+            "__type": "nested_schema",
+            "nested_schema": {
+              "bigImage": {
+                "__type": "field",
+                "key": "bigImage",
+                "data_type": "str"
+              },
+              "image": {
+                "__type": "field",
+                "key": "image",
+                "data_type": "str"
+              },
+              "isBigImage": {
+                "__type": "field",
+                "key": "isBigImage",
+                "data_type": "bool"
+              }
+            },
+            "hidden": true
+          }
+        }
+      },
+      "childs": {}
+    }
+  ]
+}

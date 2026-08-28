@@ -1,0 +1,304 @@
+{
+  "__type": "all_schemas",
+  "all_schemas": [
+    {
+      "__type": "nested_schema",
+      "nested_schema": {
+        "_id": {
+          "__type": "field",
+          "key": "_id",
+          "data_type": "str"
+        },
+        "availableInRaid": {
+          "__type": "field",
+          "key": "availableInRaid",
+          "data_type": "bool"
+        },
+        "avatar": {
+          "__type": "field",
+          "key": "avatar",
+          "data_type": "str"
+        },
+        "balance_dol": {
+          "__type": "field",
+          "key": "balance_dol",
+          "data_type": "int"
+        },
+        "balance_eur": {
+          "__type": "field",
+          "key": "balance_eur",
+          "data_type": "int"
+        },
+        "balance_rub": {
+          "__type": "field",
+          "key": "balance_rub",
+          "data_type": "int"
+        },
+        "buyer_up": {
+          "__type": "field",
+          "key": "buyer_up",
+          "data_type": "bool"
+        },
+        "currency": {
+          "__type": "field",
+          "key": "currency",
+          "data_type": "str"
+        },
+        "customization_seller": {
+          "__type": "field",
+          "key": "customization_seller",
+          "data_type": "bool"
+        },
+        "discount": {
+          "__type": "field",
+          "key": "discount",
+          "data_type": "int"
+        },
+        "discount_end": {
+          "__type": "field",
+          "key": "discount_end",
+          "data_type": "int"
+        },
+        "gridHeight": {
+          "__type": "field",
+          "key": "gridHeight",
+          "data_type": "int"
+        },
+        "insurance": {
+          "availability": {
+            "__type": "field",
+            "key": "availability",
+            "data_type": "bool"
+          },
+          "excluded_category": {
+            "__type": "field",
+            "key": "excluded_category",
+            "data_type": "stringArray"
+          },
+          "max_return_hour": {
+            "__type": "field",
+            "key": "max_return_hour",
+            "data_type": "int"
+          },
+          "max_storage_time": {
+            "__type": "field",
+            "key": "max_storage_time",
+            "data_type": "int"
+          },
+          "min_payment": {
+            "__type": "field",
+            "key": "min_payment",
+            "data_type": "int"
+          },
+          "min_return_hour": {
+            "__type": "field",
+            "key": "min_return_hour",
+            "data_type": "int"
+          }
+        },
+        "isAvailableInPVE": {
+          "__type": "field",
+          "key": "isAvailableInPVE",
+          "data_type": "bool"
+        },
+        "isCanTransferItems": {
+          "__type": "field",
+          "key": "isCanTransferItems",
+          "data_type": "bool"
+        },
+        "isCanTransferItemsFromPve": {
+          "__type": "field",
+          "key": "isCanTransferItemsFromPve",
+          "data_type": "bool"
+        },
+        "items_buy": {
+          "category": {
+            "__type": "field",
+            "key": "category",
+            "data_type": "stringArray"
+          },
+          "id_list": {
+            "__type": "field",
+            "key": "id_list",
+            "data_type": "stringArray"
+          }
+        },
+        "items_buy_prohibited": {
+          "category": {
+            "__type": "field",
+            "key": "category",
+            "data_type": "list"
+          },
+          "id_list": {
+            "__type": "field",
+            "key": "id_list",
+            "data_type": "stringArray"
+          }
+        },
+        "items_sell": {
+          "__type": "field",
+          "key": "items_sell",
+          "data_type": "list"
+        },
+        "location": {
+          "__type": "field",
+          "key": "location",
+          "data_type": "str"
+        },
+        "loyaltyLevels": {
+          "__type": "field",
+          "key": "loyaltyLevels",
+          "data_type": "list",
+          "array_nested": {
+            "buy_price_coef": {
+              "__type": "field",
+              "key": "buy_price_coef",
+              "data_type": "int"
+            },
+            "exchange_price_coef": {
+              "__type": "field",
+              "key": "exchange_price_coef",
+              "data_type": "int"
+            },
+            "heal_price_coef": {
+              "__type": "field",
+              "key": "heal_price_coef",
+              "data_type": "int"
+            },
+            "insurance_price_coef": {
+              "__type": "field",
+              "key": "insurance_price_coef",
+              "data_type": "str"
+            },
+            "minLevel": {
+              "__type": "field",
+              "key": "minLevel",
+              "data_type": "int"
+            },
+            "minSalesSum": {
+              "__type": "field",
+              "key": "minSalesSum",
+              "data_type": "int"
+            },
+            "minStanding": {
+              "__type": "field",
+              "key": "minStanding",
+              "data_type": "int"
+            },
+            "repair_price_coef": {
+              "__type": "field",
+              "key": "repair_price_coef",
+              "data_type": "int"
+            }
+          }
+        },
+        "mainDialogue": {
+          "__type": "field",
+          "key": "mainDialogue",
+          "data_type": "NoneType"
+        },
+        "medic": {
+          "__type": "field",
+          "key": "medic",
+          "data_type": "bool"
+        },
+        "name": {
+          "__type": "field",
+          "key": "name",
+          "data_type": "str"
+        },
+        "nextResupply": {
+          "__type": "field",
+          "key": "nextResupply",
+          "data_type": "int"
+        },
+        "nickname": {
+          "__type": "field",
+          "key": "nickname",
+          "data_type": "str"
+        },
+        "prohibitedTransferableItems": {
+          "category": {
+            "__type": "field",
+            "key": "category",
+            "data_type": "list"
+          },
+          "id_list": {
+            "__type": "field",
+            "key": "id_list",
+            "data_type": "list"
+          }
+        },
+        "repair": {
+          "availability": {
+            "__type": "field",
+            "key": "availability",
+            "data_type": "bool"
+          },
+          "currency": {
+            "__type": "field",
+            "key": "currency",
+            "data_type": "str"
+          },
+          "currency_coefficient": {
+            "__type": "field",
+            "key": "currency_coefficient",
+            "data_type": "int"
+          },
+          "excluded_category": {
+            "__type": "field",
+            "key": "excluded_category",
+            "data_type": "stringArray"
+          },
+          "excluded_id_list": {
+            "__type": "field",
+            "key": "excluded_id_list",
+            "data_type": "list"
+          },
+          "quality": {
+            "__type": "field",
+            "key": "quality",
+            "data_type": "int"
+          },
+          "price_rate": {
+            "__type": "field",
+            "key": "price_rate",
+            "data_type": "int"
+          }
+        },
+        "sell_category": {
+          "__type": "field",
+          "key": "sell_category",
+          "data_type": "list"
+        },
+        "sell_modifier_for_prohibited_items": {
+          "__type": "field",
+          "key": "sell_modifier_for_prohibited_items",
+          "data_type": "int"
+        },
+        "surname": {
+          "__type": "field",
+          "key": "surname",
+          "data_type": "str"
+        },
+        "transferableItems": {
+          "category": {
+            "__type": "field",
+            "key": "category",
+            "data_type": "list"
+          },
+          "id_list": {
+            "__type": "field",
+            "key": "id_list",
+            "data_type": "stringArray"
+          }
+        },
+        "unlockedByDefault": {
+          "__type": "field",
+          "key": "unlockedByDefault",
+          "data_type": "bool"
+        }
+      }
+    }
+  ]
+}

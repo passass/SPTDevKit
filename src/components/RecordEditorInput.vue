@@ -35,12 +35,15 @@
 				v-for="field in displayFields"
 				:key="field.key"
 				class="form-field"
-				:class="{ 'field-hidden': field instanceof HiddenField || (field instanceof UnneccesaryField && !isShowUnneccesaryFields) }"
+				:class="{ 'field-hidden': field.hidden || (field.unneccesary && !isShowUnneccesaryFields) }"
 			>
 				<div class="form-field__header">
-					<label :for="field.key">{{ field.label }}</label>
+					<label :for="field.key">{{ gameLocalization.getUIText({
+						localeId: field.key
+						, default: field.label
+					}) }}</label>
 					<button
-						v-if="isNavigable(getData[field.key])"
+						v-if="isNavigable(getData[field.key]) && !isCompareInput(field)"
 						class="navigate-btn"
 						@click="handleNavigate(field.key)"
 						title="Открыть вложенную структуру"
@@ -61,8 +64,13 @@
 					:field="field"
 				/>
 
+				<CompareInput
+					v-else-if="isCompareInput(field)"
+					v-model="getData[field.key]"
+				/>
+
 				<input
-					v-else-if="field.type === 'text' || field instanceof HiddenField"
+					v-else-if="field.type === 'text' || field.hidden"
 					:id="field.key"
 					v-model="getData[field.key]"
 					type="text"
@@ -112,13 +120,12 @@
 								option,
 								`${option} Name`,
 								`${option} Nickname`
-							]
-						, locale: currentLocale}) }}
+							]}) }}
 					</option>
 				</select>
 
 				<ArrayInput
-					v-else-if="field.type === 'array' || field.type === 'stringArray' || field.type === 'arrayAdvancedSelect'"
+					v-else-if="field.type === 'array' || field.type === 'stringArray' || field.type === 'numberArray' || field.type === 'arrayAdvancedSelect'"
 					v-model="getData[field.key]"
 					:field="field"
 					:array-key="field.key"
@@ -146,7 +153,7 @@
 	</div>
 </template>
 
-// src/components/RecordEditorInput.vue
+<!-- src/components/RecordEditorInput.vue -->
 
 <script setup lang="tsx">
 import { inject, ref, watch, computed, shallowRef, triggerRef, markRaw, type Ref } from "vue";
@@ -164,9 +171,8 @@ import SchemaChooserInput from "@/components/inputs/SchemaChooserInput.vue";
 import { gameLocalization } from "@/types/localization.ts";
 import { type locales } from "@/types/localization.ts";
 import ListTabs from "./ListTabs.vue";
-
-
-const currentLocale: Ref<locales> = inject<Ref<locales>>("currentLocale") ?? ref('en')
+import { getStaticField } from "@/utils/classUtils.ts";
+import CompareInput from "./inputs/CompareInput.vue";
 
 const props = defineProps<{
 	data: any;
@@ -192,17 +198,30 @@ const displayFields = computed<Field[]>(() => {
 });
 
 const recordData = computed(() => dataRef.value);
-const getData = computed(() => recordData.value.getData());
+const getData = computed(() => {
+	return recordData.value.getData()
+});
 const isShowUnneccesaryFields = ref<boolean>(false);
 const isShowUnneccesaryFieldsCheckmark = computed<boolean>(() => {
-	return displayFields.value.some((el) => el instanceof UnneccesaryField)
+	return displayFields.value.some((el) => el.unneccesary)
 })
 
 function getObjectSummary(value: Record<string, any>): string {
 	if (!value) return "{}";
-	const keys = Object.keys(value);
+	const keys = value instanceof RecordSchema ? Object.keys(value.data) : Object.keys(value);
 	if (keys.length === 0) return "{}";
-	const preview = keys.slice(0, 3).join(", ");
+	
+	// Берем первые 3 ключа и переводим их
+	const previewKeys = keys.slice(0, 3);
+	const translatedKeys = previewKeys.map(key => {
+		const translated = gameLocalization.getUIText({
+			localeId: key,
+			default: key
+		});
+		return translated;
+	});
+	
+	const preview = translatedKeys.join(", ");
 	return keys.length > 3
 		? `{ ${preview}... (${keys.length} полей) }`
 		: `{ ${preview} }`;
@@ -215,6 +234,13 @@ function handleNavigate(key: string) {
 function handleSchemaChoose(newInstance: RecordSchema) {
 	frameNavigator?.changeCurrentSchema(newInstance);
 	triggerRef(dataRef);
+}
+
+function isCompareInput(field: Field): boolean {
+	return field.nestedSchema
+		&& (field.nestedSchema as any)?.fields?.length === 2
+		&& (field.nestedSchema as any)?.getFieldByKeyStatic('compareMethod')
+		&& (field.nestedSchema as any)?.getFieldByKeyStatic('value')
 }
 </script>
 

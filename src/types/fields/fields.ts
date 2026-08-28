@@ -1,7 +1,7 @@
 // src/types/fields.ts
 import { Data } from "dataclass";
 import { type SchemaChoice, SchemaChoicer } from "./fieldsSchemaChoicer";
-import { type ClassType } from "@/utils/classUtils";
+import { getStaticField, type ClassType } from "@/utils/classUtils";
 
 export const idsFields: string[] = ['_id', 'id']
 
@@ -16,6 +16,7 @@ export type FieldType = 'text'
 	| 'select'
 	| 'object'
 	| 'array'
+	| 'optionsArray'
 	| 'stringArray'
 	| 'numberArray'
 	| 'hidden'
@@ -38,6 +39,9 @@ export class Field extends Data {
 	nestedSchema?: ClassType<RecordSchema>;
 	arrayItemSchema?: arrayItemSchemaType;
 
+	hidden?: boolean;
+	unneccesary?: boolean;
+
 	getDefaultValue?(data: SchemaData): any;
 }
 
@@ -57,10 +61,12 @@ export class AdvSelectField extends Field {
 }
 
 export class HiddenField extends Field {
-	type: FieldType = 'hidden';
+	hidden = true;
 }
 
-export class UnneccesaryField extends Field {}
+export class UnneccesaryField extends Field {
+	unneccesary = true;
+}
 
 function autoDetectType(value: any): FieldType {
 	if (value === null || value === undefined) return 'text';
@@ -94,15 +100,16 @@ export const castByArrayItemSchema = (
 	if (isNotRecordSchemaButObject(value)) {
 		if (arrayItemSchema) {
 			if (SchemaChoicer.isPrototypeOf(arrayItemSchema)) {
-				const choosedSchema: SchemaChoice | null = (arrayItemSchema as typeof SchemaChoicer).getSchema(value);
+				const choosedSchema: SchemaChoice = (
+					(arrayItemSchema as typeof SchemaChoicer).getSchema(value)
+					?? (arrayItemSchema as typeof SchemaChoicer).schemas[0]
+				);
 				
-				if (choosedSchema) {
-					return new choosedSchema.schema(value, {
-						...otherData,
-						schemaChooser: arrayItemSchema,
-						choosedSchema: choosedSchema,
-					});
-				}
+				return new choosedSchema.schema(value, {
+					...otherData,
+					schemaChooser: arrayItemSchema,
+					choosedSchema: choosedSchema,
+				});
 			} else {
 				return new (arrayItemSchema as ClassType<RecordSchema>)(value, otherData) as RecordSchema;
 			}
@@ -145,6 +152,37 @@ export const castByNestedSchemaInField = (el: any, field: Field): RecordSchema =
 	: castToRecordSchema(el)
 )
 
+function resolveDefaultValue(field: Field, data: SchemaData): any {
+    let val = field.getDefaultValue ? field.getDefaultValue(data) : field.defaultValue;
+
+    if (val === undefined) {
+        if (field.type === 'object' && field.nestedSchema) {
+            return new field.nestedSchema();
+        }
+		if (field.type === 'text')
+			return '';
+		if (field.type === 'number')
+			return 0;
+		if (field.type === 'select' && field.options)
+			return field.options[0];
+        if (['array', 'stringArray', 'numberArray', 'arrayAdvancedSelect'].includes(field.type)) {
+            return [];
+        }
+        return null;
+    }
+
+    // Глубокое клонирование объектов и массивов, чтобы избежать共享 ссылок между экземплярами
+    if (val !== null && typeof val === 'object') {
+        try {
+            return structuredClone(val);
+        } catch {
+            return JSON.parse(JSON.stringify(val));
+        }
+    }
+
+    return val;
+}
+
 export type recordSchemaOtherData = {
 	schemaChooser?: ClassType<SchemaChoicer> | null,
 	choosedSchema?: SchemaChoice | null,
@@ -153,76 +191,73 @@ export type recordSchemaOtherData = {
 export class RecordSchema {
 	static fields: Field[] = [];
 
-	getFieldByKey(key: string) {
+	static getFieldByKeyStatic(key: string, def?: any) {
+		const fields = this.fields || [];
+		return fields.find((el: Field) => el.key === key) ?? def
+	}
+	getFieldByKey(key: string, def?: any) {
 		const fields = (this.constructor as typeof RecordSchema).fields || [];
-		return fields.find((el: Field) => el.key === key)
-	} 
+		return fields.find((el: Field) => el.key === key) ?? def
+	}
 
 	schemaChooser: recordSchemaOtherData['schemaChooser'] = null;
 	choosedSchema: recordSchemaOtherData['choosedSchema'] = null;
+
+	storeId?: string;
 
 	extraFields: Field[];
 
 	data: SchemaData = {};
 
 	constructor(data: SchemaData = {}, otherData?: recordSchemaOtherData) {
-		this.extraFields = new Array();
-		
-		// Проверка на корректный тип данных
-		if (!data || typeof data !== "object" || Array.isArray(data)) {
-			console.error("wrong data type in RecordSchema", data);
-			this.data = {};
-			return;
-		}
+        this.extraFields = [];
+        
+        if (!data || typeof data !== "object" || Array.isArray(data)) {
+            console.error("wrong data type in RecordSchema", data);
+            this.data = {};
+            return;
+        }
 
-		this.data = data;
+        this.data = data;
+        
+        if (otherData) {
+            if (otherData.schemaChooser) this.schemaChooser = otherData.schemaChooser;
+            if (otherData.choosedSchema) this.choosedSchema = otherData.choosedSchema;
+        }
 
-		if (otherData) {
-			if (otherData.schemaChooser) {
-				this.schemaChooser = otherData.schemaChooser
-			}
-			if (otherData.choosedSchema) {
-				this.choosedSchema = otherData.choosedSchema
-			}
-		}
-		
-		const fields = (this.constructor as typeof RecordSchema).fields || [];
-		const lazyLoadFunctions: Map<string, (data: SchemaData) => string> = new Map()
-		
-		const usedKeys: Set<string> = new Set();
+        const fields = (this.constructor as typeof RecordSchema).fields || [];
+        const lazyLoadFunctions = new Map<string, (data: SchemaData) => any>();
+        const usedKeys = new Set<string>();
 
-		for (const field of fields) {
-			usedKeys.add(field.key)
+        for (const field of fields) {
+            usedKeys.add(field.key);
+            if (field.key in this.data) continue;
 
-			if (field.key in this.data)
-				continue;
-	
-			const defVal = field.getDefaultValue ? field.getDefaultValue(data) : field.defaultValue;
-			if (typeof defVal === "function") {
-				lazyLoadFunctions.set(field.key, defVal)
-			} else if (defVal !== undefined) {
-				this.data[field.key] = defVal ?? null
-			} else if (field.type === "object" && field.nestedSchema) {
-				this.data[field.key] = new field.nestedSchema()
-			}
-		}
+            const defVal = resolveDefaultValue(field, data);
 
-		for (const [key, value] of Object.entries(this.data)) {
-			if (!usedKeys.has(key)) {
-				this.extraFields.push(Field.create({
-					key: key,
-					label: this.formatKey(key),
-					type: autoDetectType(value),
-					placeholder: "",
-					description: "",
-				}))
-			}
-		}
+            if (typeof defVal === "function") {
+                lazyLoadFunctions.set(field.key, defVal);
+            } else {
+                this.data[field.key] = defVal;
+            }
+        }
 
-		for (const [key, func] of lazyLoadFunctions.entries()) {
-			this.data[key] = func(this.data) ?? null;
-		}
-	}
+        for (const [key, value] of Object.entries(this.data)) {
+            if (!usedKeys.has(key)) {
+                this.extraFields.push(Field.create({
+                    key,
+                    label: this.formatKey(key),
+                    type: autoDetectType(value),
+                    placeholder: "",
+                    description: "",
+                }));
+            }
+        }
+
+        for (const [key, func] of lazyLoadFunctions.entries()) {
+            this.data[key] = func(this.data) ?? null;
+        }
+    }
 
 	castToNewSchema(
 		newSchema: ClassType<RecordSchema>
@@ -258,9 +293,7 @@ export class RecordSchema {
 				continue
 			}
 
-			const defVal = field.getDefaultValue
-			? field.getDefaultValue(this.data)
-			: field.defaultValue;
+			const defVal = resolveDefaultValue(field, this.data);
 			
 			if (defVal !== undefined) {
 				this.data[key] = defVal
@@ -279,7 +312,7 @@ export class RecordSchema {
 
 	/** Получить поля текущего класса */
 	getFields(): Field[] {
-		return [...(this.constructor as typeof RecordSchema).fields, ...this.extraFields];
+		return [...(getStaticField(this, "fields") as any), ...this.extraFields];
 	}
 
 	/** Получить данные */

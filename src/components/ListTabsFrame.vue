@@ -1,3 +1,5 @@
+<!-- src/components/ListTabsFrame.vue -->
+
 <template>
 	<div class="tab-frame">
 		<div
@@ -5,20 +7,25 @@
 			class="frame-header"
 		>
 			<div class="frame-header-left">
-				<h3 v-if="tab.title">{{ tab.title }}</h3>
+				<h3 v-if="tab.title" class="frame-title">
+					<span v-if="tab.icon" class="frame-title-icon">{{ tab.icon }}</span>
+					<span class="frame-title-text">{{ tab.title }}</span>
+				</h3>
 
 				<!-- Хлебные крошки -->
 				<div v-if="pathStack.length > 0" class="frame-breadcrumbs">
 					<button class="back-btn" @click="navigator?.goBack()" title="Назад">←</button>
 					<span class="breadcrumbs-path">
-						<span class="breadcrumb-root" @click="navigator?.goRoot()">root</span>
+						<span class="breadcrumb-root" @click="navigator?.goRoot()">{{ 
+							getRootTranslate
+						}}</span>
 						<span v-for="(segment, i) in pathStack" :key="i">
 							<span class="breadcrumb-separator"> / </span>
 							<span
 								:class="{ 'breadcrumb-item': navigator?.getPathItem(i)?.type !== 'array'}"
 								@click="navigator?.getPathItem(i)?.type !== 'array' && navigator?.jumpToLevel(i)"
 							>{{
-								segment.key
+								getTranslatedPath(segment)
 							}}</span>
 						</span>
 					</span>
@@ -56,9 +63,13 @@
 </template>
 
 <script lang="ts">
-import type { PropType } from "vue";
+import { capitalize, type PropType } from "vue";
 import type { Tab } from "@/tabs/tabs.ts";
 import { Navigator, type PathItem } from "@/utils/navigation";
+import { gameLocalization } from "@/types/localization.ts";
+import { type locales } from "@/types/localization.ts";
+import { getStaticField } from "@/utils/classUtils";
+import type { Field } from "@/types/fields/fields";
 
 export default {
 	name: "ListTabsFrame",
@@ -88,6 +99,12 @@ export default {
 	computed: {
 		pathStack(): PathItem[] {
 			return this.navigator?.getPathStack() ?? [];
+		},
+
+		getRootTranslate() {
+			return capitalize(gameLocalization.getUIText({
+				localeId: "root"
+			})) 
 		},
 
 		displayData(): Record<string, any> | undefined {
@@ -124,7 +141,16 @@ export default {
 		handleUpdate(data: any) {
 			this.$emit("update", data);
 		},
-	},
+
+		getTranslatedPath(segment: PathItem): string {
+			const key = String(segment.key)
+			const translated = gameLocalization.getUIText({
+				localeId: key,
+				default: segment.label ?? key
+			});
+			return translated;
+		}
+	}
 };
 </script>
 
@@ -133,62 +159,92 @@ export default {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
-	background: #2a2a2a;
-	border-radius: 6px;
-	outline: 1px solid #3d3d3d;
+	background: linear-gradient(145deg, #1e1e2a 0%, #2a2a3a 100%);
+	border-radius: 12px;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
 	overflow: hidden;
+	border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+/* ===== УМЕНЬШЕННЫЙ ХЕДЕР ===== */
 .frame-header {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 3px 9px;
-	background: #413c25;
-	border-bottom: 1px solid #3d3d3d;
-	gap: 12px;
+	padding: 4px 12px; /* было 8px 16px */
+	background: rgba(30, 30, 46, 0.8);
+	backdrop-filter: blur(8px);
+	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+	gap: 8px; /* было 12px */
+	flex-shrink: 0;
+	min-height: 36px; /* задаём минимальную высоту для аккуратности */
 }
 
 .frame-header-left {
 	display: flex;
 	align-items: center;
-	gap: 12px;
+	gap: 8px; /* было 12px */
 	flex: 1;
 	min-width: 0;
 	flex-wrap: wrap;
 }
 
-.frame-header h3 {
+/* Заголовок */
+.frame-title {
+	display: flex;
+	align-items: center;
+	gap: 6px; /* было 8px */
 	margin: 0;
-	font-size: 16px;
+	font-size: 14px; /* было 16px */
 	font-weight: 600;
-	color: #e8e8e8;
+	background: linear-gradient(135deg, #f0e6d0, #c0b8a8);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
+	letter-spacing: 0.2px;
+	text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 	flex-shrink: 0;
 }
 
-/* ===== Хлебные крошки ===== */
+.frame-title-icon {
+	font-size: 16px; /* было 20px */
+	-webkit-text-fill-color: initial;
+}
+
+.frame-title-text {
+	-webkit-text-fill-color: initial;
+	color: #e8e0d0;
+}
+
+/* ===== Хлебные крошки (компактнее) ===== */
 .frame-breadcrumbs {
 	display: flex;
 	align-items: center;
-	gap: 8px;
-	font-size: 13px;
+	gap: 4px; /* было 6px */
+	font-size: 12px; /* было 13px */
 	flex-wrap: wrap;
+	padding: 2px 8px; /* было 4px 10px */
+	background: rgba(0, 0, 0, 0.25);
+	border-radius: 16px; /* было 20px */
+	border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .back-btn {
-	background: #3d3d3d;
-	border: 1px solid #4a4a4a;
-	color: #e0e0e0;
-	padding: 2px 8px;
-	border-radius: 4px;
+	background: rgba(255, 255, 255, 0.06);
+	border: none;
+	color: #b0a8a0;
+	padding: 0 8px; /* было 2px 10px */
+	border-radius: 14px; /* было 16px */
 	cursor: pointer;
-	font-size: 13px;
-	transition: all 0.2s;
+	font-size: 13px; /* было 14px */
+	transition: all 0.2s ease;
+	line-height: 1.6; /* было 1.8 */
 }
 
 .back-btn:hover {
-	background: #4a4a4a;
-	border-color: #42b883;
+	background: rgba(66, 184, 131, 0.2);
+	color: #66d9a0;
+	transform: scale(1.05);
 }
 
 .breadcrumbs-path {
@@ -200,58 +256,116 @@ export default {
 }
 
 .breadcrumb-root {
+	display: flex;
+	align-items: center;
+	gap: 3px; /* было 4px */
 	cursor: pointer;
-	color: #42b883;
+	color: #66d9a0;
 	font-weight: 500;
+	background: transparent;
+	border: none;
+	padding: 1px 4px; /* было 2px 6px */
+	border-radius: 10px; /* было 12px */
+	transition: all 0.2s;
 }
 
 .breadcrumb-root:hover {
-	text-decoration: underline;
+	background: rgba(66, 184, 131, 0.15);
+	text-decoration: none;
+}
+
+.breadcrumb-root-icon {
+	font-size: 12px; /* было 14px */
 }
 
 .breadcrumb-item {
 	cursor: pointer;
-	color: #42b883;
-	transition: color 0.2s;
+	color: #66d9a0;
+	background: transparent;
+	border: none;
+	padding: 1px 4px; /* было 2px 6px */
+	border-radius: 10px; /* было 12px */
+	transition: all 0.2s;
 }
 
 .breadcrumb-item:hover {
-	color: #66d9a0;
-	text-decoration: underline;
+	background: rgba(66, 184, 131, 0.15);
+	color: #88eebb;
+	text-decoration: none;
+}
+
+.breadcrumb-current {
+	color: #d0c8b8;
+	padding: 1px 4px; /* было 2px 6px */
+	background: rgba(255,255,255,0.04);
+	border-radius: 10px; /* было 12px */
 }
 
 .breadcrumb-separator {
 	color: #666;
-	margin: 0 2px;
+	margin: 0 1px; /* было 0 2px */
+	font-weight: 300;
 }
 
-/* ===== Действия ===== */
+.breadcrumb-label {
+	white-space: nowrap;
+	max-width: 140px; /* было 180px */
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* ===== Действия (кнопки компактнее) ===== */
 .frame-actions {
 	display: flex;
-	gap: 8px;
+	gap: 4px; /* было 6px */
 	flex-shrink: 0;
 }
 
 .frame-actions button {
-	background: transparent;
+	background: rgba(255, 255, 255, 0.04);
 	border: none;
-	color: #999;
+	color: #aaa;
 	cursor: pointer;
-	padding: 4px 8px;
-	border-radius: 4px;
-	font-size: 16px;
-	transition: all 0.2s;
+	width: 28px; /* было 32px */
+	height: 28px; /* было 32px */
+	border-radius: 50%;
+	font-size: 16px; /* было 18px */
+	transition: all 0.25s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	backdrop-filter: blur(4px);
 }
 
 .frame-actions button:hover {
-	background: #4a4a4a;
+	background: rgba(255, 255, 255, 0.12);
 	color: #fff;
+	transform: scale(1.1);
 }
 
+.action-btn--refresh:hover {
+	background: rgba(66, 184, 131, 0.25);
+	color: #66d9a0;
+	transform: rotate(60deg) scale(1.1);
+}
+
+.action-btn--close:hover {
+	background: rgba(255, 70, 70, 0.2);
+	color: #ff6b6b;
+}
+
+/* ===== Остальное без изменений ===== */
 .frame-body {
 	flex: 1;
-	padding: 16px;
+	padding: 5px;
 	overflow: auto;
+	background: rgba(0, 0, 0, 0.2);
+}
+
+.frame-content {
+	background: rgba(255, 255, 255, 0.02);
+	border-radius: 8px;
+	padding: 12px;
 }
 
 .empty-state {
@@ -261,5 +375,22 @@ export default {
 	height: 100%;
 	color: #666;
 	font-size: 16px;
+	font-style: italic;
+}
+
+.frame-body::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+.frame-body::-webkit-scrollbar-track {
+	background: rgba(255, 255, 255, 0.02);
+	border-radius: 10px;
+}
+.frame-body::-webkit-scrollbar-thumb {
+	background: #555;
+	border-radius: 10px;
+}
+.frame-body::-webkit-scrollbar-thumb:hover {
+	background: #777;
 }
 </style>

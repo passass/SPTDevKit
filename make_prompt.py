@@ -3,6 +3,7 @@ import os
 import subprocess
 import platform
 from pathlib import Path
+import pyperclip
 
 # Конфигурация
 CONFIG = {
@@ -94,7 +95,7 @@ def format_output(files):
     return "\n".join(output)
 
 
-import pyperclip
+
 
             
 def copy_to_clipboard(text):

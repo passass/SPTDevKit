@@ -33,11 +33,11 @@
 
 			<button
 				v-if="schemaType"
+				class="create-btn"
 				@click="createNewSchema"
 			>
 				Создать
 			</button>
-
 
 			<!-- Список вкладок -->
 			<div
@@ -83,240 +83,170 @@
 	</div>
 </template>
 
-<script lang="tsx">
+<script setup lang="tsx">
+// (без изменений, тот же код)
 import ListTabsFrame from "./ListTabsFrame.vue";
 import type { Tab } from "@/tabs/tabs.ts";
 import { RecordSchema } from "@/types/fields/fields.ts";
-import type { PropType, Component } from "vue";
+import type { Component } from "vue";
 import { type ClassType } from "@/utils/classUtils.ts";
 import { type dataStoreType } from "@/stores/dataStore.ts";
 import { useDataStore } from "@/stores/dataStore.ts";
+import { inject, ref, computed, onMounted, nextTick } from "vue";
 
-export default {
-	name: "TabListBox",
+const dataStore = useDataStore()
 
-	components: {
-		ListTabsFrame,
-	},
+const props = defineProps<{
+	tabs: Tab[];
+	schemaType?: ClassType<RecordSchema>;
+	fileData?: dataStoreType<RecordSchema>;
+	isSearch?: boolean;
+	searchPlaceholder?: string;
+	caseSensitive?: boolean;
+	searchFields?: Array<keyof Tab>;
+}>();
 
-	inject: {
-		frameNavigator: {
-			from: 'frameNavigator',
-			default: null,
-		},
-	},
+const emit = defineEmits<{
+	(e: "tab-selected", tabId: string): void;
+	(e: "refresh", tabId: string | null): void;
+	(e: "content-update", data: any): void;
+	(e: "search", query: string): void;
+}>();
 
-	data(): {
-		activeTab: string | null;
-		searchQuery: string;
-	} {
-		return {
-			activeTab: null,
-			searchQuery: "",
-		};
-	},
+const frameNavigator = inject<any>("frameNavigator", null);
 
-	props: {
-		tabs: {
-			type: Array as PropType<Tab[]>,
-			required: true,
-			default: () => [],
-		},
-		schemaType: {
-			type: Object as PropType<ClassType<RecordSchema>>
-		},
-		fileData: {
-			type: Object as PropType<dataStoreType<RecordSchema>>
-		},
-		// ✅ Новый проп для включения поиска
-		isSearch: {
-			type: Boolean,
-			default: false,
-		},
-		// ✅ Кастомный placeholder для поиска
-		searchPlaceholder: {
-			type: String,
-			default: "Поиск вкладок...",
-		},
-		// ✅ Чувствительность к регистру
-		caseSensitive: {
-			type: Boolean,
-			default: false,
-		},
-		// ✅ Поиск по всем полям (не только label)
-		searchFields: {
-			type: Array as PropType<Array<keyof Tab>>,
-			default: () => ['label', 'id'],
-		},
-	},
+const activeTab = ref<string | null>(null);
+const searchQuery = ref("");
 
-	computed: {
-		currentTab(): Tab | undefined {
-			return this.tabs.find((t) => t.id === this.activeTab);
-		},
+const currentTab = computed(() => {
+	return props.tabs.find((t) => t.id === activeTab.value);
+});
 
-		// ✅ Отфильтрованные вкладки
-		filteredTabs(): Tab[] {
-			if (!this.isSearch || !this.searchQuery.trim()) {
-				return this.tabs;
-			}
+const filteredTabs = computed(() => {
+	if (!props.isSearch || !searchQuery.value.trim()) {
+		return props.tabs;
+	}
 
-			const query = this.caseSensitive 
-				? this.searchQuery.trim() 
-				: this.searchQuery.trim().toLowerCase();
+	const query = props.caseSensitive 
+		? searchQuery.value.trim() 
+		: searchQuery.value.trim().toLowerCase();
 
-			return this.tabs.filter((tab) => {
-				return this.searchFields.some((field) => {
-					const value = tab[field];
-					if (value === undefined || value === null) return false;
-					
-					const stringValue = String(value);
-					const searchValue = this.caseSensitive 
-						? stringValue 
-						: stringValue.toLowerCase();
-					
-					return searchValue.includes(query);
-				});
-			});
-		},
-	},
+	return props.tabs.filter((tab) => {
+		const label = props.caseSensitive 
+		? tab.label.trim()
+		: tab.label.trim().toLowerCase()
+		return label.includes(query)
+	});
+});
 
-	methods: {
-		deleteCurrentTab() {
-			const currentTab = this.currentTab
-			const dataStore = useDataStore()
+function deleteCurrentTab() {
+	const current = currentTab.value;
 
-			if (currentTab?.dataStoreId) {
-				const data = dataStore.getMap(currentTab.dataStoreId)
-				
-				data.delete(currentTab?.id)
-				this.closeTab()
-			}
-			
-			
-		},
+	if (current?.dataStoreId) {
+		const data = dataStore.getMap(current.dataStoreId);
+		data.delete(current?.id);
+		closeTab();
+	}
+}
 
-		createNewSchema() {
-			if (!this.fileData || !this.schemaType) return;
+function createNewSchema() {
+	if (!props.fileData || !props.schemaType) return;
 
-			const newInstance =	new this.schemaType()
-			const newInstanceId = newInstance.getId()
+	const newInstance = new props.schemaType();
+	const newInstanceId = newInstance.getId();
 
-			if (newInstanceId) {
-				this.fileData.set(newInstanceId, newInstance)
-				this.selectTab(newInstanceId)
-			}
-		},
+	if (newInstanceId) {
+		props.fileData.set(newInstanceId, newInstance);
+		selectTab(newInstanceId);
+	}
+}
 
-		selectTab(tabId: string) {
-			if (this.isTabVisible(tabId)) {
-				if (this.activeTab !== tabId) {
-					(this as any).frameNavigator?.goRoot?.();
-				}
-				this.activeTab = tabId;
-				localStorage.setItem("activeTab", tabId);
-				this.$emit("tab-selected", tabId);
-			}
-		},
-
-		refreshTab() {
-			this.$emit("refresh", this.activeTab);
-		},
-
-		closeTab() {
-			this.activeTab = null;
-			localStorage.removeItem("activeTab");
-		},
-
-		handleContentUpdate(data: any) {
-			this.$emit("content-update", data);
-		},
-
-		// ✅ Проверка видимости вкладки
-		isTabVisible(tabId: string): boolean {
-			if (!this.isSearch || !this.searchQuery.trim()) {
-				return true;
-			}
-			return this.filteredTabs.some(t => t.id === tabId);
-		},
-
-		// ✅ Обработка поиска
-		handleSearch() {
-			// Если активная вкладка скрыта поиском, выбираем первую найденную
-			if (this.activeTab && !this.isTabVisible(this.activeTab)) {
-				if (this.filteredTabs.length > 0) {
-					this.selectTab(this.filteredTabs[0]?.id ?? "");
-				} else {
-					this.activeTab = null;
-				}
-			}
-			this.$emit("search", this.searchQuery);
-		},
-
-		// ✅ Очистка поиска
-		clearSearch() {
-			this.searchQuery = "";
-			this.handleSearch();
-			// Фокус на поле ввода
-			this.$nextTick(() => {
-				const input = this.$refs.searchInput as HTMLInputElement;
-				if (input) input.focus();
-			});
-		},
-
-		// ✅ Подсветка совпадений
-		highlightMatch(text: string): Component {
-			if (!this.isSearch || !this.searchQuery.trim() || !text) {
-				return <span>{text}</span>;
-			}
-
-			const query = this.caseSensitive 
-				? this.searchQuery.trim() 
-				: this.searchQuery.trim().toLowerCase();
-			
-			const searchText = this.caseSensitive ? text : text.toLowerCase();
-			const index = searchText.indexOf(query);
-
-			if (index === -1) return <span>{text}</span>;
-
-			const before = text.substring(0, index);
-			const match = text.substring(index, index + query.length);
-			const after = text.substring(index + query.length);
-
-			return <span>
-				{before}
-				<span class="search-highlight">
-					{match}
-				</span>
-				{after}
-			</span>;
-		},
-	},
-
-	mounted() {
-		const savedTab = localStorage.getItem("activeTab");
-		if (savedTab && this.tabs.some((t) => t.id === savedTab)) {
-			this.activeTab = savedTab;
-		} else if (this.tabs.length > 0) {
-			this.activeTab = this.tabs[0]?.id || null;
+function selectTab(tabId: string) {
+	if (isTabVisible(tabId)) {
+		if (activeTab.value !== tabId) {
+			frameNavigator?.goRoot?.();
 		}
-	},
+		activeTab.value = tabId;
+		localStorage.setItem("activeTab", tabId);
+		emit("tab-selected", tabId);
+	}
+}
 
-	// watch: {
-	// 	tabs: {
-	// 		handler(newTabs) {
-	// 			if (this.activeTab && !newTabs.some((t: any) => t.id === this.activeTab)) {
-	// 				if (newTabs.length > 0) {
-	// 					this.activeTab = newTabs[0].id;
-	// 				} else {
-	// 					this.activeTab = null;
-	// 				}
-	// 			}
-	// 		},
-	// 		// deep: true,
-	// 	},
-	// },
-};
+function refreshTab() {
+	emit("refresh", activeTab.value);
+}
+
+function closeTab() {
+	activeTab.value = null;
+	localStorage.removeItem("activeTab");
+}
+
+function handleContentUpdate(data: any) {
+	emit("content-update", data);
+}
+
+function isTabVisible(tabId: string): boolean {
+	if (!props.isSearch || !searchQuery.value.trim()) {
+		return true;
+	}
+	return filteredTabs.value.some(t => t.id === tabId);
+}
+
+function handleSearch() {
+	if (activeTab.value && !isTabVisible(activeTab.value)) {
+		if (filteredTabs.value.length > 0) {
+			selectTab(filteredTabs.value[0]?.id ?? "");
+		} else {
+			activeTab.value = null;
+		}
+	}
+	emit("search", searchQuery.value);
+}
+
+function clearSearch() {
+	searchQuery.value = "";
+	handleSearch();
+	nextTick(() => {
+		const input = document.querySelector('.search-input') as HTMLInputElement;
+		if (input) input.focus();
+	});
+}
+
+function highlightMatch(text: string): Component {
+	if (!props.isSearch || !searchQuery.value.trim() || !text) {
+		return <span>{text}</span>;
+	}
+
+	const query = props.caseSensitive 
+		? searchQuery.value.trim() 
+		: searchQuery.value.trim().toLowerCase();
+	
+	const searchText = props.caseSensitive ? text : text.toLowerCase();
+	const index = searchText.indexOf(query);
+
+	if (index === -1) return <span>{text}</span>;
+
+	const before = text.substring(0, index);
+	const match = text.substring(index, index + query.length);
+	const after = text.substring(index + query.length);
+
+	return <span>
+		{before}
+		<span class="search-highlight">
+			{match}
+		</span>
+		{after}
+	</span>;
+}
+
+onMounted(() => {
+	const savedTab = localStorage.getItem("activeTab");
+	if (savedTab && props.tabs.some((t) => t.id === savedTab)) {
+		activeTab.value = savedTab;
+	} else if (props.tabs.length > 0) {
+		activeTab.value = props.tabs[0]?.id || null;
+	}
+});
 </script>
 
 <style scoped>
@@ -329,20 +259,32 @@ export default {
 	border-radius: 8px;
 	overflow: hidden;
 	font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+	position: relative;
 }
 
-/* ===== ЛЕВАЯ ПАНЕЛЬ ===== */
+/* ===== ЛЕВАЯ ПАНЕЛЬ (абсолютная, без влияния на контент) ===== */
 .tab-list {
-	width: 220px;
-	min-width: 180px;
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 48px;
+	min-width: 48px;
 	background: #2d2d2d;
 	padding: 8px 0;
 	border-right: 1px solid #3d3d3d;
 	overflow-y: auto;
+	overflow-x: hidden;
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
 	flex-shrink: 0;
+	transition: width 0.25s ease;
+	z-index: 10;
+}
+
+.tab-list:hover {
+	width: 220px;
 }
 
 /* ===== ПОИСК ===== */
@@ -351,6 +293,14 @@ export default {
 	border-bottom: 1px solid #3d3d3d;
 	margin-bottom: 4px;
 	flex-shrink: 0;
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.tab-list:hover .search-container {
+	opacity: 1;
+	visibility: visible;
 }
 
 .search-wrapper {
@@ -422,13 +372,39 @@ export default {
 	color: #666;
 }
 
+/* ===== КНОПКА СОЗДАТЬ ===== */
+.create-btn {
+	margin: 0 12px 4px 12px;
+	padding: 8px 16px;
+	background: #42b883;
+	border: none;
+	border-radius: 6px;
+	color: #1a1a1a;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	opacity: 0;
+	visibility: hidden;
+	white-space: nowrap;
+}
+
+.tab-list:hover .create-btn {
+	opacity: 1;
+	visibility: visible;
+}
+
+.create-btn:hover {
+	background: #66d9a0;
+}
+
 /* ===== ЭЛЕМЕНТ ВКЛАДКИ ===== */
 .tab-item {
 	display: flex;
 	align-items: center;
 	padding: 10px 14px;
 	cursor: pointer;
-	transition: all 0.2s ease;
+	transition: background 0.2s ease, border-color 0.2s ease;
 	border-left: 3px solid transparent;
 	gap: 8px;
 	user-select: none;
@@ -436,6 +412,7 @@ export default {
 	word-break: break-word;
 	overflow-wrap: break-word;
 	min-height: 36px;
+	justify-content: flex-start;
 }
 
 .tab-item:hover {
@@ -466,9 +443,17 @@ export default {
 	word-break: break-word;
 	overflow-wrap: break-word;
 	min-width: 0;
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 0.2s ease, visibility 0.2s ease;
+	white-space: nowrap;
 }
 
-/* ✅ Подсветка поиска */
+.tab-list:hover .tab-item .tab-label {
+	opacity: 1;
+	visibility: visible;
+}
+
 .search-highlight {
 	background: #42b883;
 	color: #1a1a1a;
@@ -487,6 +472,14 @@ export default {
 	min-width: 18px;
 	text-align: center;
 	flex-shrink: 0;
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.tab-list:hover .tab-item .tab-badge {
+	opacity: 1;
+	visibility: visible;
 }
 
 .tab-item.active .tab-badge {
@@ -503,6 +496,14 @@ export default {
 	color: #666;
 	font-size: 14px;
 	gap: 8px;
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.tab-list:hover .no-results {
+	opacity: 1;
+	visibility: visible;
 }
 
 .no-results-icon {
@@ -510,10 +511,10 @@ export default {
 	opacity: 0.5;
 }
 
-/* ===== ПРАВАЯ ПАНЕЛЬ ===== */
+/* ===== ПРАВАЯ ПАНЕЛЬ (контент) ===== */
 .tab-content {
 	flex: 1;
-	padding: 20px;
+	padding: 5px 5px 5px 53px; /* отступ, чтобы контент не перекрывался панелью */
 	background: #252525;
 	overflow: auto;
 	min-width: 0;

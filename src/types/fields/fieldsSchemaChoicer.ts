@@ -31,15 +31,20 @@ export function createSchemaChoiceForCondition(
 		conditionType?: string;
 		onSchemaChange?: (data: RecordSchema) => void;
 		onSchemaPostChange?: (data: RecordSchema) => void;
+		fieldNameArg?: string;
 	}
 ): SchemaChoice {
-	const conditionType = config.conditionType ?? config.name.substring(0, config.name.lastIndexOf("Condition")).trim();;
-	
+	const conditionType = config.conditionType ?? config.name.substring(0, config.name.lastIndexOf("Condition")).trim();
+	const fieldName = config.fieldNameArg ?? "conditionType"
+
 	return {
 		name: config.name,
-		condition: (data: any) => data["conditionType"] === conditionType,
+		condition: (data: any) => data[fieldName] === conditionType,
 		schema: config.schema,
-		onSchemaChange: config.onSchemaChange ?? ((oldSchema: RecordSchema) => oldSchema.set("conditionType", conditionType)),
-		onSchemaPostChange: config.onSchemaPostChange ?? ((newSchema: RecordSchema) => newSchema.sanitize()),
+		onSchemaChange: config.onSchemaChange, // ?? ((oldSchema: RecordSchema) => oldSchema.set("conditionType", conditionType)),
+		onSchemaPostChange: config.onSchemaPostChange ?? ((newSchema: RecordSchema) => {
+			newSchema.sanitize()
+			newSchema.set(fieldName, conditionType)
+		}),
 	};
 }

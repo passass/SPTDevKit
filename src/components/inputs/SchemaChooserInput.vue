@@ -8,11 +8,11 @@
 			class="schema-chooser__select"
 		>
 			<option
-				v-for="schema in schemas"
+				v-for="schema in sortedSchemas"
 				:key="schema.name"
 				:value="schema.name"
 			>
-				{{ gameLocalization.getUIText(schema.name, currentLocale) }}
+				{{ getTranslatedName(schema.name) }}
 			</option>
 		</select>
 	</div>
@@ -25,7 +25,6 @@ import { SchemaChoicer } from "@/types/fields/fieldsSchemaChoicer";
 import { gameLocalization } from "@/types/localization";
 import { type locales } from "@/types/localization";
 
-const currentLocale = inject<Ref<string>>('currentLocale', ref('ru')).value as locales;
 const props = defineProps<{
 	recordData: RecordSchema
 }>();
@@ -37,6 +36,29 @@ const emit = defineEmits<{
 const schemas = computed(() => {
 	return (props.recordData.schemaChooser as typeof SchemaChoicer).schemas || [];
 });
+
+const translatedNames = computed(() => {
+	const map = new Map<string, string>();
+	for (const schema of schemas.value) {
+		const translated = gameLocalization.getUIText({
+			localeId: schema.name,
+		});
+		map.set(schema.name, translated);
+	}
+	return map;
+});
+
+const sortedSchemas = computed(() => {
+	return [...schemas.value].sort((a, b) => {
+		const nameA = translatedNames.value.get(a.name) || a.name;
+		const nameB = translatedNames.value.get(b.name) || b.name;
+		return nameA.localeCompare(nameB);
+	});
+});
+
+function getTranslatedName(name: string): string {
+	return translatedNames.value.get(name) || name;
+}
 
 const selectedSchema = computed({
 	get: () => {

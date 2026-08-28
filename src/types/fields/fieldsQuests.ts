@@ -1,8 +1,9 @@
 // src/types/fieldsQuests.ts
 
-import { RecordSchema, Field, LocalizationField, UnneccesaryField, HiddenField } from "./fields";
+import { RecordSchema, Field, LocalizationField, UnneccesaryField, HiddenField, AdvSelectField } from "./fields";
 import { IdField } from "./fieldsClasses";
 import { QuestConditions } from "./fieldsQuestsConditions";
+import { RewardsSchemas } from "./rewards/rewards";
 
 /**
  * Схема для квеста из EFT
@@ -196,29 +197,18 @@ export class QuestSchema extends RecordSchema {
 			label: '🎁 Награды',
 			description: 'Награды за выполнение квеста',
 			type: 'object',
+			nestedSchema: RewardsSchemas,
 			order: 22
 		}),
 
 		// ===== ТОРГОВЕЦ =====
-		Field.create({
+		AdvSelectField.create({
 			key: 'traderId',
 			label: '🏪 ID Торговца',
 			description: 'ID торговца, выдающего квест',
-			type: 'select',
+			type: 'advancedSelect',
 			order: 23,
-			options: [
-				'5935c25fb3acc3127c3d8cd9'
-				, '54cb57776803fa99248b456e'
-				, '54cb50c76803fa8b248b4571'
-				, '5a7c2eca46aef81a7ca2145d'
-				, '5c0647fdd443bc2504c2d371'
-				, '579dc571d53a0658a154fbec'
-				, '5ac3b934156ae10c4430e83c'
-				, '656f0f98d80a697f855d34b1'
-				, '58330581ace78e27b8b10cee'
-				, '6617beeaa9cfa777ca915b7c'
-				, '638f541a29ffd1183d187f57'
-			]
+			storeId: "traders",
 		}),
 
 		// ===== ИЗОБРАЖЕНИЕ =====

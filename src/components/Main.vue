@@ -7,26 +7,23 @@ import { choiceStrings, gameLocalization, type locales } from "@/types/localizat
 import ListTabsFrame from "./ListTabsFrame.vue";
 import type { RecordSchema } from "@/types/fields/fields.ts";
 import { useDataStore, type dataStoreType } from "@/stores/dataStore.ts";
-import type { ClassType } from "@/utils/classUtils.ts";
+import { getStaticField, type ClassType } from "@/utils/classUtils.ts";
+import SettingsComponent from "./SettingsComponent.vue";
+import { isElectron } from "@/utils/utils.ts";
+import { generateAllSchemas } from "@/utils/schemaGenerator.ts";
 
 
 const dataStore = useDataStore()
 
-const currentLocale: Ref<locales> = ref('ru')
-provide('currentLocale', currentLocale)
-
-function getRecordEditorComponent(dataStoreId: string): Component {
+function getRecordEditorComponent(content: object, dataStoreId: string): Component {
 	return () => {
 		const itemsData: Tab[] = []
-				
 		const fileData: dataStoreType<RecordSchema> = dataStore.getMap(dataStoreId) ?? {};
 		const schemaType = dataStore.getSchemaType(dataStoreId)
 
-
 		for (const [itemId, itemData] of fileData.entries()) {
-			const localizedName: string = gameLocalization.getText({
-				localeId: [`${itemId} Name`, `${itemId} name`]
-				, locale: currentLocale.value as locales
+			const localizedName: string = gameLocalization.getObjectLocalization({
+				instance: itemData,
 			})
 
 			itemsData.push(
@@ -55,7 +52,7 @@ function createTab(content: object, dataStoreId: string): Tab {
 		dataStoreId: dataStoreId,
 		badge: computed(() => dataStore.getMap(dataStoreId).size) ,
 		schemaType: dataStore.getSchemaType(dataStoreId),
-		component: getRecordEditorComponent(dataStoreId),
+		component: getRecordEditorComponent(content, dataStoreId),
 		...content
 	}
 
@@ -73,20 +70,20 @@ const tabsContent = ref<Tab[]>([
 		icon: "📦",
 		title: "Редактор предметов",
 	}, 'items'),
-	{
-		id: "traders",
+	createTab({
 		label: "Торговцы",
 		icon: "🏪",
-		badge: 5,
-
-		title: "Торговцы и репутация",
-	},
+		title: "Торговцы",
+	}, 'traders'),
 	{
 		id: "settings",
 		label: "Настройки",
 		icon: "⚙️",
 
 		title: "Настройки приложения",
+		component: !isElectron()
+		? (<h1>Electron required</h1>)
+		: (<SettingsComponent></SettingsComponent>)
 	},
 ]);
 

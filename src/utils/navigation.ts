@@ -1,21 +1,16 @@
 // src/utils/navigation.ts
-
-import { RecordSchema, castByArrayItemSchema, castByArrayItemSchemaInField, castByNestedSchemaInField, castToRecordSchema, isNotRecordSchemaButObject, type arrayItemSchemaType, type recordSchemaOtherData } from "@/types/fields/fields";
+import { RecordSchema, castByArrayItemSchema, castToRecordSchema, type arrayItemSchemaType, type recordSchemaOtherData } from "@/types/fields/fields";
 import type { Tab } from "@/tabs/tabs.ts";
-import { LogAllMethods } from "@/utils/debug/debug";
 
-export interface NavigatorOptions {
-	tab: Tab;
-}
+export interface NavigatorOptions { tab: Tab; }
 
 export interface PathItem {
-	key: string | number;
-	type: 'object' | 'array' | 'record';
-	value: any;
-
-	schema?: RecordSchema | null;
-	arrayItemSchema?: arrayItemSchemaType | null;
-
+    key: string | number;
+    type: 'object' | 'array' | 'record';
+    value: any;
+	label?: string | null;
+    schema?: RecordSchema | null;
+    arrayItemSchema?: arrayItemSchemaType | null;
 }
 
 export function isNavigable(value: any): boolean {
@@ -28,172 +23,114 @@ export function isNavigable(value: any): boolean {
 		)
 	);
 }
-
-// @LogAllMethods('info')
 export class Navigator {
-	private _tab: Tab;
-	private _pathStack: PathItem[] = [];
+    private _tab: Tab;
+    pathStack: PathItem[];
 
-	constructor(options: NavigatorOptions) {
-		this._tab = options.tab;
-	}
+    constructor(options: NavigatorOptions) {
+        this._tab = options.tab;
+        this.pathStack = new Array();
+    }
 
-	get tab(): Tab {
-		return this._tab;
-	}
+    get tab(): Tab { return this._tab; }
+    set tab(value: Tab) {
+        this._tab = value;
+        const oldPathStack = this.pathStack.map(el => el.key);
+        this.pathStack = [];
+        this.navigate(oldPathStack);
+    }
+    
+    get sourceData(): RecordSchema | undefined {
+        return castToRecordSchema(this._tab.data) ?? undefined;
+    }
 
-	set tab(value: Tab) {
-		this._tab = value;
+    get displayData(): any {
+        if (this.pathStack.length === 0) return this.sourceData;
+        const last = this.pathStack[this.pathStack.length - 1];
+        return last?.schema ?? last?.value;
+    }
 
-		const oldPathStack = this._pathStack;
-		this._pathStack = [];
+    getPathKeys(): string[] { return this.pathStack.map(item => String(item.key)); }
+    getPathItem(index: number): PathItem | undefined { return this.pathStack[index]; }
+    getCurrentSchema(): RecordSchema | undefined { return this.displayData; }
 
-		this.navigate(oldPathStack.map((el) => el.key))
-	}
+    changeCurrentSchema(newSchema: RecordSchema): void {
+        if (this.pathStack.length === 0) {
+            this._tab.data = newSchema as any;
+            return;
+        }
+        const last = this.pathStack[this.pathStack.length - 1];
+        if (last?.schema instanceof RecordSchema) {
+            last.value = newSchema.data;
+            last.schema = newSchema;
+        }
+    }
 
-	get pathStack(): PathItem[] {
-		return this._pathStack;
-	}
+    navigate(key: any): boolean {
+        if (Array.isArray(key)) {
+            return key.every(k => this.navigate(k));
+        }
 
-	get sourceData(): RecordSchema | undefined {
-		return castToRecordSchema(this._tab.data) ?? undefined;
-	}
+        const currentData = this.displayData;
+        if (!currentData) return false;
 
-	get displayData(): any {
-		if (this._pathStack.length === 0) {
-			return this.sourceData;
-		}
-		return this._pathStack[this._pathStack.length - 1]?.schema
-		?? this._pathStack[this._pathStack.length - 1]?.value;
-	}
+        const field = currentData instanceof RecordSchema ? currentData.getFieldByKey(key) : null;
+        
+		const lastPathItem = this.pathStack[this.pathStack.length-1];
+		const label = field?.label
 
-	getPathKeys(): string[] {
-		return this._pathStack.map(item => String(item.key));
-	}
+        let target: any;
+        if (currentData instanceof RecordSchema) {
+            target = currentData.get(key);
+        } else if (Array.isArray(currentData)) {
+            const idx = typeof key === 'number' ? key : parseInt(key);
+            if (isNaN(idx) || idx < 0 || idx >= currentData.length) return false;
+            target = currentData[idx];
+        } else {
+            target = currentData[key];
+        }
 
-	getPathItem(index: number): PathItem | undefined {
-		return this._pathStack[index];
-	}
+        if (!isNavigable(target)) return false;
 
-	getCurrentSchema(): RecordSchema | undefined {
-		return this.displayData;
-	}
+        if (Array.isArray(target)) {
+            this.pathStack.push({ key, type: 'array', label: label, value: target, arrayItemSchema: field?.arrayItemSchema });
+        } else if (typeof target === 'object') {
+            let schema: RecordSchema | null = null;
+            if (lastPathItem?.arrayItemSchema) {
+                schema = castByArrayItemSchema(target, lastPathItem.arrayItemSchema);
+            } else if (field?.nestedSchema) {
+                schema = castToRecordSchema(target, field.nestedSchema);
+            } else {
+                schema = castToRecordSchema(target);
+            }
+            this.pathStack.push({
+				key
+				, schema
+				, type: 'record'
+				, value: target
+				, label: label
+			});
+        }
+        
+        return true;
+    }
 
-	changeCurrentSchema(newSchema: RecordSchema): void {
-		if (this._pathStack.length === 0) {
-			this._tab.data = newSchema as any;
-			return;
-		}
+    goBack(): void {
+        this.pathStack.pop();
+        while (Array.isArray(this.pathStack[this.pathStack.length-1]?.value)) {
+            this.pathStack.pop();
+        }
+    }
 
-		const oldPathItem = this._pathStack[this._pathStack.length - 1];
-		
-		if (oldPathItem && oldPathItem.schema instanceof RecordSchema) {
-			this._pathStack[this._pathStack.length - 1] = {
-				...oldPathItem,
-				value: newSchema.data,
-				schema: newSchema,
-			}
-		}
-	}
+    goRoot(): void { this.pathStack = []; }
+    
+    jumpToLevel(index: number): void {
+        if (index >= 0 && index < this.pathStack.length) {
+            this.pathStack = this.pathStack.slice(0, index + 1);
+        }
+    }
 
-	navigate(key: any): boolean {
-		if (Array.isArray(key)) {
-			for (const _key of key) {
-				if (this.navigate(_key) === false)
-					return false;
-			}
-			return true;
-		}
-
-		const currentData = this.displayData;
-		if (!currentData) return false;
-
-		const field = (
-			currentData instanceof RecordSchema
-			? currentData?.getFieldByKey(key) 
-			: null
-		);
-		const lastPathItem: PathItem | undefined = this._pathStack.at(-1)
-
-		let target: any;
-
-		if (typeof currentData === 'object') {
-			if (currentData instanceof RecordSchema) {
-				target = currentData.get(key);
-			} else {
-				target = currentData[key];
-			}
-		} else if (Array.isArray(currentData)) {
-			const idx = typeof key === 'number' ? key : parseInt(key);
-			if (isNaN(idx) || idx < 0 || idx >= currentData.length) return false;
-			target = currentData[idx];
-		} else {
-			return false;
-		}
-
-		if (isNavigable(target)) {
-			if (Array.isArray(target)) {
-				this._pathStack.push({
-					key: key,
-					type: 'array',
-					value: target,
-					arrayItemSchema: field?.arrayItemSchema,
-				});
-			} else if (typeof target === 'object') {
-				let schema = null;
-				if (lastPathItem?.arrayItemSchema) {
-					schema = castByArrayItemSchema(
-						target,
-						lastPathItem.arrayItemSchema
-					)
-				} else if (field?.nestedSchema) {
-					schema = castToRecordSchema(
-						target,
-						field.nestedSchema
-					)
-				} else {
-					schema = castToRecordSchema(target)
-				}
-				this._pathStack.push({
-					key,
-					schema,
-					type: 'record',
-					value: target
-				});
-			}
-			return true
-		}
-		return false
-	}
-
-	goBack(): void {
-		this._pathStack.pop();
-		while (
-			Array.isArray(this._pathStack.at(-1)?.value)
-		) {
-			this._pathStack.pop();
-		}
-	}
-
-	goRoot(): void {
-		this._pathStack = [];
-	}
-
-	jumpToLevel(index: number): void {
-		if (index >= 0 && index < this._pathStack.length) {
-			this._pathStack = this._pathStack.slice(0, index + 1);
-		}
-	}
-
-	reset(): void {
-		this._pathStack = [];
-	}
-
-	getPathStack(): PathItem[] {
-		return this._pathStack;
-	}
-
-	getDisplayData(): RecordSchema | undefined {
-		return this.displayData;
-	}
+    reset(): void { this.pathStack = []; }
+    getPathStack(): PathItem[] { return this.pathStack; }
+    getDisplayData(): RecordSchema | undefined { return this.displayData; }
 }
