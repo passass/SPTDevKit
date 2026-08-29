@@ -12,7 +12,7 @@ export interface Tab {
 	id: string;
 	label: string;
 	icon?: string;
-	badge?: ComputedValue<number>;
+    badge?: number; //| number;
 
 	title?: string;
 	component?: Component;

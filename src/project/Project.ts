@@ -4,6 +4,7 @@ import Traders from "./Traders";
 import { availableLocales, suffixes } from "@/types/localization";
 import { Path, PathArray } from "@/utils/pathUtils";
 import type path from "path";
+import { isElectron } from "@/utils/utils";
 
 export const currentProjectTag = "currentProject";
 export const modTag = "mod";
@@ -64,7 +65,7 @@ class Project {
 			});
 		}
 
-		if (!projectArgs.ProjectArgs) await this.dataStore?.loadMultiple(Array.from(storeIds.values()));
+		if (!projectArgs.notLoadImmediately) await this.dataStore?.loadMultiple(Array.from(storeIds.values()));
 	}
 
 	async loadTraders(projectArgs: ProjectArgs) {
@@ -75,7 +76,7 @@ class Project {
 			Traders.loadAdditionalTrader(filePath.toString(), projectArgs.tags);
 		});
 
-		if (!projectArgs.ProjectArgs) await this.dataStore?.load("traders");
+		if (!projectArgs.notLoadImmediately) await this.dataStore?.load("traders");
 	}
 
 	async loadQuests(projectArgs: ProjectArgs) {
@@ -96,7 +97,7 @@ class Project {
 				tags: projectArgs.tags,
 			});
 		}
-		if (!projectArgs.ProjectArgs) await this.dataStore?.load("quests");
+		if (!projectArgs.notLoadImmediately) await this.dataStore?.load("quests");
 	}
 
 	async loadSPTFolder(projectArgs: ProjectArgs) {
@@ -142,9 +143,10 @@ class Project {
 	}
 
 	async init() {
+		await Traders.load();
+		if (!isElectron()) return;
 		this.dataStore ??= useDataStore();
 		const savedEftPath = localStorage.getItem("eftFolderPath");
-		await Traders.load();
 		if (savedEftPath) {
 			await this.loadEFTMods(new Path(savedEftPath));
 		}

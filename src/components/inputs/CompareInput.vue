@@ -4,7 +4,7 @@
 	<div class="compare-input">
 		<div class="compare-input__row">
 			<select
-				v-model="localData.compareMethod"
+				v-model="items['compareMethod']"
 				class="compare-input__select"
 			>
 				<option value=">=">>=</option>
@@ -13,10 +13,10 @@
 				<option value=">">></option>
 				<option value="<"><</option>
 			</select>
-			
+
 			<input
 				type="number"
-				v-model.number="localData.value"
+				v-model.number="items['value']"
 				class="compare-input__input"
 				placeholder="Значение"
 			/>
@@ -25,29 +25,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { RecordSchema, type SchemaData } from '@/types/fields/fields';
+import { onMounted, computed } from 'vue';
+
 
 const props = defineProps<{
-	modelValue: { compareMethod: string; value: number } | null | undefined;
+	modelValue: Record<string, any>;
 }>();
 
-const emit = defineEmits<{
-	(e: 'update:modelValue', value: { compareMethod: string; value: number }): void;
-}>();
-
-const localData = computed({
-	get: () => {
-		if (!props.modelValue || typeof props.modelValue !== 'object') {
-			return { compareMethod: '>=', value: 0 };
-		}
-		return {
-			compareMethod: props.modelValue.compareMethod || '>=',
-			value: props.modelValue.value ?? 0
-		};
-	},
-	set: (val) => {
-		emit('update:modelValue', val);
-	}
+const items = computed<SchemaData>(() => {
+	const data = props.modelValue instanceof RecordSchema ? props.modelValue.data : props.modelValue
+	props.modelValue["compareMethod"] ??= ">=="
+	props.modelValue["value"] ??= 0
+	return data
 });
 </script>
 

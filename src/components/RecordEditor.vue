@@ -3,9 +3,9 @@
 	import ListTabs from "./ListTabs.vue";
 	import type { Tab } from "@/tabs/tabs.ts";
 	import type { PropType } from "vue";
-	import { RecordSchema } from "@/types/fields/fields.ts";
-	import { type ClassType } from "@/utils/classUtils.ts";
-	import { type dataStoreType } from "@/stores/dataStore.ts";
+	import { RecordSchema } from "@/types/fields/fields";
+	import { type ClassType } from "@/utils/classUtils";
+	import { type dataStoreType } from "@/stores/dataStore";
 
 	const props = defineProps<{
 		itemsData: Tab[]
@@ -15,7 +15,7 @@
 </script>
 
 <template>
-	<ListTabs 
+	<ListTabs
 	:isSearch="true"
 	:schemaType="props.schemaType"
 	:fileData="props.fileData"

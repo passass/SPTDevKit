@@ -11,6 +11,11 @@
 	],
 	"compilerOptions": {
 		"experimentalDecorators": true,
-		"emitDecoratorMetadata": true
+		"emitDecoratorMetadata": true,
+		"jsx": "preserve",
+    	"jsxImportSource": "vue",
+	    "paths": {
+	      "@/*": ["./src/*"]
+	    }
 	}
 }

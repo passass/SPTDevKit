@@ -24,24 +24,16 @@ export function isNavigable(value: any): boolean {
 	);
 }
 export class Navigator {
-    private _tab: Tab;
+    tab: Tab;
     pathStack: PathItem[];
 
     constructor(options: NavigatorOptions) {
-        this._tab = options.tab;
+        this.tab = options.tab;
         this.pathStack = new Array();
     }
 
-    get tab(): Tab { return this._tab; }
-    set tab(value: Tab) {
-        this._tab = value;
-        const oldPathStack = this.pathStack.map(el => el.key);
-        this.pathStack = [];
-        this.navigate(oldPathStack);
-    }
-    
     get sourceData(): RecordSchema | undefined {
-        return castToRecordSchema(this._tab.data) ?? undefined;
+        return castToRecordSchema(this.tab.data) ?? undefined;
     }
 
     get displayData(): any {
@@ -56,7 +48,7 @@ export class Navigator {
 
     changeCurrentSchema(newSchema: RecordSchema): void {
         if (this.pathStack.length === 0) {
-            this._tab.data = newSchema as any;
+            this.tab.data = newSchema as any;
             return;
         }
         const last = this.pathStack[this.pathStack.length - 1];
@@ -75,7 +67,7 @@ export class Navigator {
         if (!currentData) return false;
 
         const field = currentData instanceof RecordSchema ? currentData.getFieldByKey(key) : null;
-        
+
 		const lastPathItem = this.pathStack[this.pathStack.length-1];
 		const label = field?.label
 
@@ -111,7 +103,7 @@ export class Navigator {
 				, label: label
 			});
         }
-        
+
         return true;
     }
 
@@ -123,7 +115,7 @@ export class Navigator {
     }
 
     goRoot(): void { this.pathStack = []; }
-    
+
     jumpToLevel(index: number): void {
         if (index >= 0 && index < this.pathStack.length) {
             this.pathStack = this.pathStack.slice(0, index + 1);

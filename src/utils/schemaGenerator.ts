@@ -17,14 +17,14 @@ interface FieldInfo {
     data_type?: string;
 
 	rel_path?: string;
-    
+
 	array_nested?: Record<string, FieldInfo>;
 	options?: string[];
 
 	hidden: boolean;
 	nested_schema: Record<string, FieldInfo>;
 	unneccesary?: boolean;
-	
+
 	inputType?: FieldType;
 	storeId?: string;
 
@@ -55,7 +55,7 @@ function mapDataType(dataType: string): Field['type'] {
 
         'stringArray': 'stringArray',
         'numberArray': 'numberArray',
-        
+
 		'optionsArray': 'optionsArray',
         'array': 'array',
         'object': 'object'
@@ -75,7 +75,7 @@ function generateFieldClass(fieldName: string, fieldInfo: FieldInfo, lastSplitSc
             order: 0,
         });
     }
-	
+
     const commonFields: any = {
         key: fieldInfo.key ?? fieldName,
         label: fieldInfo.label ?? fieldName,
@@ -92,7 +92,7 @@ function generateFieldClass(fieldName: string, fieldInfo: FieldInfo, lastSplitSc
         return Field.create({
             ...commonFields,
             type: 'object',
-			
+
             nestedSchema: nestedClass
         });
     }
@@ -108,7 +108,7 @@ function generateFieldClass(fieldName: string, fieldInfo: FieldInfo, lastSplitSc
 
 	if (fieldInfo.__type === "split_path_child") {
 		const childObject: any = Object.values(lastSplitSchema.childs).find((el: any) => el.rel_path == fieldInfo.rel_path)
-		if (childObject?.__type === "split_path_child" 
+		if (childObject?.__type === "split_path_child"
 			&& childObject?.value?.__type === "split_path"
 		) {
 			const childSplitObject = processSplitPath(
@@ -128,28 +128,28 @@ function generateFieldClass(fieldName: string, fieldInfo: FieldInfo, lastSplitSc
 	if (fieldInfo.__type !== "field")
 		return null;
 
-	
+
 
     const dataType = mapDataType(fieldInfo.data_type || 'unknown');
-    
+
     if (dataType === 'array' && fieldInfo.array_nested) {
         // Вложенная схема генерируется рекурсивно
         const nestedClass = generateNestedSchema(`${fieldName}NestedSchema`, fieldInfo.array_nested, lastSplitSchema);
-        
+
         return Field.create({
             ...commonFields,
             type: 'array',
             arrayItemSchema: nestedClass
         });
     }
-    
+
     if (fieldInfo.options)
         return Field.create({
             ...commonFields,
             type: 'select',
             options: fieldInfo.options,
         });
-    
+
     if (fieldInfo.key === "traderId")
         return AdvSelectField.create({
             ...commonFields,
@@ -160,7 +160,7 @@ function generateFieldClass(fieldName: string, fieldInfo: FieldInfo, lastSplitSc
 	if (fieldInfo.storeId) {
 		return AdvSelectField.create({
 			...commonFields,
-			type: "advancedSelect",
+			type: dataType,
 			storeId: fieldInfo.storeId,
 		});
 	}
@@ -174,30 +174,26 @@ function generateFieldClass(fieldName: string, fieldInfo: FieldInfo, lastSplitSc
     });
 }
 
-
-
-				
-
 function generateNestedSchema(className: string, fields: Record<string, FieldInfo>, lastSplitSchema: any): ClassType<RecordSchema> {
     const generatedFields: Field[] = [];
-    
+
     for (const [fieldKey, fieldInfo] of Object.entries(fields)) {
         if (typeof fieldInfo === 'object' && fieldInfo !== null && !Array.isArray(fieldInfo)) {
             const field = generateFieldClass(fieldKey, fieldInfo, lastSplitSchema);
             if (field) generatedFields.push(field);
         }
     }
-    
+
     class GeneratedSchema extends RecordSchema {
         static fields: Field[] = generatedFields;
     }
-    
+
     return GeneratedSchema;
 }
 
 export function generateSchemaChoicer(className: string, schemas: Map<string, ClassType<RecordSchema>>, split_key: string): ClassType<SchemaChoicer> {
     const schemaChoices: SchemaChoice[] = [];
-    
+
     for (const [name, schemaClass] of schemas) {
         const conditionType = name.replace('Schema', '');
 
@@ -208,11 +204,11 @@ export function generateSchemaChoicer(className: string, schemas: Map<string, Cl
 			fieldNameArg: split_key
 		}))
     }
-    
+
     class GeneratedSchemaChoicer extends SchemaChoicer {
         static schemas: SchemaChoice[] = schemaChoices;
     }
-    
+
     return GeneratedSchemaChoicer;
 }
 
@@ -230,10 +226,10 @@ function processSplitPath(
         type: 'root',
 		path: schema.path,
     };
-    
+
     if (schema.fields) {
         const schemaChoices: Map<string, ClassType<RecordSchema>> = new Map();
-        
+
         for (const [fieldName, fieldData] of Object.entries(schema.fields)) {
             if (typeof fieldData === 'object' && fieldData !== null) {
                 const fieldInfos = fieldData as Record<string, FieldInfo>;
@@ -252,7 +248,7 @@ function processSplitPath(
                 schemaChoices.set(className, GeneratedSchema);
             }
         }
-        
+
         // Если есть несколько схем, создаем SchemaChoicer
         if (schemaChoices.size > 0) {
             const choicerName = `${schema.split_key}Choicer`;
@@ -265,24 +261,24 @@ function processSplitPath(
                 parent: node,
                 type: 'choicer'
             };
-            
+
             // Обновляем parent для дочерних узлов
             for (const child of choicerNode.children) {
                 child.parent = choicerNode;
             }
-            
+
 			node.schema = choicerClass
         }
     }
-    
+
     // Рекурсивно обрабатываем childs
     if (schema.childs) {
         for (const [childKey, childData] of Object.entries(schema.childs)) {
             if (
-                childData 
-                && typeof childData === 'object' 
+                childData
+                && typeof childData === 'object'
                 && 'value' in childData
-                && childData.value 
+                && childData.value
                 && typeof childData.value === 'object'
                 && '__type' in childData.value
                 && childData.value.__type === 'split_path'
@@ -296,7 +292,7 @@ function processSplitPath(
             }
         }
     }
-    
+
     return node;
 }
 
@@ -317,7 +313,7 @@ export function generateAllSchemas(outputJson: any): SchemaNode {
         children: [],
         type: 'root'
     };
-    
+
     if (typeof outputJson !== "object" || !outputJson.all_schemas || !Array.isArray(outputJson.all_schemas)) {
         return rootNode;
     }
@@ -325,7 +321,7 @@ export function generateAllSchemas(outputJson: any): SchemaNode {
 	if (!dataStore) {
 		dataStore = useDataStore();
 	}
-    
+
     for (const schema of outputJson.all_schemas) {
         if (schema.__type === 'split_path') {
             const node = processSplitPath(schema, schema.split_key || 'split_path', rootNode);
@@ -344,7 +340,7 @@ export function generateAllSchemas(outputJson: any): SchemaNode {
             rootNode.children.push(childNode);
 		}
     }
-    
+
     return rootNode;
 }
 
@@ -360,7 +356,7 @@ export function printTree(node: SchemaNode, indent: string = ''): void {
     const typeLabel = node.type === 'root' ? '📁' : node.type === 'choicer' ? '🔀' : '📄';
     const nameLabel = node.schema ? `${node.name} (${node.schema.name})` : node.name;
     console.log(`${indent}${typeLabel} ${nameLabel}`);
-    
+
     for (const child of node.children) {
         printTree(child, indent + '  ');
     }

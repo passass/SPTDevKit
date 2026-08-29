@@ -6,11 +6,11 @@ import { ref, type Component, type Ref, provide, computed } from 'vue'
 import { choiceStrings, gameLocalization, type locales } from "@/types/localization";
 import ListTabsFrame from "./ListTabsFrame.vue";
 import type { RecordSchema } from "@/types/fields/fields.ts";
-import { useDataStore, type dataStoreType } from "@/stores/dataStore.ts";
-import { getStaticField, type ClassType } from "@/utils/classUtils.ts";
+import { useDataStore, type dataStoreType } from "@/stores/dataStore";
+import { getStaticField, type ClassType } from "@/utils/classUtils";
 import SettingsComponent from "./SettingsComponent.vue";
-import { isElectron } from "@/utils/utils.ts";
-import { generateAllSchemas } from "@/utils/schemaGenerator.ts";
+import { isElectron } from "@/utils/utils";
+import { generateAllSchemas } from "@/utils/schemaGenerator";
 
 
 const dataStore = useDataStore()
@@ -49,8 +49,11 @@ function getRecordEditorComponent(content: object, dataStoreId: string): Compone
 function createTab(content: object, dataStoreId: string): Tab {
 	const res = {
 		id: `tab${dataStoreId}`,
-		dataStoreId: dataStoreId,
-		badge: computed(() => dataStore.getMap(dataStoreId).size) ,
+        dataStoreId: dataStoreId,
+        // badge: computed(() => dataStore.getMap(dataStoreId).size),
+        get badge() {
+            return dataStore.getMap(dataStoreId)?.size ?? 0;
+        },
 		schemaType: dataStore.getSchemaType(dataStoreId),
 		component: getRecordEditorComponent(content, dataStoreId),
 		...content

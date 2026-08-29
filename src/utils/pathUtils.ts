@@ -1,9 +1,5 @@
-// src/utils/Path.ts
 
-import { time } from "console";
 import { isElectron } from "./utils";
-
-// src/utils/pathUtils.ts
 
 export class PathArray {
     filePaths: Array<Path> = []
