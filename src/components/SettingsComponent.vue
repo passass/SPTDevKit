@@ -18,6 +18,10 @@
 			variant="eft"
 			@select="selectEftFolder"
 		/>
+
+		<button @click="Project.saveProject()">
+			Сохранить
+		</button>
 	</div>
 </template>
 
@@ -39,54 +43,13 @@ const isLoading = ref(false);
 const eftPath = ref<string>('');
 const isLoadingEft = ref(false);
 
-const pathUtils = window.electronAPI.pathUtils
-
-function toJsonObject(data: any): any {
-	if (data instanceof RecordSchema) {
-		return toJsonObject(data.data)
-	} else if (data instanceof SchemaChoicer) {
-		throw new Error("SchemaChoicer not implemented to json object") 
-	} else if (Array.isArray(data)) {
-		return data.map((el) => toJsonObject(el))
-	} else if (data instanceof Map) {
-		const result: Record<any, any> = {}
-		for (const [key, value] of data.entries()) {
-			result[key] = toJsonObject(value)
-		}
-		return result
-	} else if (typeof data === "object") {
-		const result: Record<any, any> = {}
-		for (const [key, value] of Object.entries(data)) {
-			result[key] = toJsonObject(value)
-		}
-		return result
-	} else {
-		return data
-	}
-}
-
-function saveFile() {
-	const dataStore = useDataStore()
-	const toWrite = toJsonObject(dataStore.getByTagInStore("quests", currentProjectTag))
-	console.log(dataStore.getByTagInStore("quests", currentProjectTag))
-	window.electronAPI.writeJson(
-		"D:/Misha/Downloads/test.json"
-		, JSON.stringify(toWrite, null, 2)
-	)
-}
-
-function getCurrentProjectObjects() {
-	const dataStore = useDataStore()
-	console.log(dataStore.getByTagInStore("quests", currentProjectTag))
-}
-
 async function selectFolder() {
     if (isLoading.value) return;
 
     isLoading.value = true;
     try {
         const folderPath = await window.electronAPI.selectFolder();
-        
+
         if (!folderPath) {
             console.log('Выбор папки отменён');
             return;
@@ -94,7 +57,7 @@ async function selectFolder() {
 
 		Project.loadProject(new Path(folderPath))
         selectedPath.value = folderPath;
-		
+
     } catch (error) {
         console.error('Ошибка при выборе папки:', error);
         alert('Ошибка при выборе папки');
@@ -109,14 +72,14 @@ async function selectEftFolder() {
 	isLoadingEft.value = true;
 	try {
 		const folderPath = await window.electronAPI.selectFolder();
-		
+
 		if (!folderPath) {
 			console.log('Выбор папки EFT отменён');
 			return;
 		}
 
 		eftPath.value = folderPath;
-		localStorage.setItem('eftFolderPath', folderPath); 
+		localStorage.setItem('eftFolderPath', folderPath);
 		console.log('Папка EFT сохранена:', folderPath);
 		Project.loadEFTMods(new Path(folderPath))
 	} catch (error) {

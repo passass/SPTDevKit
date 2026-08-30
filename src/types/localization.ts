@@ -2,6 +2,7 @@ import { useDataStore } from "@/stores/dataStore";
 import { FileConfig } from "@/stores/fileStore.ts";
 import { idsFields, RecordSchema } from "./fields/fields";
 import { ref, type Ref } from "vue";
+import Project, { currentProjectTag } from "@/project/Project";
 
 export const availableLocales: Array<string> = ["ru", "en"];
 export type locales = "ru" | "en";
@@ -38,12 +39,25 @@ export class GameLocalization {
 	getObjectLocalization(config: {
 		instance: any;
 		locale?: locales;
-		localeId?: string[]
+		localeId?: string[];
+		canBeUI?: boolean
 	}): string {
+		if (typeof config.instance === "string") {
+			const ui_translate = config.canBeUI ? this.getUIText({
+				localeId: config.localeId ?? config.instance,
+				default: ""
+			}) : ""
+			return ui_translate !== "" ? ui_translate : gameLocalization.getText({
+				localeId: config.localeId ?? config.instance,
+				locale: config.locale ?? this.currentLocale.value,
+				default: config.instance,
+			});
+		}
+
 		let def: any = undefined
 		let itemId = ``
 		if (typeof config.instance === "object") {
-			const data = (config.instance instanceof RecordSchema) ? config.instance.data : config.instance 
+			const data = (config.instance instanceof RecordSchema) ? config.instance.data : config.instance
 			if (config.instance?.storeId === "traders" && data.nickname) {
 				def = data.nickname
 			}
@@ -81,6 +95,7 @@ export class GameLocalization {
 	}
 
 	updateLocaleText(params: localizationTextParams, newText: string) {
+		if (!this.dataStore) return;
 		if (Array.isArray(params.localeId)) {
 			for (const _localeId of params.localeId) {
 				const newLocalizationTextParams: localizationTextParams = {
@@ -93,12 +108,20 @@ export class GameLocalization {
 			return;
 		}
 
+		const locale = params.locale ?? this.currentLocale.value;
 		const suffix = suffixes[params.suffixKey ?? "localizationSuffix"];
-		this.dataStore?.set(
-			`${params.locale}${suffix}`,
+		const storeId = `${locale}${suffix}`
+		this.dataStore.set(
+			storeId,
 			params.localeId,
 			newText,
 		);
+
+
+		if (this.dataStore.getExtraData(storeId, params.localeId)?.tags === undefined) {
+			this.dataStore.addTag(storeId, params.localeId, currentProjectTag)
+			console.log("add tag")
+		}
 	}
 
 	getUIText = (params: localizationTextParams) =>
@@ -131,7 +154,7 @@ export class GameLocalization {
 		}
 
 		const localizations = [`${locale}${suffix}`]
-		
+
 		if (!params.notCheckForDefaultLocalization)
 			localizations.push(`en${suffix}`)
 

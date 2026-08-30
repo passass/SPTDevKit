@@ -30,7 +30,7 @@
                 <div class="form-field__header" v-if="!(compareInputFields.includes(field.key) && hasCompareInput)">
                     <label :for="field.key">{{
                         gameLocalization.getUIText({
-                            localeId: field.key,
+                            localeId: field.key !== "" ? [field.key, field.label] : field.label,
                             default: field.label,
                         })
                     }}</label>
@@ -44,7 +44,12 @@
                     </button>
                 </div>
 
-                <LocalizationInput v-if="field.type === 'localization'" v-model="getData[field.key]" :field="field" />
+                <LocalizationInput
+                    v-if="field.type === 'localization'"
+                    :data="getData"
+                    v-model="getData[field.key]"
+                    :field="field"
+                />
 
                 <AdvancedSelectInput
                     v-if="field.type === 'advancedSelect'"
@@ -54,15 +59,21 @@
 
                 <CompareInput v-else-if="isCompareInput(field)" v-model="getData[field.key]" />
 
+                <ParentInput
+                    v-else-if="field.key === 'parentId'"
+                    :recordSchema="dataRef"
+                    v-model="getData[field.key]"
+                />
+
                 <div v-else-if="compareInputFields.includes(field.key) && hasCompareInput">
                     <div v-if="field.key === 'value'">
-	                    <label :for="field.key">{{
-		                    gameLocalization.getUIText({
-		                        localeId: field.key,
-		                        default: field.label,
-		                    })
-		                }}</label>
-	                	<CompareInput v-model="getData" />
+                        <label :for="field.key">{{
+                            gameLocalization.getUIText({
+                                localeId: field.key,
+                                default: field.label,
+                            })
+                        }}</label>
+                        <CompareInput v-model="getData" />
                     </div>
                 </div>
 
@@ -107,12 +118,8 @@
                     v-model="getData[field.key]"
                     :disabled="!field.editable"
                 >
-                    <option v-for="option in field.options" :key="option" :value="option">
-                        {{
-                            gameLocalization.getText({
-                                localeId: [option, `${option} Name`, `${option} Nickname`],
-                            })
-                        }}
+                    <option v-for="params in sortedOptions(field)" :key="params.option" :value="params.option">
+                        {{ params.loc }}
                     </option>
                 </select>
 
@@ -165,6 +172,7 @@ import { type locales } from "@/types/localization";
 import ListTabs from "./ListTabs.vue";
 import { getStaticField } from "@/utils/classUtils";
 import CompareInput from "./inputs/CompareInput.vue";
+import ParentInput from "./inputs/ParentInput.vue";
 
 const props = defineProps<{
     data: any;
@@ -182,7 +190,6 @@ const frameNavigator = inject<Navigator>("frameNavigator");
 const validationErrors = ref<Record<string, string>>({});
 
 const dataRef = computed<RecordSchema>(() => {
-    console.log(props.data instanceof RecordSchema, getStaticField(props.data, "fields"));
     return props.data instanceof RecordSchema ? props.data : new RecordSchema(props.data);
 });
 
@@ -201,13 +208,31 @@ const isShowUnneccesaryFieldsCheckmark = computed<boolean>(() => {
 
 const compareInputFields: string[] = ["compareMethod", "value"];
 const hasCompareInput = computed<boolean>(() => {
-	console.log("hasCompareInput", toValue(dataRef as any)?.getFieldByKey("compareMethod") &&
-        toValue(dataRef as any)?.getFieldByKey("value"));
-    return (
-        toValue(dataRef as any)?.getFieldByKey("compareMethod") &&
-        toValue(dataRef as any)?.getFieldByKey("value")
-    );
+    return toValue(dataRef as any)?.getFieldByKey("compareMethod") && toValue(dataRef as any)?.getFieldByKey("value");
 });
+
+function sortedOptions(field: Field): Array<{ option: string; loc: string }> {
+    const localizations: Array<{ option: string; loc: string }> = [];
+    const keys = new Set();
+    if (!field.options) return [];
+
+    for (const option of field.options) {
+        if (keys.has(option)) continue;
+        keys.add(option);
+        localizations.push({
+            option: option,
+            loc: gameLocalization.getObjectLocalization({ instance: option, canBeUI: true }),
+        });
+    }
+
+    localizations.sort((a: { option: string; loc: string }, b: { option: string; loc: string }) => {
+        const labelA = a.loc;
+        const labelB = b.loc;
+        return labelA.localeCompare(labelB);
+    });
+
+    return localizations;
+}
 
 function getObjectSummary(value: Record<string, any>): string {
     if (!value) return "{}";

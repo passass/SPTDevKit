@@ -11,6 +11,7 @@
 		itemsData: Tab[]
 		schemaType?: ClassType<RecordSchema>
 		fileData?: dataStoreType<RecordSchema>
+		storeId?: string
 	}>()
 </script>
 
@@ -18,6 +19,7 @@
 	<ListTabs
 	:isSearch="true"
 	:schemaType="props.schemaType"
+	:storeId="props.storeId"
 	:fileData="props.fileData"
 	:tabs="props.itemsData">
 		<template #content="{ data, listTabs }">

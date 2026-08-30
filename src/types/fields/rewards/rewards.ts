@@ -9,6 +9,7 @@ export class RewardsSchemas extends RecordSchema {
 			type: 'array',
 			order: 1,
 			arrayItemSchema: createLazySchemaChoicer(
+				"questsSchemas.json",
 				"*.rewards.Success",
 				"SuccessReward"
 			)
@@ -19,6 +20,7 @@ export class RewardsSchemas extends RecordSchema {
 			type: 'array',
 			order: 2,
 			arrayItemSchema: createLazySchemaChoicer(
+				"questsSchemas.json",
 				"*.rewards.Started",
 				"StartedReward"
 			)
@@ -29,6 +31,7 @@ export class RewardsSchemas extends RecordSchema {
 			type: 'array',
 			order: 3,
 			arrayItemSchema: createLazySchemaChoicer(
+				"questsSchemas.json",
 				"*.rewards.Fail",
 				"FailReward"
 			)

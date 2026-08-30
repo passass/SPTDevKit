@@ -100,12 +100,14 @@ import { inject, ref, computed, onMounted, nextTick, toValue } from "vue";
 import { DynamicScroller, DynamicScrollerItem } from "vue-virtual-scroller";
 import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
 import { Navigator } from "@/utils/navigation";
+import { currentProjectTag } from "@/project/Project";
 
 const dataStore = useDataStore();
 
 const props = defineProps<{
     tabs: Tab[];
-    schemaType?: ClassType<RecordSchema>;
+	schemaType?: ClassType<RecordSchema>;
+	storeId?: string;
     fileData?: dataStoreType<RecordSchema>;
     isSearch?: boolean;
     searchPlaceholder?: string;
@@ -153,15 +155,19 @@ function createNewSchema() {
     if (!props.fileData || !props.schemaType) return;
     const newInstance = new props.schemaType();
     const newInstanceId = newInstance.getId();
-    if (newInstanceId) {
-        props.fileData.set(newInstanceId, newInstance);
-        selectTab(newInstanceId);
+    if (newInstanceId && props.storeId) {
+    	const store = dataStore.getMap(props.storeId);
+		props.fileData.set(newInstanceId, newInstance);
+
+		store.set(newInstanceId, newInstance);
+        dataStore.setExtraData(props.storeId, newInstanceId, {tags: [currentProjectTag]})
+
+		selectTab(newInstanceId);
     }
 }
 
 function selectTab(tabId: string) {
     if (isTabVisible(tabId)) {
-        console.log(activeTab.value, tabId);
         if (activeTab.value !== tabId) {
             frameNavigator?.goRoot?.();
         }

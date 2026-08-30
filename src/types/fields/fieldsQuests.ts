@@ -1,6 +1,6 @@
 // src/types/fieldsQuests.ts
 
-import { RecordSchema, Field, LocalizationField, UnneccesaryField, HiddenField, AdvSelectField } from "./fields";
+import { RecordSchema, Field, UnneccesaryField, HiddenField, AdvSelectField, LocalizationField } from "./fields";
 import { IdField } from "./fieldsClasses";
 import { QuestConditions } from "./fieldsQuestsConditions";
 import { RewardsSchemas } from "./rewards/rewards";
@@ -21,7 +21,7 @@ export class QuestSchema extends RecordSchema {
 			type: 'text',
 			order: 2
 		}),
-		
+
 		// ===== ЛОКАЛИЗУЕМЫЕ ПОЛЯ =====
 		LocalizationField.create({
 			key: 'name',

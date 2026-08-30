@@ -35,7 +35,7 @@ const props = defineProps<{
 
 const items = computed<SchemaData>(() => {
 	const data = props.modelValue instanceof RecordSchema ? props.modelValue.data : props.modelValue
-	props.modelValue["compareMethod"] ??= ">=="
+	props.modelValue["compareMethod"] ??= ">="
 	props.modelValue["value"] ??= 0
 	return data
 });

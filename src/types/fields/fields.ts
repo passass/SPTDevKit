@@ -4,6 +4,13 @@ import { type SchemaChoice, SchemaChoicer } from "./fieldsSchemaChoicer";
 import { getStaticField, type ClassType } from "@/utils/classUtils";
 
 export const idsFields: string[] = ['_id', 'id']
+export function getIdFieldValue(instance: any): string | undefined {
+	for (const idField of idsFields) {
+		if (typeof instance[idField] === "string") {
+			return instance[idField]
+		}
+	}
+}
 
 export type arrayItemSchemaType = ClassType<RecordSchema>
 | ClassType<SchemaChoicer>
@@ -25,7 +32,7 @@ export type FieldType = 'text'
 	| 'arrayAdvancedSelect';
 
 export class Field extends Data {
-	key!: string;
+	key: string = "";
 	label!: string;
 	description?: string = "";
 	placeholder?: string = "";
@@ -38,20 +45,13 @@ export class Field extends Data {
 	validate?: (value: any, record: SchemaData) => true | string;
 	nestedSchema?: ClassType<RecordSchema>;
 	arrayItemSchema?: arrayItemSchemaType;
+	virtual?: boolean;
 
 	hidden?: boolean;
 	unneccesary?: boolean;
 
 	getDefaultValue?(data: SchemaData): any;
-}
-
-export class LocalizationField extends Field {
-	type: FieldType = 'localization';
-
-	getDefaultValue(data: SchemaData): string {
-		const key = this.key;
-		return `${data["_id"]} ${key}`;
-	}
+	exactValue?(data: SchemaData): any;
 }
 
 export class AdvSelectField extends Field {
@@ -78,9 +78,9 @@ function autoDetectType(value: any): FieldType {
 	return 'text';
 }
 
-export const isObjectNotArray = (item: any): boolean => typeof item === 'object' && !Array.isArray(item) 
+export const isObjectNotArray = (item: any): boolean => typeof item === 'object' && !Array.isArray(item)
 export const isNotRecordSchemaButObject = (el: any): boolean => (
-	typeof el === 'object' && !(el instanceof RecordSchema) && !Array.isArray(el) 
+	typeof el === 'object' && !(el instanceof RecordSchema) && !Array.isArray(el)
 )
 export const castToRecordSchema = (el: any, recordSchemaType?: ClassType<RecordSchema>, otherData?: recordSchemaOtherData): RecordSchema => (
 	isNotRecordSchemaButObject(el)
@@ -96,7 +96,7 @@ export const castByArrayItemSchema = (
 	if (!value) {
 		throw new Error('Value is required');
 	}
-	
+
 	if (isNotRecordSchemaButObject(value)) {
 		if (arrayItemSchema) {
 			if (SchemaChoicer.isPrototypeOf(arrayItemSchema)) {
@@ -104,7 +104,7 @@ export const castByArrayItemSchema = (
 					(arrayItemSchema as typeof SchemaChoicer).getSchema(value)
 					?? (arrayItemSchema as typeof SchemaChoicer).schemas[0]
 				);
-				
+
 				return new choosedSchema.schema(value, {
 					...otherData,
 					schemaChooser: arrayItemSchema,
@@ -114,8 +114,8 @@ export const castByArrayItemSchema = (
 				return new (arrayItemSchema as ClassType<RecordSchema>)(value, otherData) as RecordSchema;
 			}
 		}
-		
-		return castToRecordSchema(value);
+
+		return castToRecordSchema(value, undefined, otherData);
 	}
 	return value
 }
@@ -136,10 +136,10 @@ export const castByArrayItemSchemaInField = (el: any[], index: number, field: Fi
 						choosedSchema: choosedSchema,
 					});
 				}
-			} else		
+			} else
 				return (new field.arrayItemSchema(value)) as RecordSchema;
 		}
-			
+
 		return castToRecordSchema(value);
 	}
 
@@ -163,6 +163,8 @@ function resolveDefaultValue(field: Field, data: SchemaData): any {
 			return '';
 		if (field.type === 'number')
 			return 0;
+		if (field.type === 'boolean')
+			return false;
 		if (field.type === 'select' && field.options)
 			return field.options[0];
         if (['array', 'stringArray', 'numberArray', 'arrayAdvancedSelect'].includes(field.type)) {
@@ -183,9 +185,29 @@ function resolveDefaultValue(field: Field, data: SchemaData): any {
     return val;
 }
 
+export class LocalizationField extends Field {
+	type: FieldType = 'localization';
+
+	getDefaultValue(data: SchemaData): string {
+		const key = this.key;
+		return `${data["_id"]} ${key}`;
+	}
+}
+
+export class VirtualLocalizationField extends LocalizationField {
+	type: FieldType = 'localization';
+	virtual: boolean = true;
+	editable: boolean = false;
+
+	getDefaultValue(data: SchemaData): string {
+		return data["id"] ?? data["_id"];
+	}
+}
+
 export type recordSchemaOtherData = {
 	schemaChooser?: ClassType<SchemaChoicer> | null,
 	choosedSchema?: SchemaChoice | null,
+	parent?: Record<string, any> | Array<object> | RecordSchema | null,
 }
 
 export class RecordSchema {
@@ -200,8 +222,23 @@ export class RecordSchema {
 		return fields.find((el: Field) => el.key === key) ?? def
 	}
 
+	getLocalizationFieldsKeys(): string[] {
+		const res: string[] = []
+		const fields = this.getFields()
+		for (const field of fields) {
+			if (field instanceof LocalizationField && field.key) {
+				const value = this.get(field.key)
+
+				res.push(value)
+			}
+		}
+
+		return res
+	}
+
 	schemaChooser: recordSchemaOtherData['schemaChooser'] = null;
 	choosedSchema: recordSchemaOtherData['choosedSchema'] = null;
+	parent: recordSchemaOtherData['parent'] = null;
 
 	storeId?: string;
 
@@ -211,7 +248,7 @@ export class RecordSchema {
 
 	constructor(data: SchemaData = {}, otherData?: recordSchemaOtherData) {
         this.extraFields = [];
-        
+
         if (!data || typeof data !== "object" || Array.isArray(data)) {
             console.error("wrong data type in RecordSchema", data);
             this.data = {};
@@ -219,17 +256,19 @@ export class RecordSchema {
         }
 
         this.data = data;
-        
+
         if (otherData) {
             if (otherData.schemaChooser) this.schemaChooser = otherData.schemaChooser;
             if (otherData.choosedSchema) this.choosedSchema = otherData.choosedSchema;
+            if (otherData.parent) this.parent = otherData.parent;
         }
 
         const fields = (this.constructor as typeof RecordSchema).fields || [];
         const lazyLoadFunctions = new Map<string, (data: SchemaData) => any>();
         const usedKeys = new Set<string>();
 
-        for (const field of fields) {
+		for (const field of fields) {
+			if (!field.key) continue;
             usedKeys.add(field.key);
             if (field.key in this.data) continue;
 
@@ -277,9 +316,9 @@ export class RecordSchema {
 	sanitize() {
 		const fields = (this.constructor as typeof RecordSchema).fields || [];
 		const fieldsMap = new Map(fields.map(f => [f.key, f]));
-		
+
 		const keysToDelete: string[] = [];
-		
+
 		for (const key of Object.keys(this.data)) {
 			if (idsFields.includes(key.toLowerCase())) continue;
 
@@ -294,15 +333,15 @@ export class RecordSchema {
 			}
 
 			const defVal = resolveDefaultValue(field, this.data);
-			
+
 			if (defVal !== undefined) {
 				this.data[key] = defVal
 				continue
 			}
-			
+
 			keysToDelete.push(key)
 		}
-		
+
 		for (const key of keysToDelete) {
 			delete this.data[key];
 		}
@@ -322,7 +361,7 @@ export class RecordSchema {
 
 	getId(): string | undefined {
 		return (
-			this.data["_id"] 
+			this.data["_id"]
 			?? this.data["_id"]
 		)
 	}
@@ -335,10 +374,10 @@ export class RecordSchema {
 	/** Установить значение поля */
 	set(key: string, value: any): void {
 		const field = this.getField(key);
-		
+
 		// Если поле array и есть arrayItemSchema, преобразуем элементы
 		if (field?.type === 'array' && field.arrayItemSchema && Array.isArray(value)) {
-			this.data[key] = value.map(item => 
+			this.data[key] = value.map(item =>
 				item instanceof RecordSchema ? item : new field.arrayItemSchema!(item)
 			);
 		}
@@ -376,7 +415,7 @@ export class RecordSchema {
 	}
 
 	/** Получить поля для отображения */
-	
+
 
 	/** Определить тип поля */
 	resolveType(key: string): FieldType {
@@ -396,7 +435,7 @@ export class RecordSchema {
 	isNavigable(key: string): boolean {
 		const field = this.getField(key);
 		const rawValue = this.data[key];
-		
+
 		if (field) {
 			return field.type === 'object' || field.type === 'array' || !!field.nestedSchema || !!field.arrayItemSchema;
 		}
@@ -444,15 +483,16 @@ export class RecordSchema {
 	validate(): { valid: boolean; errors: Record<string, string> } {
 		const errors: Record<string, string> = {};
 		const fields = this.getFields();
-		
+
 		for (const field of fields) {
+			if (!field.key) continue;
 			const value = this.data[field.key];
 			const result = this.validateField(field.key, value);
 			if (result !== true) {
 				errors[field.key] = result;
 			}
 		}
-		
+
 		return {
 			valid: Object.keys(errors).length === 0,
 			errors

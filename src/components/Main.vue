@@ -39,6 +39,7 @@ function getRecordEditorComponent(content: object, dataStoreId: string): Compone
 		}
 
 		return <RecordEditor
+			storeId={dataStoreId}
 			fileData={fileData}
 			schemaType={schemaType}
 			itemsData={itemsData}

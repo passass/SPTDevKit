@@ -7,7 +7,7 @@ export interface NavigatorOptions { tab: Tab; }
 export interface PathItem {
     key: string | number;
     type: 'object' | 'array' | 'record';
-    value: any;
+    value: Record<string, any> | Array<object>;
 	label?: string | null;
     schema?: RecordSchema | null;
     arrayItemSchema?: arrayItemSchemaType | null;
@@ -68,10 +68,10 @@ export class Navigator {
 
         const field = currentData instanceof RecordSchema ? currentData.getFieldByKey(key) : null;
 
-		const lastPathItem = this.pathStack[this.pathStack.length-1];
+		const lastPathItem: PathItem | undefined = this.pathStack[this.pathStack.length - 1];
 		const label = field?.label
 
-        let target: any;
+        let target: Record<string, any> | Array<object>;
         if (currentData instanceof RecordSchema) {
             target = currentData.get(key);
         } else if (Array.isArray(currentData)) {
@@ -87,17 +87,19 @@ export class Navigator {
         if (Array.isArray(target)) {
             this.pathStack.push({ key, type: 'array', label: label, value: target, arrayItemSchema: field?.arrayItemSchema });
         } else if (typeof target === 'object') {
-            let schema: RecordSchema | null = null;
-            if (lastPathItem?.arrayItemSchema) {
-                schema = castByArrayItemSchema(target, lastPathItem.arrayItemSchema);
+			let schema: RecordSchema | null = null;
+
+			const parent = lastPathItem?.schema ?? lastPathItem?.value
+			if (lastPathItem?.arrayItemSchema) {
+                schema = castByArrayItemSchema(target, lastPathItem.arrayItemSchema, {parent: parent});
             } else if (field?.nestedSchema) {
-                schema = castToRecordSchema(target, field.nestedSchema);
+                schema = castToRecordSchema(target, field.nestedSchema, {parent: parent});
             } else {
-                schema = castToRecordSchema(target);
+                schema = castToRecordSchema(target, undefined, {parent: parent});
             }
             this.pathStack.push({
-				key
-				, schema
+				key: key
+				, schema: schema
 				, type: 'record'
 				, value: target
 				, label: label

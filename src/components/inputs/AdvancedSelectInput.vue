@@ -59,6 +59,8 @@ import { AdvSelectField, type Field } from "@/types/fields/fields";
 const props = defineProps<{
 	modelValue: string | null;
 	field?: Field;
+
+	itemsOverride?: Map<string, object>;
 }>();
 
 const emit = defineEmits<{
@@ -72,13 +74,12 @@ const isOpen = ref(false);
 const selectedIndex = ref(-1);
 
 const items = computed(() => {
-	const field: AdvSelectField = props.field as AdvSelectField 
-	const itemMap = dataStore.getMap(
-		field?.storeId ?? "items"
+	const itemMap = props.itemsOverride ?? dataStore.getMap(
+		(props.field as AdvSelectField)?.storeId ?? "items"
 	);
 
 	const result: Array<{ id: string; label: string; data: any }> = [];
-	
+
 	for (const [id, data] of itemMap) {
 		const name = gameLocalization.getObjectLocalization({instance: data})
 		result.push({
@@ -87,7 +88,7 @@ const items = computed(() => {
 			data,
 		});
 	}
-	
+
 	return result;
 });
 
@@ -95,9 +96,9 @@ const filteredItems = computed(() => {
 	if (!searchQuery.value.trim()) {
 		return items.value;
 	}
-	
+
 	const query = searchQuery.value.toLowerCase().trim();
-	return items.value.filter(item => 
+	return items.value.filter(item =>
 		item.label.toLowerCase().includes(query) ||
 		item.id.toLowerCase().includes(query)
 	);
@@ -149,8 +150,8 @@ function selectNext() {
 
 function selectPrev() {
 	if (filteredItems.value.length === 0) return;
-	selectedIndex.value = selectedIndex.value <= 0 
-		? filteredItems.value.length - 1 
+	selectedIndex.value = selectedIndex.value <= 0
+		? filteredItems.value.length - 1
 		: selectedIndex.value - 1;
 }
 
