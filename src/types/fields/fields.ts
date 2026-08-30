@@ -223,19 +223,47 @@ export class RecordSchema {
 	}
 
 	getLocalizationFieldsKeys(): string[] {
-		const res: string[] = []
-		const fields = this.getFields()
-		for (const field of fields) {
-			if (field instanceof LocalizationField && field.key) {
-				const value = this.get(field.key)
+		const res = new Set<string>();
 
-				res.push(value)
+		const processSchema = (instance: RecordSchema) => {
+			const fields = instance.getFields();
+			for (const field of fields) {
+				if (field instanceof LocalizationField && field.key) {
+					const value = instance.get(field.key);
+					if (value) res.add(value);
+				} else if (field instanceof VirtualLocalizationField) {
+					res.add(field.getDefaultValue(instance.data))
+				} else if (field.nestedSchema) {
+					const nestedData = instance.get(field.key);
+					if (nestedData && typeof nestedData === 'object') {
+						const nestedInstance = castToRecordSchema(nestedData, field.nestedSchema);
+						processSchema(nestedInstance);
+					}
+				} else if (field.arrayItemSchema) {
+					const arrayData = instance.get(field.key);
+					if (Array.isArray(arrayData)) {
+						for (const item of arrayData) {
+							if (item && typeof item === 'object') {
+								if (SchemaChoicer.isPrototypeOf(field.arrayItemSchema)) {
+									const choicer = field.arrayItemSchema as unknown as typeof SchemaChoicer;
+									for (const schemaChoice of choicer.schemas) {
+										const nestedInstance = castToRecordSchema(item, schemaChoice.schema);
+										processSchema(nestedInstance);
+									}
+								} else {
+									const nestedInstance = castToRecordSchema(item, field.arrayItemSchema as ClassType<RecordSchema>);
+									processSchema(nestedInstance);
+								}
+							}
+						}
+					}
+				}
 			}
-		}
+		};
 
-		return res
+		processSchema(this);
+		return Array.from(res);
 	}
-
 	schemaChooser: recordSchemaOtherData['schemaChooser'] = null;
 	choosedSchema: recordSchemaOtherData['choosedSchema'] = null;
 	parent: recordSchemaOtherData['parent'] = null;

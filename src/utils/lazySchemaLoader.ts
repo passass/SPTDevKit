@@ -125,7 +125,7 @@ export function createLazySchemaChoicer(
             }
 
             try {
-                const tree = await loadTree(filePath, path);
+                const tree = await loadTree(filePath);
                 const node = findSchemaByPath(tree, path);
                 if (node && node.schema) {
                     cachedSchema = node.schema;
