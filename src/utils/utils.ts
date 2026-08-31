@@ -24,7 +24,6 @@ export function allElementsInArray<T>(arr: T[], targetArr: T[]): boolean {
     return arr.every((element) => targetSet.has(element));
 }
 
-
 // src/utils/deepClone.ts
 
 /**

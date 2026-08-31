@@ -42,7 +42,10 @@ export class GameLocalization {
 		localeId?: string[];
 		canBeUI?: boolean
 	}): string {
-		if (typeof config.instance === "string") {
+		if (Array.isArray(config.instance)) {
+			if (config.instance.length === 0) return ""
+			return config.instance.map((item: any) => this.getObjectLocalization({ instance: item })).join(", ");
+		} else if (typeof config.instance === "string") {
 			const ui_translate = config.canBeUI ? this.getUIText({
 				localeId: config.localeId ?? config.instance,
 				default: ""

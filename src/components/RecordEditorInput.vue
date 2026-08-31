@@ -44,11 +44,15 @@
                     </button>
                 </div>
 
-                <LoadWeaponBuildInput
-                    v-if="field.key === 'items' && field.isArray()"
-                    :field="field"
-                    :data="getData"
-                />
+                <div v-if="field.key === 'items' && field.isArray()">
+                    <LoadWeaponBuildInput :field="field" :data="getData" />
+                    <div v-if="getData[field.key]?.filter((item: WeaponBuildItem) => !item.parentId).length > 0" class="weapon-build-reward">
+                        <span class="weapon-build-reward__label">Награда:</span>
+                        <span class="weapon-build-reward__value">
+                            {{ getRewardDisplay(getData[field.key]) }}
+                        </span>
+                    </div>
+                </div>
 
                 <LocalizationInput
                     v-if="field.type === 'localization'"
@@ -194,6 +198,7 @@ import AdvancedSelectInput from "./inputs/AdvancedSelectInput.vue";
 import CompareInput from "./inputs/CompareInput.vue";
 import ParentInput from "./inputs/ParentInput.vue";
 import ListTabs from "./ListTabs.vue";
+import { WeaponBuildItem } from "@/stores/profileStore";
 
 const props = defineProps<{
     data: any;
@@ -291,6 +296,27 @@ function isCompareInput(field: Field): boolean {
         (field.nestedSchema as any)?.getFieldByKeyStatic("compareMethod") &&
         (field.nestedSchema as any)?.getFieldByKeyStatic("value")
     );
+}
+
+function getRewardDisplay(items: WeaponBuildItem[]): string {
+    const rootItems = items.filter(item => !item.parentId);
+    if (rootItems.length === 0) return '';
+
+    const grouped: Record<string, { tpl: string; count: number }> = {};
+    for (const item of rootItems) {
+        const tpl = item._tpl;
+        if (!grouped[tpl]) grouped[tpl] = { tpl, count: 0 };
+        grouped[tpl].count += item?.upd?.StackObjectsCount ?? 1;
+    }
+
+    const parts: string[] = [];
+    for (const [tpl, data] of Object.entries(grouped)) {
+        const name = gameLocalization.getObjectLocalization({ instance: { _id: tpl } });
+        const count = data.count;
+        const display = count > 1 ? `${name} x ${count}` : name;
+        parts.push(display);
+    }
+    return parts.join(', ');
 }
 </script>
 
@@ -427,4 +453,28 @@ function isCompareInput(field: Field): boolean {
     gap: 10px;
     justify-content: flex-end;
 }
+
+.weapon-build-reward {
+    margin: 8px 0;
+    padding: 6px 12px;
+    background: rgba(66, 184, 131, 0.08);
+    border-left: 3px solid #42b883;
+    border-radius: 4px;
+    display: flex;
+    gap: 8px;
+    font-size: 13px;
+    color: #b0b0b0;
+}
+
+.weapon-build-reward__label {
+    font-weight: 500;
+    color: #42b883;
+    flex-shrink: 0;
+}
+
+.weapon-build-reward__value {
+    color: #e0e0e0;
+    word-break: break-word;
+}
+
 </style>

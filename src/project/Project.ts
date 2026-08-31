@@ -4,7 +4,7 @@ import Quests from "./Quests";
 import { availableLocales, suffixes } from "@/types/localization";
 import { Path, PathArray } from "@/utils/pathUtils";
 import { isElectron } from "@/utils/utils";
-import Profiles from "@/userProfiles/Profiles";
+import { useProfilesStore } from "@/stores/profileStore";
 
 export const currentProjectTag = "currentProject";
 export const modTag = "mod";
@@ -76,7 +76,8 @@ class Project {
     }
 
     async loadEFTMods(folderPath: Path) {
-        this.EFTFolder = folderPath;
+		this.EFTFolder = folderPath;
+        const profilesStore = useProfilesStore();
         for (const folderPath of await new Path(this.EFTFolder, "*/user/mods/*").findFolders()) {
             await this.loadSPTFolder({
                 folderPath: folderPath,
@@ -85,7 +86,7 @@ class Project {
             });
         }
 		await Promise.all([
-			Profiles.load(this.EFTFolder),
+			profilesStore.load(this.EFTFolder),
             this.dataStore?.load("quests"),
             async () => {
                 for (const locale of availableLocales)

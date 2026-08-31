@@ -24,9 +24,12 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import Profiles from "@/userProfiles/Profiles";
+import { useProfilesStore } from "@/stores/profileStore";
 import { type SchemaData } from "@/types/fields/fields";
 import { type Field } from "@/types/fields/fields";
+
+
+const profilesStore = useProfilesStore();
 
 
 const props = defineProps<{
@@ -35,7 +38,7 @@ const props = defineProps<{
 }>();
 
 const selectRef = ref<HTMLSelectElement | null>(null);
-const builds = computed(() => Profiles.getWeaponBuilds());
+const builds = computed(() => profilesStore.getWeaponBuilds());
 
 function handleLoad(event: Event) {
     if (!selectRef.value) return;
@@ -43,7 +46,7 @@ function handleLoad(event: Event) {
     const value = target.value;
     if (!value) return;
 
-    props.data[props.field.key] = Profiles.getWeaponBuildItems(value)
+    props.data[props.field.key] = profilesStore.getWeaponBuildItems(value)
 }
 </script>
 
