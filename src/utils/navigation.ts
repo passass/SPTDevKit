@@ -96,7 +96,7 @@ export class Navigator {
                 schema = castToRecordSchema(target, field.nestedSchema, {parent: parent});
             } else {
                 schema = castToRecordSchema(target, undefined, {parent: parent});
-            }
+			}
             this.pathStack.push({
 				key: key
 				, schema: schema

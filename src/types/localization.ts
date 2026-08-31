@@ -120,7 +120,6 @@ export class GameLocalization {
 
 		if (this.dataStore.getExtraData(storeId, params.localeId)?.tags === undefined) {
 			this.dataStore.addTag(storeId, params.localeId, currentProjectTag)
-			console.log("add tag")
 		}
 	}
 

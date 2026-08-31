@@ -31,6 +31,7 @@ export function createSchemaChoiceForCondition(
 		conditionType?: string;
 		onSchemaChange?: (data: RecordSchema) => void;
 		onSchemaPostChange?: (data: RecordSchema) => void;
+		condition?: (data: SchemaData) => boolean;
 		fieldNameArg?: string;
 	}
 ): SchemaChoice {
@@ -39,7 +40,7 @@ export function createSchemaChoiceForCondition(
 
 	return {
 		name: config.name,
-		condition: (data: any) => data[fieldName] === conditionType,
+		condition: config.condition ?? ((data: any) => data[fieldName] === conditionType),
 		schema: config.schema,
 		onSchemaChange: config.onSchemaChange, // ?? ((oldSchema: RecordSchema) => oldSchema.set("conditionType", conditionType)),
 		onSchemaPostChange: config.onSchemaPostChange ?? ((newSchema: RecordSchema) => {

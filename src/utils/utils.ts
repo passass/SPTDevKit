@@ -1,7 +1,13 @@
+const generatedUUID24chars = new Set<string>();
 export function generateUUID24chars(): string {
-    return 'xxxxxxxxxxxxxxxxxxxxxxxx'.replace(/[x]/g, () => {
-        return Math.floor(Math.random() * 16).toString(16);
-    });
+    let uuid: string;
+    do {
+        uuid = 'xxxxxxxxxxxxxxxxxxxxxxxx'.replace(/[x]/g, () => {
+            return Math.floor(Math.random() * 16).toString(16);
+        });
+    } while (generatedUUID24chars.has(uuid));
+    generatedUUID24chars.add(uuid);
+    return uuid;
 }
 
 export function capitalize(str: string) {
@@ -11,4 +17,261 @@ export function capitalize(str: string) {
 
 export function isElectron() {
     return window && window.electronAPI !== undefined;
+}
+
+export function allElementsInArray<T>(arr: T[], targetArr: T[]): boolean {
+    const targetSet = new Set(targetArr);
+    return arr.every((element) => targetSet.has(element));
+}
+
+
+// src/utils/deepClone.ts
+
+/**
+ * Простая функция глубокого клонирования
+ * Поддерживает: примитивы, Date, RegExp, массивы, обычные объекты
+ * Не поддерживает: циклические ссылки, Map, Set, функции, Symbol, DOM-узлы и т.д.
+ */
+export function deepClone<T>(value: T): T {
+  if (value === null || typeof value !== 'object') {
+    return value;
+  }
+  if (value instanceof Date) {
+    return new Date(value.getTime()) as any;
+  }
+  if (value instanceof RegExp) {
+    return new RegExp(value.source, value.flags) as any;
+  }
+  if (Array.isArray(value)) {
+    return value.map(item => deepClone(item)) as any;
+  }
+  if (value instanceof Object) {
+    const result: Record<string, any> = {};
+    for (const key of Object.keys(value)) {
+      result[key] = deepClone((value as any)[key]);
+    }
+    return result as T;
+  }
+  return value;
+}
+
+
+
+type DataStructure = Record<string, any> | any[] | any;
+
+/**
+ * Разбирает часть пути на имя и фильтр вида [key=value]
+ */
+function parseFilter(part: string): { name: string; filter: [string, string] | null } {
+    const filterMatch = part.match(/\[([^=]+)=([^\]]+)\]$/);
+    if (filterMatch) {
+        const name = part.slice(0, filterMatch.index);
+        const [, key, value] = filterMatch;
+        return { name, filter: [key, value] };
+    }
+    return { name: part, filter: null };
+}
+
+/**
+ * Проверяет, соответствует ли элемент фильтру
+ */
+function matchesFilter(item: any, filterKey: string, filterValue: string): boolean {
+    if (item && typeof item === 'object' && filterKey in item) {
+        return String(item[filterKey]) === filterValue;
+    }
+    return false;
+}
+
+/**
+ * Рекурсивный обход с применением фильтра
+ */
+function traverseWithFilter(
+    current: any,
+    parts: string[],
+    index: number,
+    results: any[]
+): void {
+    if (current === null || current === undefined) return;
+
+    if (index >= parts.length) {
+        results.push(current);
+        return;
+    }
+
+    const part = parts[index];
+    const { name, filter } = parseFilter(part);
+
+    // Обработка текущего узла
+    if (name === '*') {
+        // Wildcard - перебираем все элементы коллекции
+        if (Array.isArray(current)) {
+            for (const item of current) {
+                processItemWithFilter(item, filter, parts, index + 1, results);
+            }
+        } else if (current && typeof current === 'object' && !Array.isArray(current)) {
+            // Для объекта перебираем значения
+            for (const value of Object.values(current)) {
+                processItemWithFilter(value, filter, parts, index + 1, results);
+            }
+        }
+        // Иначе ничего не делаем
+    } else {
+        // Обычный путь
+        if (Array.isArray(current)) {
+            // Если часть - число, используем как индекс
+            const idx = parseInt(name, 10);
+            if (!isNaN(idx) && idx >= 0 && idx < current.length) {
+                processItemWithFilter(current[idx], filter, parts, index + 1, results);
+            } else {
+                // Иначе ищем элементы с таким ключом
+                for (const item of current) {
+                    if (item && typeof item === 'object' && name in item) {
+                        processItemWithFilter(item[name], filter, parts, index + 1, results);
+                    }
+                }
+            }
+        } else if (current && typeof current === 'object' && !Array.isArray(current)) {
+            if (name in current) {
+                processItemWithFilter(current[name], filter, parts, index + 1, results);
+            }
+        }
+    }
+}
+
+/**
+ * Обрабатывает элемент с учётом фильтра
+ */
+function processItemWithFilter(
+    item: any,
+    filter: [string, string] | null,
+    parts: string[],
+    nextIndex: number,
+    results: any[]
+): void {
+    if (filter === null) {
+        traverseWithFilter(item, parts, nextIndex, results);
+        return;
+    }
+
+    const [filterKey, filterValue] = filter;
+    // Если элемент соответствует фильтру, продолжаем обход
+    if (matchesFilter(item, filterKey, filterValue)) {
+        traverseWithFilter(item, parts, nextIndex, results);
+    } else if (Array.isArray(item)) {
+        // Если элемент - массив, проверяем каждый его элемент
+        for (const subItem of item) {
+            if (matchesFilter(subItem, filterKey, filterValue)) {
+                traverseWithFilter(subItem, parts, nextIndex, results);
+                break; // Нашли подходящий, дальше не ищем
+            }
+        }
+    }
+}
+
+/**
+ * Возвращает все значения по заданному пути с поддержкой wildcard и фильтров
+ * @param data - исходные данные (объект или массив)
+ * @param path - путь вида "a.b.*.c" или "items[type=weapon].id"
+ * @returns массив найденных значений
+ */
+export function getValuesByPath(data: DataStructure, path: string): any[] {
+    if (!path) {
+        return data !== null && data !== undefined ? [data] : [];
+    }
+
+    const parts = path.split('.');
+    const results: any[] = [];
+    traverseWithFilter(data, parts, 0, results);
+    return results;
+}
+
+/**
+ * Возвращает первое значение по простому пути (без wildcard и фильтров)
+ * @param data - исходные данные
+ * @param path - путь вида "a.b.c"
+ * @returns найденное значение или undefined
+ */
+export function getValueByPath(data: DataStructure, path: string): any | undefined {
+    const parts = path.split('.');
+    let current: any = data;
+
+    for (const key of parts) {
+        let found = false;
+
+        if (current && typeof current === 'object' && !Array.isArray(current) && key in current) {
+            current = current[key];
+            found = true;
+        } else if (Array.isArray(current) && /^\d+$/.test(key)) {
+            const index = parseInt(key, 10);
+            if (index >= 0 && index < current.length) {
+                current = current[index];
+                found = true;
+            }
+        }
+
+        if (!found) {
+            return undefined;
+        }
+    }
+
+    return current;
+}
+
+/**
+ * Устанавливает значение по простому пути (без wildcard и фильтров)
+ * @param data - исходные данные (изменяются напрямую)
+ * @param path - путь вида "a.b.c"
+ * @param value - новое значение
+ * @returns true если путь существует и значение установлено, иначе false
+ */
+export function setValueByPath(data: DataStructure, path: string, value: any): boolean {
+    const parts = path.split('.');
+    let current: any = data;
+
+    // Проходим по всем частям, кроме последней
+    for (let i = 0; i < parts.length - 1; i++) {
+        const key = parts[i];
+        let found = false;
+
+        if (current && typeof current === 'object' && !Array.isArray(current) && key in current) {
+            current = current[key];
+            found = true;
+        } else if (Array.isArray(current) && /^\d+$/.test(key)) {
+            const index = parseInt(key, 10);
+            if (index >= 0 && index < current.length) {
+                current = current[index];
+                found = true;
+            }
+        }
+
+        if (!found) {
+            return false;
+        }
+    }
+
+    const lastKey = parts[parts.length - 1];
+
+    if (current && typeof current === 'object' && !Array.isArray(current)) {
+        current[lastKey] = value;
+        return true;
+    } else if (Array.isArray(current) && /^\d+$/.test(lastKey)) {
+        const index = parseInt(lastKey, 10);
+        if (index >= 0 && index < current.length) {
+            current[index] = value;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Вычисляет среднее арифметическое чисел
+ * @param list - массив чисел
+ * @returns среднее значение или NaN, если массив пуст
+ */
+export function avg(list: number[]): number {
+    if (!list || list.length === 0) return NaN;
+    const sum = list.reduce((acc, val) => acc + val, 0);
+    return sum / list.length;
 }

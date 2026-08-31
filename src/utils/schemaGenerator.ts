@@ -7,9 +7,6 @@ import { SchemaChoicer, type SchemaChoice, createSchemaChoiceForCondition } from
 import { useFileDataStore } from "@/stores/fileStore";
 import { useDataStore } from "@/stores/dataStore";
 
-type FieldDataType = 'str' | 'int' | 'float' | 'bool' | 'list' | 'dict' | 'stringArray' | 'numberArray' | 'unknown';
-
-let dataStore: ReturnType<typeof useDataStore> | null = null;
 
 interface FieldInfo {
     __type?: string;
@@ -76,7 +73,8 @@ function generateFieldClass(fieldName: string, fieldInfo: FieldInfo, lastSplitSc
         });
     }
 
-    const commonFields: any = {
+	const commonFields = {
+		defaultValue: fieldInfo.defaultValue,
         key: fieldInfo.key ?? fieldName,
         label: fieldInfo.label ?? fieldName,
         order: fieldInfo.order ?? 99,
@@ -317,10 +315,6 @@ export function generateAllSchemas(outputJson: any): SchemaNode {
     if (typeof outputJson !== "object" || !outputJson.all_schemas || !Array.isArray(outputJson.all_schemas)) {
         return rootNode;
     }
-
-	if (!dataStore) {
-		dataStore = useDataStore();
-	}
 
     for (const schema of outputJson.all_schemas) {
         if (schema.__type === 'split_path') {

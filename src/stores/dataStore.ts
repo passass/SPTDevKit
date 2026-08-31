@@ -7,6 +7,7 @@ import { QuestSchema } from "@/types/fields/fieldsQuests";
 import { idsFields, type RecordSchema, type SchemaData } from "@/types/fields/fields";
 import { getValueByPath, type ClassType } from "@/utils/classUtils";
 import { gameLocalization, type locales } from "@/types/localization";
+import { allElementsInArray } from "@/utils/utils";
 
 export interface DataStoreConfigFiles {
     filename: string;
@@ -20,13 +21,6 @@ export interface dataStoreExtraDataType {
     tags?: string[];
 }
 export type dataStoreType<T = any> = Map<string, T>;
-
-function allElementsInArray<T>(arr: T[], targetArr: T[]): boolean {
-    // Преобразуем целевой массив в Set для быстрого поиска O(1)
-    const targetSet = new Set(targetArr);
-    // Проверяем каждый элемент arr на наличие в Set
-    return arr.every((element) => targetSet.has(element));
-}
 
 export const useDataStore = defineStore("dataStore", () => {
     const fileStore = useFileDataStore();

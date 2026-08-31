@@ -44,6 +44,12 @@
                     </button>
                 </div>
 
+                <LoadWeaponBuildInput
+                    v-if="field.key === 'items' && field.isArray()"
+                    :field="field"
+                    :data="getData"
+                />
+
                 <LocalizationInput
                     v-if="field.type === 'localization'"
                     :data="getData"
@@ -52,7 +58,7 @@
                 />
 
                 <AdvancedSelectInput
-                    v-if="field.type === 'advancedSelect'"
+                    v-else-if="field.type === 'advancedSelect'"
                     v-model="getData[field.key]"
                     :field="field"
                 />
@@ -113,10 +119,23 @@
                 />
 
                 <select
+                    v-else-if="field.type === 'select' && field.virtual"
+                    :id="field.key"
+                    :disabled="!field.editable"
+                    :value="field.initialValue && field.initialValue(getData)"
+                    @change="field.onChange && field.onChange(getData, $event)"
+                >
+                    <option v-for="params in sortedOptions(field)" :key="params.option" :value="params.option">
+                        {{ params.loc }}
+                    </option>
+                </select>
+
+                <select
                     v-else-if="field.type === 'select'"
                     :id="field.key"
                     v-model="getData[field.key]"
                     :disabled="!field.editable"
+                    @change="field.onChange && field.onChange(getData, $event)"
                 >
                     <option v-for="params in sortedOptions(field)" :key="params.option" :value="params.option">
                         {{ params.loc }}
@@ -132,7 +151,6 @@
                     "
                     v-model="getData[field.key]"
                     :field="field"
-                    :array-key="field.key"
                     :options="field.options || []"
                     :label-field="field.label || 'label'"
                 />
@@ -161,18 +179,21 @@
 
 <script setup lang="tsx">
 import { inject, ref, watch, computed, shallowRef, triggerRef, markRaw, type Ref, toValue } from "vue";
-import { RecordSchema, Field, UnneccesaryField, HiddenField } from "@/types/fields/fields";
-import AdvancedSelectInput from "./inputs/AdvancedSelectInput.vue";
-import LocalizationInput from "@/components/inputs/LocalizationInput.vue";
+
 import ArrayInput from "@/components/inputs/ArrayInput.vue";
-import { Navigator, isNavigable } from "@/utils/navigation";
+import LocalizationInput from "@/components/inputs/LocalizationInput.vue";
 import SchemaChooserInput from "@/components/inputs/SchemaChooserInput.vue";
+import { RecordSchema, Field, UnneccesaryField, HiddenField } from "@/types/fields/fields";
 import { gameLocalization } from "@/types/localization";
 import { type locales } from "@/types/localization";
-import ListTabs from "./ListTabs.vue";
 import { getStaticField } from "@/utils/classUtils";
+import { Navigator, isNavigable } from "@/utils/navigation";
+
+import LoadWeaponBuildInput from "./inputs/LoadWeaponBuildInput.vue";
+import AdvancedSelectInput from "./inputs/AdvancedSelectInput.vue";
 import CompareInput from "./inputs/CompareInput.vue";
 import ParentInput from "./inputs/ParentInput.vue";
+import ListTabs from "./ListTabs.vue";
 
 const props = defineProps<{
     data: any;
@@ -190,6 +211,7 @@ const frameNavigator = inject<Navigator>("frameNavigator");
 const validationErrors = ref<Record<string, string>>({});
 
 const dataRef = computed<RecordSchema>(() => {
+    console.log(props.data instanceof RecordSchema ? props.data.getData() : props.data);
     return props.data instanceof RecordSchema ? props.data : new RecordSchema(props.data);
 });
 

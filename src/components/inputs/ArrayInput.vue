@@ -96,10 +96,10 @@
 import { computed, inject, ref, type Ref, watch } from "vue";
 import { RecordSchema, Field, AdvSelectField } from "@/types/fields/fields";
 import AdvancedSelectInput from "./AdvancedSelectInput.vue";
-import { SchemaChoicer, type SchemaChoice } from "@/types/fields/fieldsSchemaChoicer.ts";
-import { getStaticField, type ClassType } from "@/utils/classUtils.ts";
-import { Navigator } from "@/utils/navigation.ts";
-import { gameLocalization, type locales } from "@/types/localization.ts";
+import { SchemaChoicer, type SchemaChoice } from "@/types/fields/fieldsSchemaChoicer";
+import { getStaticField, type ClassType } from "@/utils/classUtils";
+import { Navigator } from "@/utils/navigation";
+import { gameLocalization, type locales } from "@/types/localization";
 
 type InputType = any[];
 const frameNavigator = inject<Navigator>("frameNavigator");
@@ -107,7 +107,6 @@ const frameNavigator = inject<Navigator>("frameNavigator");
 const props = defineProps<{
     modelValue: InputType;
     field: Field;
-    arrayKey: string;
     labelField?: string;
 }>();
 
@@ -116,10 +115,12 @@ const emit = defineEmits<{
     (e: "change", value: InputType): void;
 }>();
 
-const selectedIndex = ref<number | null>(props.modelValue.length > 0 ? 0 : null);
+const selectedIndex = ref<number | null>(props.modelValue && props.modelValue.length > 0 ? 0 : null);
 
 const items = computed({
-    get: () => props.modelValue as InputType,
+    get: () => {
+        return props.modelValue as InputType;
+    },
     set: (val: InputType) => {
         emit("update:modelValue", val);
         emit("change", val);
@@ -201,37 +202,38 @@ function addItem() {
                 const choosedSchema = getStaticField<SchemaChoice[]>(arrayItemSchema, "schemas")?.[0];
 
                 if (choosedSchema) {
-                    items.value.push(
-                        new choosedSchema.schema(
-                            {},
-                            {
-                                schemaChooser: props.field.arrayItemSchema,
-                                choosedSchema: choosedSchema,
-                            }
-                        )
+                    const schema = new choosedSchema.schema(
+                        {},
+                        {
+                            schemaChooser: props.field.arrayItemSchema,
+                            choosedSchema: choosedSchema,
+                        }
                     );
+                    items.value.push(schema.getData());
 
-                    frameNavigator?.navigate([props.arrayKey, items.value.length - 1]);
+                    frameNavigator?.navigate([props.field.key, items.value.length - 1]);
                     return;
                 }
             } else if (RecordSchema.isPrototypeOf(arrayItemSchema)) {
-                items.value.push(new arrayItemSchema({}));
-                frameNavigator?.navigate([props.arrayKey, items.value.length - 1]);
+                const schema = (new arrayItemSchema({}) as RecordSchema);
+                items.value.push(schema.getData());
+                frameNavigator?.navigate([props.field.key, items.value.length - 1]);
                 return;
             }
         }
 
         const nestedSchema: Field["nestedSchema"] = props.field.nestedSchema;
         if (nestedSchema) {
-            items.value.push(new nestedSchema({}));
-            frameNavigator?.navigate([props.arrayKey, items.value.length - 1]);
+            const schema = new nestedSchema({});
+            items.value.push(schema.getData());
+            frameNavigator?.navigate([props.field.key, items.value.length - 1]);
         }
     }
 }
 
 function handleNavigate() {
     if (selectedIndex.value === null) return;
-    frameNavigator?.navigate?.([props.arrayKey, selectedIndex.value]);
+    frameNavigator?.navigate?.([props.field.key, selectedIndex.value]);
 }
 
 watch(

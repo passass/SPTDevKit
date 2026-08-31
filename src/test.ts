@@ -1,17 +1,15 @@
-// Использование в main.ts или другом файле
-import outputJson from '../data/output.json';
-import { generateAllSchemas, printTree } from './utils/schemaGenerator';
+import { getValuesByPath, getValueByPath, setValueByPath } from "./utils/utils";
 
-const schemas = generateAllSchemas(outputJson);
+const data = {
+	a: {
+		b: 1
+	},
+	b: 5,
+	c: {
+		b: 3
+	},
+};
 
-// const res = schemas.children.find((el) => el.path == "*.conditions.AvailableForFinish") 
-// if (res)
-// 	printTree(res)
+setValueByPath(data, "a.b", 6)
 
-for (const schemaNode of schemas.children) {
-	console.log(schemaNode.path, schemaNode)
-}
-
-if (schemas.children[0].schema) {
-	console.log(schemas.children[0].schema)
-}
+console.log(getValuesByPath(data, "*.b"));

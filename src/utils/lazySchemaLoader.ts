@@ -8,8 +8,9 @@ import { generateAllSchemas, type SchemaNode } from "@/utils/schemaGenerator";
 
 // filepath -> schemanode
 const cachedTrees: Map<string, SchemaNode> = new Map();
+export type lazyParams = { schemas?: SchemaChoice[]; fields?: Field[] };
 // filepath -> path -> field[]
-const additionalFields: Map<string, Map<string, Field[]>> = new Map();
+const additionalFields: Map<string, Map<string, lazyParams>> = new Map();
 let isLoading = false;
 let loadPromise: Promise<SchemaNode> | null = null;
 
@@ -38,22 +39,29 @@ async function loadTree(filePath: string): Promise<SchemaNode> {
 
             const newAdditionalFields = additionalFields?.get(filePath);
             if (newAdditionalFields) {
-                for (const [path, fields] of newAdditionalFields.entries()) {
+                for (const [path, params] of newAdditionalFields.entries()) {
                     const schemaNode = findSchemaByPath(tree, path);
                     const schema = schemaNode?.schema;
 
                     if (!schema) continue;
 
-                    for (const field of fields) {
-                        const isSchemaChoicer = SchemaChoicer.isPrototypeOf(schema);
-                        const isRecordSchema = RecordSchema.isPrototypeOf(schema);
-                        if (isRecordSchema && "fields" in schema) {
-                            schema.fields = [...(schema.fields as Field[]), additionalFields];
-                        } else if (isSchemaChoicer && "schemas" in schema && Array.isArray(schema.schemas)) {
-                            const schemas: SchemaChoice[] = schema.schemas;
-                            for (const schemaChoice of schemas) {
-                                if ("fields" in schemaChoice?.schema && Array.isArray(schemaChoice?.schema?.fields)) {
-                                    schemaChoice?.schema?.fields?.push(field);
+                    if (params.schemas) {
+                        if (SchemaChoicer.isPrototypeOf(schema) && "schemas" in schema && Array.isArray(schema.schemas)) {
+                            schema.schemas = [...params.schemas, ...schema.schemas];
+                        }
+					}
+                    if (params.fields) {
+                        for (const field of params.fields) {
+                            const isSchemaChoicer = SchemaChoicer.isPrototypeOf(schema);
+                            const isRecordSchema = RecordSchema.isPrototypeOf(schema);
+                            if (isRecordSchema && "fields" in schema) {
+                                schema.fields = [...(schema.fields as Field[]), additionalFields];
+                            } else if (isSchemaChoicer && "schemas" in schema && Array.isArray(schema.schemas)) {
+                                const schemas: SchemaChoice[] = schema.schemas;
+                                for (const schemaChoice of schemas) {
+                                    if ("fields" in schemaChoice?.schema && Array.isArray(schemaChoice?.schema?.fields)) {
+                                        schemaChoice?.schema?.fields?.push(field);
+                                    }
                                 }
                             }
                         }
@@ -88,7 +96,7 @@ export function createLazySchemaChoicer(
     filePath: string,
     path: string,
     className: string,
-    newAdditionalFields: Field[] = []
+    newAdditionalFields: lazyParams = {}
 ): ClassType<SchemaChoicer> {
     additionalFields.set(filePath, additionalFields.get(filePath) ?? new Map());
     additionalFields.get(filePath)?.set(path, newAdditionalFields);

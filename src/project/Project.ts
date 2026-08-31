@@ -4,6 +4,7 @@ import Quests from "./Quests";
 import { availableLocales, suffixes } from "@/types/localization";
 import { Path, PathArray } from "@/utils/pathUtils";
 import { isElectron } from "@/utils/utils";
+import Profiles from "@/userProfiles/Profiles";
 
 export const currentProjectTag = "currentProject";
 export const modTag = "mod";
@@ -17,7 +18,7 @@ export type ProjectArgs = {
 class Project {
     dataStore: ReturnType<typeof useDataStore> | null = null;
     EFTFolder?: Path;
-    currentProjectFolder?: Path;
+	currentProjectFolder?: Path;
 
     async loadLocale(projectArgs: ProjectArgs) {
         const customQuestsPath = new Path(projectArgs.folderPath, "db/CustomQuests");
@@ -83,7 +84,8 @@ class Project {
                 notLoadImmediately: true,
             });
         }
-        await Promise.all([
+		await Promise.all([
+			Profiles.load(this.EFTFolder),
             this.dataStore?.load("quests"),
             async () => {
                 for (const locale of availableLocales)

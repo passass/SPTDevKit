@@ -47,11 +47,16 @@ export class Field extends Data {
 	arrayItemSchema?: arrayItemSchemaType;
 	virtual?: boolean;
 
+	initialValue?: (data: SchemaData) => any;
+	onChange?: (data: SchemaData, event: Event) => void;
+
 	hidden?: boolean;
 	unneccesary?: boolean;
 
 	getDefaultValue?(data: SchemaData): any;
 	exactValue?(data: SchemaData): any;
+
+	isArray(): boolean {return this.type.toLocaleLowerCase().includes("array")};
 }
 
 export class AdvSelectField extends Field {
