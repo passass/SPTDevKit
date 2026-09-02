@@ -1,3 +1,6 @@
+import { gameLocalization } from "@/types/localization";
+import { Field } from "@/types/fields/fields";
+
 const generatedUUID24chars = new Set<string>();
 export function generateUUID24chars(): string {
     let uuid: string;
@@ -9,6 +12,30 @@ export function generateUUID24chars(): string {
     generatedUUID24chars.add(uuid);
     return uuid;
 }
+
+export function sortedOptions(field: Field): Array<{ option: string; loc: string }> {
+    const localizations: Array<{ option: string; loc: string }> = [];
+    const keys = new Set();
+    if (!field.options) return [];
+
+    for (const option of field.options) {
+        if (keys.has(option)) continue;
+        keys.add(option);
+        localizations.push({
+            option: option,
+            loc: gameLocalization.getObjectLocalization({ instance: option, canBeUI: true }),
+        });
+    }
+
+    localizations.sort((a: { option: string; loc: string }, b: { option: string; loc: string }) => {
+        const labelA = a.loc;
+		const labelB = b.loc;
+        return labelA.localeCompare(labelB);
+    });
+
+    return localizations;
+}
+
 
 export function capitalize(str: string) {
     if (!str) return str;

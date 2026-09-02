@@ -32,6 +32,8 @@
         </option>
       </select>
     </div>
+
+    <button class="" @click="console.log(dataStore.getAllDirties('quests'))">тест</button>
   </div>
 </template>
 
@@ -45,8 +47,10 @@ import Project from '@/project/Project';
 import FolderSelector from '@/components/selectors/FolderSelector.vue';
 import { Path } from '@/utils/pathUtils';
 import { useProfilesStore } from '@/stores/profileStore';
+import { useDataStore } from '@/stores/dataStore';
 
 const profilesStore = useProfilesStore();
+const dataStore = useDataStore();
 
 const selectedPath = ref<string>(Project.currentProjectFolder?.filePath ?? '');
 const isLoading = ref(false);

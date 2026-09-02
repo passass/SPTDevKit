@@ -47,7 +47,9 @@ function mapDataType(dataType: string): Field['type'] {
         'bool': 'boolean',
         'list': 'array',
         'dict': 'object',
+        'select': 'select',
         'arrayAdvancedSelect': 'arrayAdvancedSelect',
+        'arrayArrayAdvancedSelect': 'arrayArrayAdvancedSelect',
         'advancedSelect': 'advancedSelect',
 
         'stringArray': 'stringArray',
@@ -79,7 +81,9 @@ function generateFieldClass(fieldName: string, fieldInfo: FieldInfo, lastSplitSc
         label: fieldInfo.label ?? fieldName,
         order: fieldInfo.order ?? 99,
 		unneccesary: fieldInfo.unneccesary ?? (unneccesaryFields?.includes(fieldInfo?.split_key_value) || unneccesaryFields.includes(fieldInfo.key)),
-        editable: fieldInfo.editable !== undefined ? fieldInfo.editable : true,
+		editable: fieldInfo.editable !== undefined ? fieldInfo.editable : true,
+		options: undefined as string[] | undefined,
+        hidden: undefined as boolean | undefined,
     };
 
 	if (fieldInfo.hidden === true)
@@ -90,7 +94,7 @@ function generateFieldClass(fieldName: string, fieldInfo: FieldInfo, lastSplitSc
         return Field.create({
             ...commonFields,
             type: 'object',
-
+            hidden: fieldInfo.hidden,
             nestedSchema: nestedClass
         });
     }
@@ -100,6 +104,7 @@ function generateFieldClass(fieldName: string, fieldInfo: FieldInfo, lastSplitSc
         return Field.create({
             ...commonFields,
             type: 'object',
+            hidden: fieldInfo.hidden,
             nestedSchema: nestedClass
         });
     }
@@ -126,8 +131,6 @@ function generateFieldClass(fieldName: string, fieldInfo: FieldInfo, lastSplitSc
 	if (fieldInfo.__type !== "field")
 		return null;
 
-
-
     const dataType = mapDataType(fieldInfo.data_type || 'unknown');
 
     if (dataType === 'array' && fieldInfo.array_nested) {
@@ -142,11 +145,7 @@ function generateFieldClass(fieldName: string, fieldInfo: FieldInfo, lastSplitSc
     }
 
     if (fieldInfo.options)
-        return Field.create({
-            ...commonFields,
-            type: 'select',
-            options: fieldInfo.options,
-        });
+        commonFields.options = fieldInfo.options;
 
     if (fieldInfo.key === "traderId")
         return AdvSelectField.create({

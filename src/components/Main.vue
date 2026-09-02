@@ -6,7 +6,7 @@ import { ref, type Component, type Ref, provide, computed } from 'vue'
 import { choiceStrings, gameLocalization, type locales } from "@/types/localization";
 import ListTabsFrame from "./ListTabsFrame.vue";
 import type { RecordSchema } from "@/types/fields/fields.ts";
-import { useDataStore, type dataStoreType } from "@/stores/dataStore";
+import { useDataStore, type dataMapRecordType } from "@/stores/dataStore";
 import { getStaticField, type ClassType } from "@/utils/classUtils";
 import SettingsComponent from "./SettingsComponent.vue";
 import { isElectron } from "@/utils/utils";
@@ -18,12 +18,12 @@ const dataStore = useDataStore()
 function getRecordEditorComponent(content: object, dataStoreId: string): Component {
 	return () => {
 		const itemsData: Tab[] = []
-		const fileData: dataStoreType<RecordSchema> = dataStore.getMap(dataStoreId) ?? {};
+		const fileData: Map<string, dataMapRecordType> = dataStore.getMap(dataStoreId) ?? {};
 		const schemaType = dataStore.getSchemaType(dataStoreId)
 
 		for (const [itemId, itemData] of fileData.entries()) {
 			const localizedName: string = gameLocalization.getObjectLocalization({
-				instance: itemData,
+				instance: itemData.data,
 			})
 
 			itemsData.push(
@@ -31,7 +31,7 @@ function getRecordEditorComponent(content: object, dataStoreId: string): Compone
 					id: itemId,
 					label: localizedName,
 					title: localizedName,
-					data: itemData,
+					data: itemData.data,
 					schemaType: schemaType,
 					dataStoreId: dataStoreId,
 				}

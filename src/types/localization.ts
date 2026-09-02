@@ -119,11 +119,7 @@ export class GameLocalization {
 			params.localeId,
 			newText,
 		);
-
-
-		if (this.dataStore.getExtraData(storeId, params.localeId)?.tags === undefined) {
-			this.dataStore.addTag(storeId, params.localeId, currentProjectTag)
-		}
+		this.dataStore.addTag(storeId, params.localeId, currentProjectTag);
 	}
 
 	getUIText = (params: localizationTextParams) =>

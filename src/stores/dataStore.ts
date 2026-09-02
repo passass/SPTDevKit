@@ -1,7 +1,7 @@
 // src/stores/dataStore.ts
 
 import { defineStore } from "pinia";
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { useFileDataStore } from "./fileStore";
 import { QuestSchema } from "@/types/fields/fieldsQuests";
 import { idsFields, type RecordSchema, type SchemaData } from "@/types/fields/fields";
@@ -20,26 +20,26 @@ export interface DataStoreConfig {
 export interface dataStoreExtraDataType {
     tags?: string[];
 }
-export type dataStoreType<T = any> = Map<string, T>;
+export type dataMapRecordType = {
+	data: any;
+	tags?: string[];
+	dirty?: boolean;
+};
 
 export const useDataStore = defineStore("dataStore", () => {
     const fileStore = useFileDataStore();
 
     // Хранилище для всех данных: ключ -> Map<string, данные>
-    const dataMap = ref<Map<string, dataStoreType>>(new Map());
-    const extraDataMap = ref<Map<string, Map<string, dataStoreExtraDataType>>>(new Map());
+    const dataMap = ref<Map<string, Map<string, dataMapRecordType>>>(new Map());
 
     const configs = ref<Map<string, DataStoreConfig>>(new Map());
 
-    // Статусы загрузки для каждого ключа
     const loadingStatus = ref<Map<string, boolean>>(new Map());
     const errorStatus = ref<Map<string, string | null>>(new Map());
 
-    // Регистрация хранилища
     function register(key: string, config: DataStoreConfig) {
         if (!dataMap.value.has(key)) {
             dataMap.value.set(key, new Map());
-            extraDataMap.value.set(key, new Map());
             configs.value.set(key, config);
             loadingStatus.value.set(key, false);
             errorStatus.value.set(key, null);
@@ -84,7 +84,6 @@ export const useDataStore = defineStore("dataStore", () => {
 
         try {
             const files = Array.isArray(config.file) ? config.file : [config.file];
-            const extraDataStore = extraDataMap.value.get(key);
             const store = dataMap.value.get(key)!;
             store.clear();
 
@@ -96,7 +95,6 @@ export const useDataStore = defineStore("dataStore", () => {
 
                 const fileData = await fileStore.read(filename);
                 const fileContent = fileData.data ?? fileData;
-                const extraData = extraDataMap.value;
 
                 if (fileContent && typeof fileContent === "object") {
                     let entries: Record<string, any> = {};
@@ -118,11 +116,21 @@ export const useDataStore = defineStore("dataStore", () => {
                                 value.storeId = key;
                             } else {
                                 value = itemData;
-                            }
-                            extraDataStore?.set(id, {
-                                tags: file.tags,
-                            });
-                            store.set(id, value);
+							}
+
+							const storeResult = {
+								data: value,
+								tags: file.tags,
+							}
+							store.set(id, storeResult);
+
+							watch(
+						        storeResult.data,
+						        (newMap, oldMap) => {
+						            console.log(id)
+						        },
+						        { deep: true }
+						    );
                         } else {
                             console.warn(`Duplicate ID "${id}" found in file "${filename}", skipping...`);
                         }
@@ -147,19 +155,16 @@ export const useDataStore = defineStore("dataStore", () => {
         return res;
     }
 
-    function getByTagInStore<T = any>(storeId: string, tag: string | string[]): Map<string, T> {
-        const store = getMap<T>(storeId);
-        const result: Map<string, T> = new Map();
-
-        const extraDataStore = extraDataMap.value.get(storeId);
+    function getByTagInStore(storeId: string, tag: string | string[]): Map<string, dataMapRecordType> {
+        const store = getMap(storeId);
+        const result: Map<string, dataMapRecordType> = new Map();
 
         for (const [id, value] of store) {
-            const extra = extraDataStore?.get(id);
             if (
-                extra &&
+                value &&
                 (typeof tag === "string"
-                    ? extra?.tags?.includes(tag)
-                    : extra?.tags && allElementsInArray(tag, extra?.tags))
+                    ? value.tags?.includes(tag)
+                    : value.tags && allElementsInArray(tag, value.tags))
             ) {
                 result.set(id, value);
             }
@@ -201,39 +206,25 @@ export const useDataStore = defineStore("dataStore", () => {
     }
 
     // Получить весь Map
-    function getMap<T = any>(key: string): dataStoreType<T> {
+    function getMap<T = any>(key: string): Map<string, dataMapRecordType> {
         const store = dataMap.value.get(key);
         if (!store) {
             throw new Error(`Store "${key}" not found`);
         }
-        return store as dataStoreType<T>;
+        return store as Map<string, dataMapRecordType>;
     }
-
-    function getExtraData(storeId: string, key: string): dataStoreExtraDataType | undefined {
-        return extraDataMap.value.get(storeId)?.get(key);
-    }
-
-    function setExtraData(storeId: string, key: string, value: dataStoreExtraDataType): void {
-        extraDataMap.value.get(storeId)?.set(key, value);
-	}
 
 	function addTag(storeId: string, key: string, tag: string) {
-		let extraData = getExtraData(storeId, key)
+		let data = getMap(storeId).get(key)
 
-		if (!extraData) {
-			extraData = {}
-			setExtraData(storeId, key, extraData)
+		if (!data) {
+			throw new Error("no data")
 		}
 
-		extraData.tags ??= []
-		if (!extraData.tags.includes(tag))
-			extraData.tags.push(tag);
+		data.tags ??= []
+		if (!data.tags.includes(tag))
+			data.tags.push(tag);
 	}
-
-	// Получить список всех значений
-    function getList<T = any>(key: string): T[] {
-        return Array.from(getMap<T>(key).values());
-    }
 
     // Получить список ID
     function getIds(key: string): string[] {
@@ -246,8 +237,8 @@ export const useDataStore = defineStore("dataStore", () => {
     }
 
     // Получить один элемент
-    function get<T = any>(key: string, id: string): T | undefined {
-        return getMap<T>(key).get(id);
+    function get(key: string, id: string): dataMapRecordType["data"] | undefined {
+        return getMap(key).get(id)?.data;
     }
 
     function safeGet<T = any>(key: string | string[], id: string): T | undefined;
@@ -264,19 +255,19 @@ export const useDataStore = defineStore("dataStore", () => {
         }
 
         const store = dataMap.value?.get?.(key);
-        const value = store?.get(id) as T | undefined;
-        return value ?? def;
+        const value = store?.get(id);
+        return (value?.data) as T | undefined ?? def;
     }
 
-    // Установить элемент
-    function set<T = any>(key: string, id: string, data: T) {
-        getMap(key).set(id, data);
-    }
 
-    // Добавить элемент
-    function add<T = any>(key: string, id: string, data: T): T {
-        getMap(key).set(id, data);
-        return data;
+	function set(key: string, id: string, data: dataMapRecordType["data"]) {
+		const map = getMap(key)
+		const dataRecord = map.get(id);
+		if (dataRecord) {
+			dataRecord.data = data;
+		} else {
+			map.set(id, { data });
+		}
     }
 
     // Удалить элемент
@@ -381,9 +372,27 @@ export const useDataStore = defineStore("dataStore", () => {
 
     function getSchemaType(key: string): DataStoreConfig["schemaType"] | undefined {
         return configs.value.get(key)?.schemaType;
-    }
+	}
 
-    return {
+	function isDirty(storeId: string, id: string): boolean {
+		const store = getMap(storeId);
+		return !!(store.has(id) && store.get(id)!.dirty);
+	}
+
+	function markDirty(storeId: string, id: string) {
+		const store = getMap(storeId);
+		if (store.has(id)) {
+			store.get(id)!.dirty = true;
+		}
+	}
+
+	function getAllDirties(storeId: string): dataMapRecordType[] {
+		const store = getMap(storeId);
+		return Array.from(store.values())
+			.filter((data) => data.dirty);
+	}
+
+	return {
         dataMap,
         getSchemaType,
         addFileToStore,
@@ -398,15 +407,16 @@ export const useDataStore = defineStore("dataStore", () => {
         loadMultiple,
         loadAll,
         reload,
+		markDirty,
+		isDirty,
+        getAllDirties,
         reloadMultiple,
         getMap,
-        getList,
         getIds,
         getCount,
         get,
         safeGet,
         set,
-        add,
         remove,
         clear,
         save,
@@ -419,8 +429,6 @@ export const useDataStore = defineStore("dataStore", () => {
         getKeys,
         getFilenames,
 
-        getExtraData,
-		setExtraData,
         addTag,
     };
 });

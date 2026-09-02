@@ -29,7 +29,8 @@ export type FieldType = 'text'
 	| 'hidden'
 	| 'localization'
 	| "advancedSelect"
-	| 'arrayAdvancedSelect';
+	| 'arrayAdvancedSelect'
+	| 'arrayArrayAdvancedSelect';
 
 export class Field extends Data {
 	key: string = "";
@@ -54,7 +55,6 @@ export class Field extends Data {
 	unneccesary?: boolean;
 
 	getDefaultValue?(data: SchemaData): any;
-	exactValue?(data: SchemaData): any;
 
 	isArray(): boolean {return this.type.toLocaleLowerCase().includes("array")};
 }
@@ -172,7 +172,7 @@ function resolveDefaultValue(field: Field, data: SchemaData): any {
 			return false;
 		if (field.type === 'select' && field.options)
 			return field.options[0];
-        if (['array', 'stringArray', 'numberArray', 'arrayAdvancedSelect'].includes(field.type)) {
+        if (field.isArray()) {
             return [];
         }
         return null;

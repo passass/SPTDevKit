@@ -80,7 +80,10 @@ const items = computed(() => {
 
 	const result: Array<{ id: string; label: string; data: any }> = [];
 
-	for (const [id, data] of itemMap) {
+	for (const [id, record] of itemMap) {
+		let data: any = record;
+		if ("data" in record) data = record.data;
+
 		const name = gameLocalization.getObjectLocalization({instance: data})
 		result.push({
 			id,

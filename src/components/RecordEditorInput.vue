@@ -148,10 +148,7 @@
 
                 <ArrayInput
                     v-else-if="
-                        field.type === 'array' ||
-                        field.type === 'stringArray' ||
-                        field.type === 'numberArray' ||
-                        field.type === 'arrayAdvancedSelect'
+                        field.isArray()
                     "
                     v-model="getData[field.key]"
                     :field="field"
@@ -182,16 +179,15 @@
 <!-- src/components/RecordEditorInput.vue -->
 
 <script setup lang="tsx">
-import { inject, ref, watch, computed, shallowRef, triggerRef, markRaw, type Ref, toValue } from "vue";
+import { inject, ref, watch, computed, shallowRef, triggerRef, markRaw, type Ref, toValue, nextTick } from "vue";
 
 import ArrayInput from "@/components/inputs/ArrayInput.vue";
 import LocalizationInput from "@/components/inputs/LocalizationInput.vue";
 import SchemaChooserInput from "@/components/inputs/SchemaChooserInput.vue";
-import { RecordSchema, Field, UnneccesaryField, HiddenField } from "@/types/fields/fields";
+import { RecordSchema, Field } from "@/types/fields/fields";
 import { gameLocalization } from "@/types/localization";
-import { type locales } from "@/types/localization";
-import { getStaticField } from "@/utils/classUtils";
 import { Navigator, isNavigable } from "@/utils/navigation";
+import { sortedOptions } from "@/utils/utils";
 
 import LoadWeaponBuildInput from "./inputs/LoadWeaponBuildInput.vue";
 import AdvancedSelectInput from "./inputs/AdvancedSelectInput.vue";
@@ -199,6 +195,7 @@ import CompareInput from "./inputs/CompareInput.vue";
 import ParentInput from "./inputs/ParentInput.vue";
 import ListTabs from "./ListTabs.vue";
 import { WeaponBuildItem } from "@/stores/profileStore";
+import { useDataStore } from "@/stores/dataStore";
 
 const props = defineProps<{
     data: any;
@@ -212,12 +209,19 @@ const emit = defineEmits<{
     (e: "validation", result: { valid: boolean; errors: Record<string, string> }): void;
 }>();
 
+const dataStore = useDataStore();
 const frameNavigator = inject<Navigator>("frameNavigator");
 const validationErrors = ref<Record<string, string>>({});
 
 const dataRef = computed<RecordSchema>(() => {
-    console.log(props.data instanceof RecordSchema ? props.data.getData() : props.data);
-    return props.data instanceof RecordSchema ? props.data : new RecordSchema(props.data);
+	if (props.data instanceof RecordSchema) {
+		return props.data;
+	}
+	let data = props.data;
+	if ("data" in data) {
+		data = data.data;
+	}
+    return data instanceof RecordSchema ? data : new RecordSchema(data);
 });
 
 const displayFields = computed<Field[]>(() => {
@@ -226,6 +230,7 @@ const displayFields = computed<Field[]>(() => {
 
 const recordData = computed(() => dataRef.value);
 const getData = computed(() => {
+	console.log("fields", recordData.value.getFields())
     return recordData.value.getData();
 });
 const isShowUnneccesaryFields = ref<boolean>(false);
@@ -237,29 +242,6 @@ const compareInputFields: string[] = ["compareMethod", "value"];
 const hasCompareInput = computed<boolean>(() => {
     return toValue(dataRef as any)?.getFieldByKey("compareMethod") && toValue(dataRef as any)?.getFieldByKey("value");
 });
-
-function sortedOptions(field: Field): Array<{ option: string; loc: string }> {
-    const localizations: Array<{ option: string; loc: string }> = [];
-    const keys = new Set();
-    if (!field.options) return [];
-
-    for (const option of field.options) {
-        if (keys.has(option)) continue;
-        keys.add(option);
-        localizations.push({
-            option: option,
-            loc: gameLocalization.getObjectLocalization({ instance: option, canBeUI: true }),
-        });
-    }
-
-    localizations.sort((a: { option: string; loc: string }, b: { option: string; loc: string }) => {
-        const labelA = a.loc;
-        const labelB = b.loc;
-        return labelA.localeCompare(labelB);
-    });
-
-    return localizations;
-}
 
 function getObjectSummary(value: Record<string, any>): string {
     if (!value) return "{}";
@@ -318,6 +300,32 @@ function getRewardDisplay(items: WeaponBuildItem[]): string {
     }
     return parts.join(', ');
 }
+
+const initialized = ref(false)
+
+watch(
+    () => props.data,
+    () => {
+        initialized.value = false
+        nextTick(() => {
+            initialized.value = true
+        })
+    },
+    { immediate: true }
+)
+
+watch(
+    getData,
+    () => {
+		if (frameNavigator?.tab && initialized.value) {
+			const id = frameNavigator.tab.id;
+			const storeId = frameNavigator.tab.dataStoreId
+			if (storeId && id)
+				dataStore.markDirty(storeId, id)
+     	}
+    },
+    { deep: true }
+)
 </script>
 
 <style scoped>

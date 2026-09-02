@@ -1,4 +1,4 @@
-// src/components/inputs/ArrayInput.vue // src/components/inputs/ArrayInput.vue
+// src/components/inputs/ArrayInput.vue
 <template>
     <div class="array-input">
         <div class="array-input__controls">
@@ -33,11 +33,9 @@
         <div v-if="isOptionsArray" class="array-input__editor">
             <template v-if="selectedIndex !== null">
                 <select v-model="items[selectedIndex]" class="array-input__select">
-                    <option v-for="option in field.options" :key="option" :value="option">
+                    <option v-for="option in sortedOptions(field)" :key="option.option" :value="option.option">
                         {{
-                            gameLocalization.getText({
-                                localeId: [option, `${option} Name`, `${option} Nickname`],
-                            })
+                        	option.loc
                         }}
                     </option>
                 </select>
@@ -48,6 +46,23 @@
         <div v-else-if="isAdvancedSelectArray" class="array-input__editor">
             <template v-if="selectedIndex !== null">
                 <AdvancedSelectInput v-model="items[selectedIndex]" :field="field" />
+            </template>
+        </div>
+
+        <!-- Режим arrayArrayAdvancedSelect: массив массивов с AdvancedSelect -->
+        <div v-else-if="isArrayArrayAdvancedSelect" class="array-input__editor">
+            <template v-if="selectedIndex !== null">
+                <div class="array-input__sub-array">
+                    <div
+                        v-for="(subItem, subIndex) in items[selectedIndex]"
+                        :key="subIndex"
+                        class="array-input__sub-item"
+                    >
+                        <AdvancedSelectInput v-model="items[selectedIndex][subIndex]" :field="field" />
+                        <button class="array-input__sub-remove" @click="removeSubItem(subIndex)">✕</button>
+                    </div>
+                    <button class="array-input__sub-add" @click="addSubItem">+ Добавить</button>
+                </div>
             </template>
         </div>
 
@@ -100,6 +115,7 @@ import { SchemaChoicer, type SchemaChoice } from "@/types/fields/fieldsSchemaCho
 import { getStaticField, type ClassType } from "@/utils/classUtils";
 import { Navigator } from "@/utils/navigation";
 import { gameLocalization, type locales } from "@/types/localization";
+import { sortedOptions } from "@/utils/utils";
 
 type InputType = any[];
 const frameNavigator = inject<Navigator>("frameNavigator");
@@ -138,6 +154,11 @@ const isStringArray = computed(() => {
 // Определяем, является ли массив arrayAdvancedSelect
 const isAdvancedSelectArray = computed(() => {
     return props.field.type === "arrayAdvancedSelect";
+});
+
+// Определяем, является ли массив arrayArrayAdvancedSelect
+const isArrayArrayAdvancedSelect = computed(() => {
+    return props.field.type === "arrayArrayAdvancedSelect";
 });
 
 const isNumberArray = computed(() => {
@@ -184,7 +205,10 @@ function deleteItem() {
 }
 
 function addItem() {
-    if (isOptionsArray.value) {
+    if (isArrayArrayAdvancedSelect.value) {
+        items.value.push([]);
+        selectedIndex.value = items.value.length - 1;
+    } else if (isOptionsArray.value) {
         const defaultOption = props.field.options?.[0] ?? "";
         items.value.push(defaultOption);
         selectedIndex.value = items.value.length - 1;
@@ -229,6 +253,21 @@ function addItem() {
             frameNavigator?.navigate([props.field.key, items.value.length - 1]);
         }
     }
+}
+
+function addSubItem() {
+    if (selectedIndex.value === null) return;
+    const array = items.value[selectedIndex.value];
+    if (!Array.isArray(array)) return;
+    array.push('');
+}
+
+function removeSubItem(index: number | string) {
+	if (selectedIndex.value === null) return;
+    if (typeof index !== 'number') return;
+    const array = items.value[selectedIndex.value];
+    if (!Array.isArray(array)) return;
+    array.splice(index, 1);
 }
 
 function handleNavigate() {
@@ -408,5 +447,60 @@ watch(
     border-radius: 6px;
     color: #666;
     font-size: 13px;
+}
+
+/* NEW styles for arrayArrayAdvancedSelect */
+.array-input__sub-array {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.array-input__sub-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.array-input__sub-item .item-select {
+    flex: 1;
+}
+
+.array-input__sub-remove {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    background: transparent;
+    border: 1px solid #4a4a4a;
+    border-radius: 4px;
+    color: #888;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    font-size: 12px;
+}
+
+.array-input__sub-remove:hover {
+    background: #4a4a4a;
+    color: #ff6b6b;
+}
+
+.array-input__sub-add {
+    align-self: flex-start;
+    padding: 4px 12px;
+    background: transparent;
+    border: 1px dashed #4a4a4a;
+    border-radius: 4px;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 12px;
+}
+
+.array-input__sub-add:hover {
+    border-color: #42b883;
+    color: #42b883;
 }
 </style>

@@ -93,7 +93,7 @@ import type { Tab } from "@/tabs/tabs";
 import { RecordSchema } from "@/types/fields/fields";
 import type { Component } from "vue";
 import { type ClassType } from "@/utils/classUtils";
-import { type dataStoreType } from "@/stores/dataStore";
+import { type dataMapRecordType } from "@/stores/dataStore";
 import { useDataStore } from "@/stores/dataStore";
 import { inject, ref, computed, onMounted, nextTick, toValue } from "vue";
 // Импорт виртуального скроллера
@@ -108,7 +108,7 @@ const props = defineProps<{
     tabs: Tab[];
 	schemaType?: ClassType<RecordSchema>;
 	storeId?: string;
-    fileData?: dataStoreType<RecordSchema>;
+    fileData?: Map<string, dataMapRecordType>;
     isSearch?: boolean;
     searchPlaceholder?: string;
     caseSensitive?: boolean;
@@ -142,6 +142,10 @@ const filteredTabs = computed(() => {
     });
 });
 
+function getCurrentTab() {
+    return currentTab.value;
+}
+
 function deleteCurrentTab() {
     const current = currentTab.value;
     if (current?.dataStoreId) {
@@ -157,10 +161,10 @@ function createNewSchema() {
     const newInstanceId = newInstance.getId();
     if (newInstanceId && props.storeId) {
     	const store = dataStore.getMap(props.storeId);
-		props.fileData.set(newInstanceId, newInstance);
+		props.fileData.set(newInstanceId, {data: newInstance});
 
 		store.set(newInstanceId, newInstance);
-        dataStore.setExtraData(props.storeId, newInstanceId, {tags: [currentProjectTag]})
+        dataStore.addTag(props.storeId, newInstanceId, currentProjectTag);
 
 		selectTab(newInstanceId);
     }
@@ -250,9 +254,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.asd {
-	font-size: 99px;
-}
 /* ===== ОСНОВНОЙ КОНТЕЙНЕР ===== */
 .tab-container {
     display: flex;

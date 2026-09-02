@@ -5,12 +5,12 @@
 	import type { PropType } from "vue";
 	import { RecordSchema } from "@/types/fields/fields";
 	import { type ClassType } from "@/utils/classUtils";
-	import { type dataStoreType } from "@/stores/dataStore";
+	import { type dataMapRecordType } from "@/stores/dataStore";
 
 	const props = defineProps<{
 		itemsData: Tab[]
 		schemaType?: ClassType<RecordSchema>
-		fileData?: dataStoreType<RecordSchema>
+		fileData?: Map<string, dataMapRecordType>
 		storeId?: string
 	}>()
 </script>
