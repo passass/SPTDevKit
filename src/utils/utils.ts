@@ -16,16 +16,27 @@ export function generateUUID24chars(): string {
 export function sortedOptions(field: Field): Array<{ option: string; loc: string }> {
     const localizations: Array<{ option: string; loc: string }> = [];
     const keys = new Set();
-    if (!field.options) return [];
+    if (!field.options || typeof field.options !== "object") return [];
 
-    for (const option of field.options) {
-        if (keys.has(option)) continue;
-        keys.add(option);
-        localizations.push({
-            option: option,
-            loc: gameLocalization.getObjectLocalization({ instance: option, canBeUI: true }),
-        });
-    }
+	if (Array.isArray(field.options)) {
+		for (const option of field.options) {
+			if (keys.has(option)) continue;
+			keys.add(option);
+			localizations.push({
+				option: option,
+				loc: gameLocalization.getObjectLocalization({ instance: option, canBeUI: true }),
+			});
+		}
+	} else {
+		for (const [optionKey, optionValue] of Object.entries(field.options)) {
+			if (keys.has(optionKey)) continue;
+			keys.add(optionKey);
+			localizations.push({
+				option: optionValue,
+				loc: gameLocalization.getObjectLocalization({ instance: optionKey, canBeUI: true }),
+			});
+		}
+	}
 
     localizations.sort((a: { option: string; loc: string }, b: { option: string; loc: string }) => {
         const labelA = a.loc;

@@ -275,5 +275,8 @@
   "followerBirdEye": "Босс BirdEye",
   "followerSanitar": "Охранник Санитара",
   "bossBully": "Босс Решала",
-  "<": "<"
+  "<": "<",
+  "status4": "Завершен",
+  "status2": "Начат",
+  "status3": "Доступен к завершению"
 }

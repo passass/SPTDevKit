@@ -41,7 +41,7 @@ export class Field extends Data {
 	visible?: boolean = true;
 	editable?: boolean = true;
 	order?: number = 1;
-	options?: any[];
+	options?: string[] | Record<any, string>;
 	defaultValue?: any;
 	validate?: (value: any, record: SchemaData) => true | string;
 	nestedSchema?: ClassType<RecordSchema>;
@@ -56,7 +56,9 @@ export class Field extends Data {
 
 	getDefaultValue?(data: SchemaData): any;
 
-	isArray(): boolean {return this.type.toLocaleLowerCase().includes("array")};
+	isArray(): boolean {
+		return this.type && this.type.toLocaleLowerCase().includes("array")
+	};
 }
 
 export class AdvSelectField extends Field {
@@ -171,7 +173,7 @@ function resolveDefaultValue(field: Field, data: SchemaData): any {
 		if (field.type === 'boolean')
 			return false;
 		if (field.type === 'select' && field.options)
-			return field.options[0];
+			return Array.isArray(field.options) ? field.options[0] : Object.values(field.options)[0];
         if (field.isArray()) {
             return [];
         }
@@ -489,7 +491,7 @@ export class RecordSchema {
 	}
 
 	/** Получить options */
-	getOptions(key: string): any[] | undefined {
+	getOptions(key: string): Field["options"] {
 		return this.getField(key)?.options;
 	}
 

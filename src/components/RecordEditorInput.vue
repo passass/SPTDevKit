@@ -47,7 +47,7 @@
                 <div v-if="field.key === 'items' && field.isArray()">
                     <LoadWeaponBuildInput :field="field" :data="getData" />
                     <div v-if="getData[field.key]?.filter((item: WeaponBuildItem) => !item.parentId).length > 0" class="weapon-build-reward">
-                        <span class="weapon-build-reward__label">Награда:</span>
+                        <span class="weapon-build-reward__label">Предметы:</span>
                         <span class="weapon-build-reward__value">
                             {{ getRewardDisplay(getData[field.key]) }}
                         </span>
@@ -315,14 +315,16 @@ watch(
 )
 
 watch(
-    getData,
-    () => {
-		if (frameNavigator?.tab && initialized.value) {
-			const id = frameNavigator.tab.id;
-			const storeId = frameNavigator.tab.dataStoreId
-			if (storeId && id)
-				dataStore.markDirty(storeId, id)
-     	}
+    () => getData.value,
+	() => {
+
+
+        if (frameNavigator?.tab && initialized.value) {
+            const id = frameNavigator.tab.id;
+            const storeId = frameNavigator.tab.dataStoreId
+            if (storeId && id)
+                dataStore.markDirty(storeId, id)
+        }
     },
     { deep: true }
 )

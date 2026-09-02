@@ -123,14 +123,6 @@ export const useDataStore = defineStore("dataStore", () => {
 								tags: file.tags,
 							}
 							store.set(id, storeResult);
-
-							watch(
-						        storeResult.data,
-						        (newMap, oldMap) => {
-						            console.log(id)
-						        },
-						        { deep: true }
-						    );
                         } else {
                             console.warn(`Duplicate ID "${id}" found in file "${filename}", skipping...`);
                         }

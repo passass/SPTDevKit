@@ -169,7 +169,7 @@ const isNumberArray = computed(() => {
 });
 
 const isOptionsArray = computed(() => {
-    return props.field.type === "optionsArray" && Array.isArray(props.field.options);
+    return props.field.type === "optionsArray";
 });
 
 const selectedItem = computed(() => {

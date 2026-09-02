@@ -83,11 +83,8 @@ function generateFieldClass(fieldName: string, fieldInfo: FieldInfo, lastSplitSc
 		unneccesary: fieldInfo.unneccesary ?? (unneccesaryFields?.includes(fieldInfo?.split_key_value) || unneccesaryFields.includes(fieldInfo.key)),
 		editable: fieldInfo.editable !== undefined ? fieldInfo.editable : true,
 		options: undefined as string[] | undefined,
-        hidden: undefined as boolean | undefined,
+        hidden: !!fieldInfo.hidden as boolean,
     };
-
-	if (fieldInfo.hidden === true)
-		return HiddenField.create(commonFields);
 
     if (fieldInfo.__type === "nested_schema") {
         const nestedClass = generateNestedSchema(`${fieldName}NestedSchema`, fieldInfo.nested_schema, lastSplitSchema);
@@ -162,9 +159,6 @@ function generateFieldClass(fieldName: string, fieldInfo: FieldInfo, lastSplitSc
 		});
 	}
 
-	if (fieldInfo.key === lastSplitSchema.split_key)
-		commonFields.hidden = true;
-
     return Field.create({
         ...commonFields,
         type: dataType,
@@ -183,7 +177,9 @@ function generateNestedSchema(className: string, fields: Record<string, FieldInf
 
     class GeneratedSchema extends RecordSchema {
         static fields: Field[] = generatedFields;
-    }
+	}
+
+	GeneratedSchema.getFieldByKeyStatic("")
 
     return GeneratedSchema;
 }
@@ -230,7 +226,13 @@ function processSplitPath(
         for (const [fieldName, fieldData] of Object.entries(schema.fields)) {
             if (typeof fieldData === 'object' && fieldData !== null) {
                 const fieldInfos = fieldData as Record<string, FieldInfo>;
-                const className = `${fieldName}`; // Schema
+				const className = `${fieldName}`;
+
+				for (const field of Object.values(fieldInfos)) {
+					if (field.key === schema.split_key) {
+						field.hidden = true;
+					}
+				}
 
 				const GeneratedSchema = generateNestedSchema(className, fieldInfos, schema)
 
