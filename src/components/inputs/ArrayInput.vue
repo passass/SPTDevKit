@@ -32,13 +32,7 @@
         <!-- Режим optionsArray: select -->
         <div v-if="isOptionsArray" class="array-input__editor">
             <template v-if="selectedIndex !== null">
-                <select v-model="items[selectedIndex]" class="array-input__select">
-                    <option v-for="option in sortedOptions(field)" :key="option.option" :value="option.option">
-                        {{
-                        	option.loc
-                        }}
-                    </option>
-                </select>
+                <OptionsInput v-model="items[selectedIndex]" :field="field" :data="items" />
             </template>
         </div>
 
@@ -115,7 +109,7 @@ import { SchemaChoicer, type SchemaChoice } from "@/types/fields/fieldsSchemaCho
 import { getStaticField, type ClassType } from "@/utils/classUtils";
 import { Navigator } from "@/utils/navigation";
 import { gameLocalization, type locales } from "@/types/localization";
-import { sortedOptions } from "@/utils/utils";
+import OptionsInput from "./OptionsInput.vue";
 
 type InputType = any[];
 const frameNavigator = inject<Navigator>("frameNavigator");
@@ -239,7 +233,7 @@ function addItem() {
                     return;
                 }
             } else if (RecordSchema.isPrototypeOf(arrayItemSchema)) {
-                const schema = (new arrayItemSchema({}) as RecordSchema);
+                const schema = new arrayItemSchema({}) as RecordSchema;
                 items.value.push(schema.getData());
                 frameNavigator?.navigate([props.field.key, items.value.length - 1]);
                 return;
@@ -259,12 +253,12 @@ function addSubItem() {
     if (selectedIndex.value === null) return;
     const array = items.value[selectedIndex.value];
     if (!Array.isArray(array)) return;
-    array.push('');
+    array.push("");
 }
 
 function removeSubItem(index: number | string) {
-	if (selectedIndex.value === null) return;
-    if (typeof index !== 'number') return;
+    if (selectedIndex.value === null) return;
+    if (typeof index !== "number") return;
     const array = items.value[selectedIndex.value];
     if (!Array.isArray(array)) return;
     array.splice(index, 1);

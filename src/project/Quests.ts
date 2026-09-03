@@ -3,11 +3,28 @@ import { RecordSchema } from "@/types/fields/fields";
 import { availableLocales, gameLocalization, suffixes, type locales } from "@/types/localization";
 import { Path } from "@/utils/pathUtils";
 import { currentProjectTag } from "./Project";
+import { deepClone } from "@/utils/utils";
+import { generateUUID24chars } from "@/utils/uuidUtils";
 
 interface ProjectArgs {
     folderPath: Path;
     tags: string[];
     notLoadImmediately?: boolean;
+}
+
+function getAllLocalizations(data: RecordSchema): string[] {
+    let localizations: string[] = [];
+    for (const field of data.getFields()) {
+        if (field.type === "localization" && field.getDefaultValue) {
+            localizations.push(field.getDefaultValue(data.getData()));
+        } else if (field.nestedSchema) {
+            localizations = [...localizations, ...getAllLocalizations(data.getCastedData(field.key))];
+        } else if (field.arrayItemSchema) {
+            for (const schema of data.getArrayCastedData(field.key))
+                localizations = [...localizations, ...getAllLocalizations(schema)];
+        }
+    }
+    return localizations;
 }
 
 function toJsonObject(obj: any): any {
@@ -40,7 +57,7 @@ function toJsonObject(obj: any): any {
 class Quests {
     async loadQuests(projectArgs: ProjectArgs) {
         const dataStore = useDataStore();
-		const filesFound = await new Path(projectArgs.folderPath, "db/*/*/?uests/*.json").findFiles();
+        const filesFound = await new Path(projectArgs.folderPath, "db/*/*/?uests/*.json").findFiles();
         for (const filepath of filesFound) {
             dataStore.addFileToStore("quests", {
                 filename: filepath.filePath,
@@ -51,8 +68,12 @@ class Quests {
     }
 
     getProjectQuests(): Map<string, RecordSchema> {
-        const dataStore = useDataStore()
-        return dataStore.getByTagInStore("quests", currentProjectTag);
+        const dataStore = useDataStore();
+        const res = new Map();
+        for (const [questId, quest] of dataStore.getByTagInStore("quests", currentProjectTag).entries()) {
+            res.set(questId, quest.data);
+        }
+        return res;
     }
 
     getProjectQuestsFilteredByTraders(): Map<string, Map<string, RecordSchema>> {
@@ -75,10 +96,10 @@ class Quests {
         }
     }
 
-	async saveLocales(currentProjectFolder: Path) {
-		for (const [traderId, quests] of this.getProjectQuestsFilteredByTraders().entries()) {
+    async saveLocales(currentProjectFolder: Path) {
+        for (const [traderId, quests] of this.getProjectQuestsFilteredByTraders().entries()) {
             let localizationFields: string[] = [];
-			for (const [questId, quest] of quests.entries()) {
+            for (const [questId, quest] of quests.entries()) {
                 localizationFields = [...localizationFields, ...quest.getLocalizationFieldsKeys()];
             }
             for (const locale of availableLocales) {
@@ -104,8 +125,67 @@ class Quests {
         }
     }
 
-	async saveProject(currentProjectFolder: Path) {
+    async saveProject(currentProjectFolder: Path) {
         await Promise.all([this.saveProjectQuests(currentProjectFolder), this.saveLocales(currentProjectFolder)]);
+    }
+
+    copyQuest(data: RecordSchema): RecordSchema {
+        const dataStore = useDataStore();
+        const copiedData: Record<string, any> = deepClone(data.getData()) as Record<string, any>;
+        const idsMap = new Map<string, string>();
+        const sourceId = data.getId();
+        const newItemId = generateUUID24chars();
+
+        const changeAllIds = (obj: any, isRoot = false): void => {
+            if (!obj || typeof obj !== "object") return;
+
+            if (Array.isArray(obj)) {
+                obj.forEach((item) => changeAllIds(item, false));
+                return;
+            }
+
+            for (const [key, value] of Object.entries(obj)) {
+                if (key === "_id" || key === "id") {
+                    obj[key] = isRoot ? newItemId : generateUUID24chars();
+                    idsMap.set(value as string, obj[key]);
+                } else if (typeof value === "string" && sourceId && value.includes(sourceId)) {
+                    obj[key] = value.replace(new RegExp(sourceId, "g"), newItemId);
+                } else if (typeof value === "object" && value !== null) {
+                    changeAllIds(value, false);
+                }
+            }
+        };
+        changeAllIds(copiedData, true);
+
+        const oldLocaleKeys = getAllLocalizations(data);
+        const localeMapping = new Map<string, string>();
+
+        for (const oldKey of oldLocaleKeys) {
+            if (typeof oldKey === "string") {
+                const newKey = idsMap.has(oldKey)
+                    ? idsMap.get(oldKey)!
+                    : sourceId
+                    ? oldKey.replace(new RegExp(sourceId, "g"), newItemId)
+                    : oldKey;
+                localeMapping.set(oldKey, newKey);
+            }
+        }
+        console.log("localeMapping", localeMapping);
+
+        for (const [oldKey, newKey] of localeMapping.entries()) {
+            if (oldKey === newKey) continue;
+            for (const locale of availableLocales) {
+                const storeId = `${locale}${suffixes.localizationSuffix}`;
+                const text = dataStore.get(storeId, oldKey);
+                if (text !== undefined && text !== null) {
+                    dataStore.set(storeId, newKey, text);
+                    dataStore.addTag(storeId, newKey, currentProjectTag);
+                }
+            }
+        }
+
+        const schema = new (data.constructor as typeof RecordSchema)(copiedData);
+        return schema;
     }
 }
 

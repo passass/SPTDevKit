@@ -9,7 +9,7 @@
 		"dev": "vite",
 		"electron": "electron .",
 		"electron:dev": "vite build --mode electron & npx electron .",
-		"electron:build": "vite build --mode electron && electron-builder",
+		"electron:build": "vite build --mode electron && electron-builder --win portable",
 		"electron:serve": "vite build --mode electron && electron .",
 		"postinstall": "electron-builder install-app-deps",
 		"postuninstall": "electron-builder install-app-deps",

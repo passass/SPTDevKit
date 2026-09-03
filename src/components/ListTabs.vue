@@ -39,20 +39,20 @@
                         <div
                             class="tab-item"
                             :class="{
-                                'active': activeTab === item.id,
-                                'hidden': !isTabVisible(item.id),
+                                active: activeTab === item.id,
+                                hidden: !isTabVisible(item.id),
                             }"
                             @click="selectTab(item.id)"
                             :title="item.label"
                         >
                             <span v-if="item.icon" class="tab-icon">{{ item.icon }}</span>
                             <component
-                            	class="tab-label"
-                             	:class="{
-                              		'has-badge': !(item.badge === null || item.badge === undefined),
-                              		'not-has-badge': item.badge === null || item.badge === undefined,
-                              	}"
-                            	:is="highlightMatch(item.label)"
+                                class="tab-label"
+                                :class="{
+                                    'has-badge': !(item.badge === null || item.badge === undefined),
+                                    'not-has-badge': item.badge === null || item.badge === undefined,
+                                }"
+                                :is="highlightMatch(item.label)"
                             ></component>
                             <span v-if="item.badge" class="tab-badge">{{ item.badge }}</span>
                         </div>
@@ -68,6 +68,7 @@
 
         <!-- Правая панель -->
         <div class="tab-content">
+            {{ console.log(this) }}
             <ListTabsFrame
                 v-if="currentTab"
                 :tab="currentTab"
@@ -87,7 +88,8 @@
     </div>
 </template>
 
-<script setup lang="tsx">
+<script lang="tsx">
+import { defineComponent, ref, computed, onMounted, inject, nextTick, toValue } from "vue";
 import ListTabsFrame from "./ListTabsFrame.vue";
 import type { Tab } from "@/tabs/tabs";
 import { RecordSchema } from "@/types/fields/fields";
@@ -95,161 +97,164 @@ import type { Component } from "vue";
 import { type ClassType } from "@/utils/classUtils";
 import { type dataMapRecordType } from "@/stores/dataStore";
 import { useDataStore } from "@/stores/dataStore";
-import { inject, ref, computed, onMounted, nextTick, toValue } from "vue";
-// Импорт виртуального скроллера
 import { DynamicScroller, DynamicScrollerItem } from "vue-virtual-scroller";
 import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
 import { Navigator } from "@/utils/navigation";
 import { currentProjectTag } from "@/project/Project";
+import { deepClone } from "@/utils/utils";
 
-const dataStore = useDataStore();
+export default defineComponent({
+    name: "ListTabs",
+    components: {
+        ListTabsFrame,
+        DynamicScroller,
+        DynamicScrollerItem,
+    },
+    props: {
+        tabs: { type: Array as () => Tab[], required: true },
+        schemaType: { type: Object as () => ClassType<RecordSchema> },
+        storeId: { type: String },
+        fileData: { type: Object as () => Map<string, dataMapRecordType> },
+        isSearch: { type: Boolean },
+        searchPlaceholder: { type: String },
+        caseSensitive: { type: Boolean },
+        searchFields: { type: Array as () => Array<keyof Tab> },
+    },
+    emits: ["tab-selected", "refresh", "content-update", "search"],
+    setup(props, { emit }) {
+        const dataStore = useDataStore();
+        const frameNavigator = inject<Navigator | null>("frameNavigator", null);
+        const activeTab = ref<string | null>(null);
+        const searchQuery = ref("");
 
-const props = defineProps<{
-    tabs: Tab[];
-	schemaType?: ClassType<RecordSchema>;
-	storeId?: string;
-    fileData?: Map<string, dataMapRecordType>;
-    isSearch?: boolean;
-    searchPlaceholder?: string;
-    caseSensitive?: boolean;
-    searchFields?: Array<keyof Tab>;
-}>();
+        const currentTab = computed(() => {
+            return props.tabs.find((t) => t.id === activeTab.value);
+        });
 
-const emit = defineEmits<{
-    (e: "tab-selected", tabId: string): void;
-    (e: "refresh", tabId: string | null): void;
-    (e: "content-update", data: any): void;
-    (e: "search", query: string): void;
-}>();
+        const filteredTabs = computed(() => {
+            if (!props.isSearch || !searchQuery.value.trim()) {
+                return props.tabs;
+            }
+            const query = props.caseSensitive ? searchQuery.value.trim() : searchQuery.value.trim().toLowerCase();
+            return props.tabs.filter((tab) => {
+                const label = props.caseSensitive ? tab.label.trim() : tab.label.trim().toLowerCase();
+                return label.includes(query);
+            });
+        });
 
-const frameNavigator = inject<Navigator | null>("frameNavigator", null);
-
-const activeTab = ref<string | null>(null);
-const searchQuery = ref("");
-
-const currentTab = computed(() => {
-    return props.tabs.find((t) => t.id === activeTab.value);
-});
-
-const filteredTabs = computed(() => {
-    if (!props.isSearch || !searchQuery.value.trim()) {
-        return props.tabs;
-    }
-    const query = props.caseSensitive ? searchQuery.value.trim() : searchQuery.value.trim().toLowerCase();
-    return props.tabs.filter((tab) => {
-        const label = props.caseSensitive ? tab.label.trim() : tab.label.trim().toLowerCase();
-        return label.includes(query);
-    });
-});
-
-function getCurrentTab() {
-    return currentTab.value;
-}
-
-function deleteCurrentTab() {
-    const current = currentTab.value;
-    if (current?.dataStoreId) {
-        const data = dataStore.getMap(current.dataStoreId);
-        data.delete(current?.id);
-        closeTab();
-    }
-}
-
-function createNewSchema() {
-    if (!props.fileData || !props.schemaType) return;
-    const newInstance = new props.schemaType();
-    const newInstanceId = newInstance.getId();
-    if (newInstanceId && props.storeId) {
-    	const store = dataStore.getMap(props.storeId);
-		props.fileData.set(newInstanceId, {data: newInstance});
-
-		store.set(newInstanceId, newInstance);
-        dataStore.addTag(props.storeId, newInstanceId, currentProjectTag);
-
-		selectTab(newInstanceId);
-    }
-}
-
-function selectTab(tabId: string) {
-    if (isTabVisible(tabId)) {
-        if (activeTab.value !== tabId) {
-            frameNavigator?.goRoot?.();
+        function createNewSchema() {
+            if (!props.fileData || !props.schemaType) return;
+            const newInstance = new props.schemaType();
+            const newInstanceId = newInstance.getId();
+            if (newInstanceId && props.storeId) {
+                const store = dataStore.getMap(props.storeId);
+                props.fileData.set(newInstanceId, { data: newInstance });
+                store.set(newInstanceId, newInstance);
+                dataStore.addTag(props.storeId, newInstanceId, currentProjectTag);
+                selectTab(newInstanceId);
+            }
         }
-        activeTab.value = tabId;
-        localStorage.setItem("activeTab", tabId);
-        emit("tab-selected", tabId);
-    }
-}
 
-function refreshTab() {
-    emit("refresh", activeTab.value);
-}
+        function selectTab(tabId: string) {
+            if (isTabVisible(tabId)) {
+                if (activeTab.value !== tabId) {
+                    frameNavigator?.goRoot?.();
+                }
+                activeTab.value = tabId;
+                localStorage.setItem("activeTab", tabId);
+                emit("tab-selected", tabId);
+            }
+        }
 
-function closeTab() {
-    activeTab.value = null;
-    localStorage.removeItem("activeTab");
-}
+        function refreshTab() {
+            emit("refresh", activeTab.value);
+        }
 
-function handleContentUpdate(data: any) {
-    emit("content-update", data);
-}
-
-function isTabVisible(tabId: string): boolean {
-    if (!props.isSearch || !searchQuery.value.trim()) {
-        return true;
-    }
-    return filteredTabs.value.some((t) => t.id === tabId);
-}
-
-function handleSearch() {
-    if (activeTab.value && !isTabVisible(activeTab.value)) {
-        if (filteredTabs.value.length > 0) {
-            selectTab(filteredTabs.value[0]?.id ?? "");
-        } else {
+        function closeTab() {
             activeTab.value = null;
+            localStorage.removeItem("activeTab");
         }
-    }
-    emit("search", searchQuery.value);
-}
 
-function clearSearch() {
-    searchQuery.value = "";
-    handleSearch();
-    nextTick(() => {
-        const input = document.querySelector(".search-input") as HTMLInputElement;
-        if (input) input.focus();
-    });
-}
+        function handleContentUpdate(data: any) {
+            emit("content-update", data);
+        }
 
-function highlightMatch(text: string): Component {
-    if (!props.isSearch || !searchQuery.value.trim() || !text) {
-        return <span>{text}</span>;
-    }
-    const query = props.caseSensitive ? searchQuery.value.trim() : searchQuery.value.trim().toLowerCase();
-    const searchText = props.caseSensitive ? text : text.toLowerCase();
-    const index = searchText.indexOf(query);
-    if (index === -1) return <span>{text}</span>;
+        function isTabVisible(tabId: string): boolean {
+            if (!props.isSearch || !searchQuery.value.trim()) {
+                return true;
+            }
+            return filteredTabs.value.some((t) => t.id === tabId);
+        }
 
-    const before = text.substring(0, index);
-    const match = text.substring(index, index + query.length);
-    const after = text.substring(index + query.length);
+        function handleSearch() {
+            if (activeTab.value && !isTabVisible(activeTab.value)) {
+                if (filteredTabs.value.length > 0) {
+                    selectTab(filteredTabs.value[0]?.id ?? "");
+                } else {
+                    activeTab.value = null;
+                }
+            }
+            emit("search", searchQuery.value);
+        }
 
-    return (
-        <span>
-            {before}
-            <span class="search-highlight">{match}</span>
-            {after}
-        </span>
-    );
-}
+        function clearSearch() {
+            searchQuery.value = "";
+            handleSearch();
+            nextTick(() => {
+                const input = document.querySelector(".search-input") as HTMLInputElement;
+                if (input) input.focus();
+            });
+        }
 
-onMounted(() => {
-    const savedTab = localStorage.getItem("activeTab");
-    if (savedTab && props.tabs.some((t) => t.id === savedTab)) {
-        activeTab.value = savedTab;
-    } else if (props.tabs.length > 0) {
-        activeTab.value = props.tabs[0]?.id || null;
-    }
+        function highlightMatch(text: string): Component {
+            if (!props.isSearch || !searchQuery.value.trim() || !text) {
+                return <span>{text}</span>;
+            }
+            const query = props.caseSensitive ? searchQuery.value.trim() : searchQuery.value.trim().toLowerCase();
+            const searchText = props.caseSensitive ? text : text.toLowerCase();
+            const index = searchText.indexOf(query);
+            if (index === -1) return <span>{text}</span>;
+
+            const before = text.substring(0, index);
+            const match = text.substring(index, index + query.length);
+            const after = text.substring(index + query.length);
+
+            return (
+                <span>
+                    {before}
+                    <span class="search-highlight">{match}</span>
+                    {after}
+                </span>
+            );
+        }
+
+        onMounted(() => {
+            const savedTab = localStorage.getItem("activeTab");
+            if (savedTab && props.tabs.some((t) => t.id === savedTab)) {
+                activeTab.value = savedTab;
+            } else if (props.tabs.length > 0) {
+                activeTab.value = props.tabs[0]?.id || null;
+            }
+        });
+
+        return {
+            activeTab,
+            searchQuery,
+            currentTab,
+            filteredTabs,
+            createNewSchema,
+            selectTab,
+            refreshTab,
+            closeTab,
+            handleContentUpdate,
+            isTabVisible,
+            handleSearch,
+            clearSearch,
+            highlightMatch,
+            dataStore,
+            frameNavigator,
+        };
+    },
 });
 </script>
 

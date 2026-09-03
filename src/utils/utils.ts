@@ -1,53 +1,3 @@
-import { gameLocalization } from "@/types/localization";
-import { Field } from "@/types/fields/fields";
-
-const generatedUUID24chars = new Set<string>();
-export function generateUUID24chars(): string {
-    let uuid: string;
-    do {
-        uuid = 'xxxxxxxxxxxxxxxxxxxxxxxx'.replace(/[x]/g, () => {
-            return Math.floor(Math.random() * 16).toString(16);
-        });
-    } while (generatedUUID24chars.has(uuid));
-    generatedUUID24chars.add(uuid);
-    return uuid;
-}
-
-export function sortedOptions(field: Field): Array<{ option: string; loc: string }> {
-    const localizations: Array<{ option: string; loc: string }> = [];
-    const keys = new Set();
-    if (!field.options || typeof field.options !== "object") return [];
-
-	if (Array.isArray(field.options)) {
-		for (const option of field.options) {
-			if (keys.has(option)) continue;
-			keys.add(option);
-			localizations.push({
-				option: option,
-				loc: gameLocalization.getObjectLocalization({ instance: option, canBeUI: true }),
-			});
-		}
-	} else {
-		for (const [optionKey, optionValue] of Object.entries(field.options)) {
-			if (keys.has(optionKey)) continue;
-			keys.add(optionKey);
-			localizations.push({
-				option: optionValue,
-				loc: gameLocalization.getObjectLocalization({ instance: optionKey, canBeUI: true }),
-			});
-		}
-	}
-
-    localizations.sort((a: { option: string; loc: string }, b: { option: string; loc: string }) => {
-        const labelA = a.loc;
-		const labelB = b.loc;
-        return labelA.localeCompare(labelB);
-    });
-
-    return localizations;
-}
-
-
 export function capitalize(str: string) {
     if (!str) return str;
     return str[0].toUpperCase() + str.slice(1);
@@ -62,15 +12,8 @@ export function allElementsInArray<T>(arr: T[], targetArr: T[]): boolean {
     return arr.every((element) => targetSet.has(element));
 }
 
-// src/utils/deepClone.ts
-
-/**
- * Простая функция глубокого клонирования
- * Поддерживает: примитивы, Date, RegExp, массивы, обычные объекты
- * Не поддерживает: циклические ссылки, Map, Set, функции, Symbol, DOM-узлы и т.д.
- */
 export function deepClone<T>(value: T): T {
-  if (value === null || typeof value !== 'object') {
+  if (value === null || value === undefined || typeof value !== 'object') {
     return value;
   }
   if (value instanceof Date) {
@@ -91,8 +34,6 @@ export function deepClone<T>(value: T): T {
   }
   return value;
 }
-
-
 
 type DataStructure = Record<string, any> | any[] | any;
 

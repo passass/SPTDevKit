@@ -2,6 +2,8 @@
 import { Data } from "dataclass";
 import { type SchemaChoice, SchemaChoicer } from "./fieldsSchemaChoicer";
 import { getStaticField, type ClassType } from "@/utils/classUtils";
+import { generateUUID24chars } from "@/utils/uuidUtils";
+import { deepClone } from "@/utils/utils";
 
 export const idsFields: string[] = ['_id', 'id']
 export function getIdFieldValue(instance: any): string | undefined {
@@ -229,6 +231,25 @@ export class RecordSchema {
 		return fields.find((el: Field) => el.key === key) ?? def
 	}
 
+	getArrayCastedData(key: string): RecordSchema[] {
+		const field = this.getFieldByKey(key);
+		if (!field) return [];
+		if (!field.arrayItemSchema) return [];
+		const nestedData = this.get(key);
+		if (!nestedData) return [];
+		if (!Array.isArray(nestedData)) return [];
+		return nestedData.map((item: any) => castByArrayItemSchema(item, field.arrayItemSchema))
+	}
+
+	getCastedData(key: string): RecordSchema {
+		const field = this.getFieldByKey(key);
+		if (!field) return this;
+		if (!field.nestedSchema) return this;
+		const nestedData = this.get(key);
+		if (!nestedData) return this;
+		return castToRecordSchema(nestedData, field.nestedSchema)
+	}
+
 	getLocalizationFieldsKeys(): string[] {
 		const res = new Set<string>();
 
@@ -449,10 +470,10 @@ export class RecordSchema {
 		return fields.find(f => f.key === key);
 	}
 
-	/** Получить поля для отображения */
+	copy(): RecordSchema {
 
+	}
 
-	/** Определить тип поля */
 	resolveType(key: string): FieldType {
 		const field = this.getField(key);
 		if (field) return field.type;

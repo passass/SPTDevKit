@@ -7,8 +7,11 @@
         </div>
 
         <div class="form-frame__fields">
-            <button v-if="(frameNavigator?.getPathStack()?.length ?? 0) === 0" @click="listTabs.deleteCurrentTab()">
+            <button v-if="(frameNavigator?.getPathStack()?.length ?? 0) === 0" @click="deleteCurrentTab()">
                 удалить
+            </button>
+            <button v-if="(frameNavigator?.getPathStack()?.length ?? 0) === 0" @click="copyCurrentTab()">
+                копировать
             </button>
 
             <div class="form-field" v-if="isShowUnneccesaryFieldsCheckmark">
@@ -16,9 +19,9 @@
                 <input v-model="isShowUnneccesaryFields" :id="'ShowUnneccesaryFields'" type="checkbox" />
             </div>
 
-            <div v-if="recordData.schemaChooser" class="form-frame__chooser">
+            <div v-if="dataRef.schemaChooser" class="form-frame__chooser">
                 <label>Тип схемы:</label>
-                <SchemaChooserInput :record-data="recordData" @schemaСhoose="handleSchemaChoose" />
+                <SchemaChooserInput :record-data="dataRef" @schemaСhoose="handleSchemaChoose" />
             </div>
 
             <div
@@ -46,7 +49,10 @@
 
                 <div v-if="field.key === 'items' && field.isArray()">
                     <LoadWeaponBuildInput :field="field" :data="getData" />
-                    <div v-if="getData[field.key]?.filter((item: WeaponBuildItem) => !item.parentId).length > 0" class="weapon-build-reward">
+                    <div
+                        v-if="getData[field.key]?.filter((item: WeaponBuildItem) => !item.parentId).length > 0"
+                        class="weapon-build-reward"
+                    >
                         <span class="weapon-build-reward__label">Предметы:</span>
                         <span class="weapon-build-reward__value">
                             {{ getRewardDisplay(getData[field.key]) }}
@@ -122,34 +128,10 @@
                     :disabled="!field.editable"
                 />
 
-                <select
-                    v-else-if="field.type === 'select' && field.virtual"
-                    :id="field.key"
-                    :disabled="!field.editable"
-                    :value="field.initialValue && field.initialValue(getData)"
-                    @change="field.onChange && field.onChange(getData, $event)"
-                >
-                    <option v-for="params in sortedOptions(field)" :key="params.option" :value="params.option">
-                        {{ params.loc }}
-                    </option>
-                </select>
-
-                <select
-                    v-else-if="field.type === 'select'"
-                    :id="field.key"
-                    v-model="getData[field.key]"
-                    :disabled="!field.editable"
-                    @change="field.onChange && field.onChange(getData, $event)"
-                >
-                    <option v-for="params in sortedOptions(field)" :key="params.option" :value="params.option">
-                        {{ params.loc }}
-                    </option>
-                </select>
+                <OptionsInput v-else-if="field.type === 'select'" :data="getData" v-model="getData[field.key]" :field="field" />
 
                 <ArrayInput
-                    v-else-if="
-                        field.isArray()
-                    "
+                    v-else-if="field.isArray()"
                     v-model="getData[field.key]"
                     :field="field"
                     :options="field.options || []"
@@ -187,8 +169,7 @@ import SchemaChooserInput from "@/components/inputs/SchemaChooserInput.vue";
 import { RecordSchema, Field } from "@/types/fields/fields";
 import { gameLocalization } from "@/types/localization";
 import { Navigator, isNavigable } from "@/utils/navigation";
-import { sortedOptions } from "@/utils/utils";
-
+import { Tab } from "@/tabs/tabs";
 import LoadWeaponBuildInput from "./inputs/LoadWeaponBuildInput.vue";
 import AdvancedSelectInput from "./inputs/AdvancedSelectInput.vue";
 import CompareInput from "./inputs/CompareInput.vue";
@@ -196,6 +177,10 @@ import ParentInput from "./inputs/ParentInput.vue";
 import ListTabs from "./ListTabs.vue";
 import { WeaponBuildItem } from "@/stores/profileStore";
 import { useDataStore } from "@/stores/dataStore";
+import { currentProjectTag } from "@/project/Project";
+import OptionsInput from "./inputs/OptionsInput.vue";
+import { availableLocales, suffixes } from "@/types/localization";
+import Quests from "@/project/Quests";
 
 const props = defineProps<{
     data: any;
@@ -214,13 +199,13 @@ const frameNavigator = inject<Navigator>("frameNavigator");
 const validationErrors = ref<Record<string, string>>({});
 
 const dataRef = computed<RecordSchema>(() => {
-	if (props.data instanceof RecordSchema) {
-		return props.data;
-	}
-	let data = props.data;
-	if ("data" in data) {
-		data = data.data;
-	}
+    if (props.data instanceof RecordSchema) {
+        return props.data;
+    }
+    let data = props.data;
+    if ("data" in data) {
+        data = data.data;
+    }
     return data instanceof RecordSchema ? data : new RecordSchema(data);
 });
 
@@ -228,10 +213,9 @@ const displayFields = computed<Field[]>(() => {
     return dataRef.value.getDisplayFields();
 });
 
-const recordData = computed(() => dataRef.value);
 const getData = computed(() => {
-	console.log("fields", recordData.value.getFields())
-    return recordData.value.getData();
+    console.log("fields", dataRef.value.getFields());
+    return dataRef.value.getData();
 });
 const isShowUnneccesaryFields = ref<boolean>(false);
 const isShowUnneccesaryFieldsCheckmark = computed<boolean>(() => {
@@ -281,8 +265,8 @@ function isCompareInput(field: Field): boolean {
 }
 
 function getRewardDisplay(items: WeaponBuildItem[]): string {
-    const rootItems = items.filter(item => !item.parentId);
-    if (rootItems.length === 0) return '';
+    const rootItems = items.filter((item) => !item.parentId);
+    if (rootItems.length === 0) return "";
 
     const grouped: Record<string, { tpl: string; count: number }> = {};
     for (const item of rootItems) {
@@ -298,36 +282,61 @@ function getRewardDisplay(items: WeaponBuildItem[]): string {
         const display = count > 1 ? `${name} x ${count}` : name;
         parts.push(display);
     }
-    return parts.join(', ');
+    return parts.join(", ");
 }
 
-const initialized = ref(false)
+function getCurrentTab() {
+    return frameNavigator?.tab;
+}
+
+
+
+function copyCurrentTab() {
+    const currentTab: Tab | undefined = getCurrentTab();
+    if (currentTab && currentTab.schemaType && currentTab.data instanceof RecordSchema) {
+        const newInstance = Quests.copyQuest(currentTab.data);
+        const newInstanceId = newInstance.getId();
+        if (newInstanceId && currentTab.dataStoreId) {
+            dataStore.set(currentTab.dataStoreId, newInstanceId, newInstance);
+            dataStore.addTag(currentTab.dataStoreId, newInstanceId, currentProjectTag);
+            props.listTabs.selectTab(newInstanceId);
+        }
+    }
+}
+
+function deleteCurrentTab() {
+    const current = getCurrentTab();
+    if (current?.dataStoreId) {
+        const data = dataStore.getMap(current.dataStoreId);
+        data.delete(current?.id);
+        props.listTabs.closeTab();
+    }
+}
+
+const initialized = ref(false);
 
 watch(
     () => props.data,
     () => {
-        initialized.value = false
+        initialized.value = false;
         nextTick(() => {
-            initialized.value = true
-        })
+            initialized.value = true;
+        });
     },
     { immediate: true }
-)
+);
 
 watch(
     () => getData.value,
-	() => {
-
-
+    () => {
         if (frameNavigator?.tab && initialized.value) {
             const id = frameNavigator.tab.id;
-            const storeId = frameNavigator.tab.dataStoreId
-            if (storeId && id)
-                dataStore.markDirty(storeId, id)
+            const storeId = frameNavigator.tab.dataStoreId;
+            if (storeId && id) dataStore.markDirty(storeId, id);
         }
     },
     { deep: true }
-)
+);
 </script>
 
 <style scoped>
@@ -486,5 +495,4 @@ watch(
     color: #e0e0e0;
     word-break: break-word;
 }
-
 </style>

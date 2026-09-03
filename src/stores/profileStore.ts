@@ -1,5 +1,7 @@
 import { defineStore } from "pinia";
-import { generateUUID24chars, isElectron } from "@/utils/utils";
+import { isElectron } from "@/utils/utils";
+import { generateUUID24chars } from "@/utils/uuidUtils";
+
 import { Path } from "@/utils/pathUtils";
 import { useFileDataStore } from "@/stores/fileStore";
 import { deepClone } from "@/utils/utils";

@@ -109,23 +109,23 @@ export const useDataStore = defineStore("dataStore", () => {
                     }
 
                     for (const [id, itemData] of Object.entries(entries)) {
-                        if (!store.has(id)) {
-                            let value: any;
-                            if (schemaType && itemData && typeof itemData === "object") {
-                                value = new schemaType(itemData);
-                                value.storeId = key;
-                            } else {
-                                value = itemData;
-							}
-
-							const storeResult = {
-								data: value,
-								tags: file.tags,
-							}
-							store.set(id, storeResult);
+                        // if (!store.has(id)) {
+                        let value: any;
+                        if (schemaType && itemData && typeof itemData === "object") {
+                            value = new schemaType(itemData);
+                            value.storeId = key;
                         } else {
-                            console.warn(`Duplicate ID "${id}" found in file "${filename}", skipping...`);
-                        }
+                            value = itemData;
+						}
+
+						const storeResult = {
+							data: value,
+							tags: file.tags,
+						}
+						store.set(id, storeResult);
+                        // } else {
+                        //     console.warn(`Duplicate ID "${id}" found in file "${filename}", skipping...`);
+                        // }
                     }
                 }
             }
