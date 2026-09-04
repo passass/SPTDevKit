@@ -5,7 +5,7 @@ import { createLazySchemaChoicer } from "@/utils/lazySchemaLoader";
 import { type SchemaData } from "@/types/fields/fields";
 import { createSchemaChoiceForCondition } from "@/types/fields/fieldsSchemaChoicer";
 import { allElementsInArray } from "@/utils/utils";
-import { IdField } from "./fieldsClasses";
+import { IdField } from "../fields/fieldsClasses";
 
 const virtLocField = VirtualLocalizationField.create({
     label: "name",

@@ -101,7 +101,7 @@ import { DynamicScroller, DynamicScrollerItem } from "vue-virtual-scroller";
 import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
 import { Navigator } from "@/utils/navigation";
 import { currentProjectTag } from "@/project/Project";
-import { deepClone } from "@/utils/utils";
+import { castToRecordSchema } from "@/types/fields/fields";
 
 export default defineComponent({
     name: "ListTabs",
@@ -144,7 +144,7 @@ export default defineComponent({
 
         function createNewSchema() {
             if (!props.fileData || !props.schemaType) return;
-            const newInstance = new props.schemaType();
+            const newInstance = castToRecordSchema({}, props.schemaType);
             const newInstanceId = newInstance.getId();
             if (newInstanceId && props.storeId) {
                 const store = dataStore.getMap(props.storeId);

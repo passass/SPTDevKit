@@ -3,11 +3,12 @@
 import { defineStore } from "pinia";
 import { ref, computed, watch } from "vue";
 import { useFileDataStore } from "./fileStore";
-import { QuestSchema } from "@/types/fields/fieldsQuests";
-import { idsFields, type RecordSchema, type SchemaData } from "@/types/fields/fields";
+import { QuestSchema } from "@/types/schemas/quests";
+import { castToRecordSchema, idsFields, type RecordSchema, type SchemaData } from "@/types/fields/fields";
 import { getValueByPath, type ClassType } from "@/utils/classUtils";
 import { gameLocalization, type locales } from "@/types/localization";
 import { allElementsInArray } from "@/utils/utils";
+import type { SchemaChoicer } from "@/types/fields/fieldsSchemaChoicer";
 
 export interface DataStoreConfigFiles {
     filename: string;
@@ -15,7 +16,7 @@ export interface DataStoreConfigFiles {
 }
 export interface DataStoreConfig {
     file: DataStoreConfigFiles | DataStoreConfigFiles[];
-    schemaType?: ClassType<RecordSchema>;
+    schemaType?: ClassType<RecordSchema> | ClassType<SchemaChoicer>;
 }
 export interface dataStoreExtraDataType {
     tags?: string[];
@@ -112,7 +113,7 @@ export const useDataStore = defineStore("dataStore", () => {
                         // if (!store.has(id)) {
                         let value: any;
                         if (schemaType && itemData && typeof itemData === "object") {
-                            value = new schemaType(itemData);
+                            value = castToRecordSchema(itemData, schemaType);
                             value.storeId = key;
                         } else {
                             value = itemData;
@@ -338,7 +339,7 @@ export const useDataStore = defineStore("dataStore", () => {
 
         let value: any;
         if (config.schemaType) {
-            value = new config.schemaType(data);
+            value = castToRecordSchema(data, config.schemaType);
         } else {
             value = data;
         }

@@ -1,7 +1,6 @@
 import { generateUUID24chars } from "@/utils/uuidUtils";
 import { type FieldType, type SchemaData, Field } from "./fields";
 
-console.log("fieldsClasses.ts")
 export class AdvSelectField extends Field {
 	type: FieldType = 'arrayAdvancedSelect';
 

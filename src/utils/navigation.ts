@@ -1,5 +1,5 @@
 // src/utils/navigation.ts
-import { RecordSchema, castByArrayItemSchema, castToRecordSchema, type arrayItemSchemaType, type recordSchemaOtherData } from "@/types/fields/fields";
+import { RecordSchema, castToRecordSchema, type arrayItemSchemaType, type recordSchemaOtherData } from "@/types/fields/fields";
 import type { Tab } from "@/tabs/tabs.ts";
 
 export interface NavigatorOptions { tab: Tab; }
@@ -90,14 +90,9 @@ export class Navigator {
 			let schema: RecordSchema | null = null;
 
 			const parent = lastPathItem?.schema ?? lastPathItem?.value
-			if (lastPathItem?.arrayItemSchema) {
-                schema = castByArrayItemSchema(target, lastPathItem.arrayItemSchema, {parent: parent});
-            } else if (field?.nestedSchema) {
-                schema = castToRecordSchema(target, field.nestedSchema, {parent: parent});
-            } else {
-                schema = castToRecordSchema(target, undefined, {parent: parent});
-			}
-            this.pathStack.push({
+			schema = castToRecordSchema(target, lastPathItem?.arrayItemSchema ?? field.nestedSchema, {parent: parent});
+
+			this.pathStack.push({
 				key: key
 				, schema: schema
 				, type: 'record'

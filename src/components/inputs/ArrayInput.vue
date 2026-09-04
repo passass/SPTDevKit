@@ -32,6 +32,7 @@
         <!-- Режим optionsArray: select -->
         <div v-if="isOptionsArray" class="array-input__editor">
             <template v-if="selectedIndex !== null">
+            	{{ console.log("items[selectedIndex]", items[selectedIndex], selectedIndex) }}
                 <OptionsInput v-model="items[selectedIndex]" :field="field" :data="items" />
             </template>
         </div>

@@ -7,17 +7,41 @@
         </div>
 
         <div class="form-frame__fields">
-            <button v-if="(frameNavigator?.getPathStack()?.length ?? 0) === 0" @click="deleteCurrentTab()">
-                удалить
-            </button>
-            <button v-if="(frameNavigator?.getPathStack()?.length ?? 0) === 0" @click="copyCurrentTab()">
-                копировать
-            </button>
+	        <div class="toolbar">
+	            <div class="toolbar-buttons">
+	                <button
+	                    v-if="(frameNavigator?.getPathStack()?.length ?? 0) === 0"
+	                    class="toolbar-btn toolbar-btn--danger"
+	                    @click="deleteCurrentTab()"
+	                >
+	                    🗑 удалить
+	                </button>
+	                <button
+	                    v-if="(frameNavigator?.getPathStack()?.length ?? 0) === 0"
+	                    class="toolbar-btn toolbar-btn--primary"
+	                    @click="copyCurrentTab()"
+	                >
+	                    📋 копировать
+	                </button>
+	            </div>
 
-            <div class="form-field" v-if="isShowUnneccesaryFieldsCheckmark">
-                <label :for="'ShowUnneccesaryFields'">Показывать неважные поля</label>
-                <input v-model="isShowUnneccesaryFields" :id="'ShowUnneccesaryFields'" type="checkbox" />
-            </div>
+	            <div class="toolbar-checkbox" v-if="isShowUnneccesaryFieldsCheckmark">
+	                <label for="ShowUnneccesaryFields">Показывать неважные поля</label>
+	                <input v-model="isShowUnneccesaryFields" id="ShowUnneccesaryFields" type="checkbox" />
+	            </div>
+
+	            <div class="toolbar-search">
+	                <input
+	                    type="text"
+	                    v-model="fieldSearchQuery"
+	                    placeholder="Поиск полей..."
+	                    class="field-search-input"
+	                />
+	                <!-- <span v-if="fieldSearchQuery" class="search-results-info">
+	                    {{ filteredDisplayFields.length }} / {{ displayFields.length }}
+	                </span> -->
+	            </div>
+	        </div>
 
             <div v-if="dataRef.schemaChooser" class="form-frame__chooser">
                 <label>Тип схемы:</label>
@@ -25,8 +49,8 @@
             </div>
 
             <div
-                v-for="field in displayFields"
-                :key="field.key"
+                v-for="field in filteredDisplayFields"
+                :key="field.key || field.label"
                 class="form-field"
                 :class="{ 'field-hidden': field.hidden || (field.unneccesary && !isShowUnneccesaryFields) }"
             >
@@ -128,7 +152,12 @@
                     :disabled="!field.editable"
                 />
 
-                <OptionsInput v-else-if="field.type === 'select'" :data="getData" v-model="getData[field.key]" :field="field" />
+                <OptionsInput
+                    v-else-if="field.type === 'select'"
+                    :data="getData"
+                    v-model="getData[field.key]"
+                    :field="field"
+                />
 
                 <ArrayInput
                     v-else-if="field.isArray()"
@@ -214,9 +243,24 @@ const displayFields = computed<Field[]>(() => {
 });
 
 const getData = computed(() => {
-    console.log("fields", dataRef.value.getFields());
+    console.log("fields", dataRef.value.getFields(), dataRef.value.getData());
     return dataRef.value.getData();
 });
+
+const fieldSearchQuery = ref("");
+
+const filteredDisplayFields = computed(() => {
+    if (!fieldSearchQuery.value.trim()) {
+        return displayFields.value;
+    }
+    const query = fieldSearchQuery.value.toLowerCase().trim();
+    return displayFields.value.filter(field => {
+        const label = (field.label || "").toLowerCase();
+        const key = (field.key || "").toLowerCase();
+        return label.includes(query) || key.includes(query);
+    });
+});
+
 const isShowUnneccesaryFields = ref<boolean>(false);
 const isShowUnneccesaryFieldsCheckmark = computed<boolean>(() => {
     return displayFields.value.some((el) => el.unneccesary);
@@ -247,6 +291,7 @@ function getObjectSummary(value: Record<string, any>): string {
 }
 
 function handleNavigate(key: string) {
+	fieldSearchQuery.value = "";
     frameNavigator?.navigate?.(key);
 }
 
@@ -288,8 +333,6 @@ function getRewardDisplay(items: WeaponBuildItem[]): string {
 function getCurrentTab() {
     return frameNavigator?.tab;
 }
-
-
 
 function copyCurrentTab() {
     const currentTab: Tab | undefined = getCurrentTab();
@@ -494,5 +537,164 @@ watch(
 .weapon-build-reward__value {
     color: #e0e0e0;
     word-break: break-word;
+}
+
+.search-field {
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    border: 1px solid #3d3d3d;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.field-search-input {
+    flex: 1;
+    padding: 6px 10px;
+    background: #333333;
+    border: 1px solid #4a4a4a;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 13px;
+    min-width: 150px;
+}
+
+.field-search-input:focus {
+    outline: none;
+    border-color: #42b883;
+    box-shadow: 0 0 0 2px rgba(66, 184, 131, 0.15);
+}
+
+.search-results-info {
+    font-size: 12px;
+    color: #888;
+    white-space: nowrap;
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    padding: 4px 0;
+}
+
+.toolbar-buttons {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.toolbar-btn {
+    padding: 4px 12px;
+    border: none;
+    border-radius: 4px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #fff;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.toolbar-btn--danger {
+    background: #e74c3c;
+}
+.toolbar-btn--danger:hover {
+    background: #c0392b;
+}
+
+.toolbar-btn--primary {
+    background: #007FFF;
+}
+.toolbar-btn--primary:hover {
+    background: #0056B3;
+}
+
+.toolbar-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    font-size: 13px;
+    color: #b0b0b0;
+}
+
+.toolbar-checkbox input[type="checkbox"] {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    background: #333333;
+    border: 2px solid #4a4a4a;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin: 0;
+    position: relative;
+}
+
+.toolbar-checkbox input[type="checkbox"]:checked {
+    background: #42b883;
+    border-color: #42b883;
+}
+
+.toolbar-checkbox input[type="checkbox"]:checked::after {
+    content: "✓";
+    color: #1a1a1a;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 1;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.toolbar-checkbox input[type="checkbox"]:hover {
+    border-color: #66d9a0;
+}
+
+.toolbar-checkbox input[type="checkbox"]:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(66, 184, 131, 0.2);
+}
+
+.toolbar-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 200px;
+    min-width: 150px;
+}
+
+.field-search-input {
+    flex: 1;
+    padding: 4px 8px;
+    background: #333333;
+    border: 1px solid #4a4a4a;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 13px;
+    min-width: 80px;
+}
+
+.field-search-input:focus {
+    outline: none;
+    border-color: #42b883;
+    box-shadow: 0 0 0 2px rgba(66, 184, 131, 0.15);
+}
+
+.search-results-info {
+    font-size: 12px;
+    color: #888;
+    white-space: nowrap;
 }
 </style>

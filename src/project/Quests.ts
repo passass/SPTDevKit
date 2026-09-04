@@ -5,6 +5,8 @@ import { Path } from "@/utils/pathUtils";
 import { currentProjectTag } from "./Project";
 import { deepClone } from "@/utils/utils";
 import { generateUUID24chars } from "@/utils/uuidUtils";
+import { copyRecordSchema } from "@/utils/copyUtils";
+
 
 interface ProjectArgs {
     folderPath: Path;
@@ -130,62 +132,8 @@ class Quests {
     }
 
     copyQuest(data: RecordSchema): RecordSchema {
-        const dataStore = useDataStore();
-        const copiedData: Record<string, any> = deepClone(data.getData()) as Record<string, any>;
-        const idsMap = new Map<string, string>();
-        const sourceId = data.getId();
-        const newItemId = generateUUID24chars();
-
-        const changeAllIds = (obj: any, isRoot = false): void => {
-            if (!obj || typeof obj !== "object") return;
-
-            if (Array.isArray(obj)) {
-                obj.forEach((item) => changeAllIds(item, false));
-                return;
-            }
-
-            for (const [key, value] of Object.entries(obj)) {
-                if (key === "_id" || key === "id") {
-                    obj[key] = isRoot ? newItemId : generateUUID24chars();
-                    idsMap.set(value as string, obj[key]);
-                } else if (typeof value === "string" && sourceId && value.includes(sourceId)) {
-                    obj[key] = value.replace(new RegExp(sourceId, "g"), newItemId);
-                } else if (typeof value === "object" && value !== null) {
-                    changeAllIds(value, false);
-                }
-            }
-        };
-        changeAllIds(copiedData, true);
-
-        const oldLocaleKeys = getAllLocalizations(data);
-        const localeMapping = new Map<string, string>();
-
-        for (const oldKey of oldLocaleKeys) {
-            if (typeof oldKey === "string") {
-                const newKey = idsMap.has(oldKey)
-                    ? idsMap.get(oldKey)!
-                    : sourceId
-                    ? oldKey.replace(new RegExp(sourceId, "g"), newItemId)
-                    : oldKey;
-                localeMapping.set(oldKey, newKey);
-            }
-        }
-        console.log("localeMapping", localeMapping);
-
-        for (const [oldKey, newKey] of localeMapping.entries()) {
-            if (oldKey === newKey) continue;
-            for (const locale of availableLocales) {
-                const storeId = `${locale}${suffixes.localizationSuffix}`;
-                const text = dataStore.get(storeId, oldKey);
-                if (text !== undefined && text !== null) {
-                    dataStore.set(storeId, newKey, text);
-                    dataStore.addTag(storeId, newKey, currentProjectTag);
-                }
-            }
-        }
-
-        const schema = new (data.constructor as typeof RecordSchema)(copiedData);
-        return schema;
+	    const dataStore = useDataStore();
+	    return copyRecordSchema(data, dataStore, currentProjectTag);
     }
 }
 

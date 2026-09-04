@@ -1,15 +1,16 @@
 <script setup lang="tsx">
-import { useFileDataStore } from "@/stores/fileStore.ts";
+import { SchemaChoicer } from "@/types/fields/fieldsSchemaChoicer";
 import { onMounted, ref } from "vue";
 import Main from "@/components/Main.vue";
 import { gameLocalization } from "@/types/localization";
 import { useDataStore } from "@/stores/dataStore";
-import { QuestSchema } from "./types/fields/fieldsQuests";
+import { QuestSchema } from "./types/schemas/quests";
 import { loadAllLazySchemas } from "./utils/lazySchemaLoader";
 import { isElectron } from "./utils/utils";
 import Traders from "./project/Traders";
 import { generateSchemasInFile } from "./utils/schemaGenerator";
 import Project from "./project/Project";
+import { itemsSchema } from "@/types/schemas/items";
 // import pathResolver from '@/utils/pathUtils.ts';
 
 const dataStore = useDataStore()
@@ -18,23 +19,27 @@ const error = ref<string | null>(null)
 
 async function loadData() {
 	try {
+		await loadAllLazySchemas();
+		await console.log("itemsSchema", (itemsSchema as typeof SchemaChoicer).schemas)
 		await Promise.all([
 			dataStore.registerMultiple({
-				quests: { 
+				quests: {
 					file: [
 						{
 							filename: "quests.json"
 							, tags: ["vanilla"]
 						}
-					], 
+					],
 					schemaType: QuestSchema
 				},
-				items: {  
+				items: {
 					file: [
 						{
 							filename: 'items.json'
+							, tags: ["vanilla"]
 						}
-					], 
+					],
+					schemaType: itemsSchema
 				},
 			})
 			, gameLocalization.loadLocales()
@@ -43,7 +48,6 @@ async function loadData() {
 
 		await dataStore.loadAll();
 
-		await loadAllLazySchemas()
 	} catch (e: any) {
 		error.value = e.message
 		console.error('Failed to load data:', e)
@@ -56,7 +60,7 @@ onMounted(async () => {
     await loadData();
 });
 </script>
- 
+
 <template>
 	<div v-if="error" class="error-state">
 		<h1>Ошибка загрузки</h1>

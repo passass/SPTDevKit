@@ -2,8 +2,6 @@
 import { Data } from "dataclass";
 import { type SchemaChoice, SchemaChoicer } from "./fieldsSchemaChoicer";
 import { getStaticField, type ClassType } from "@/utils/classUtils";
-import { generateUUID24chars } from "@/utils/uuidUtils";
-import { deepClone } from "@/utils/utils";
 
 export const idsFields: string[] = ['_id', 'id']
 export function getIdFieldValue(instance: any): string | undefined {
@@ -15,8 +13,8 @@ export function getIdFieldValue(instance: any): string | undefined {
 }
 
 export type arrayItemSchemaType = ClassType<RecordSchema>
-| ClassType<SchemaChoicer>
-| null
+	| ClassType<SchemaChoicer>
+	| null
 export type SchemaData = Record<string, any>
 export type FieldType = 'text'
 	| 'number'
@@ -91,75 +89,34 @@ export const isObjectNotArray = (item: any): boolean => typeof item === 'object'
 export const isNotRecordSchemaButObject = (el: any): boolean => (
 	typeof el === 'object' && !(el instanceof RecordSchema) && !Array.isArray(el)
 )
-export const castToRecordSchema = (el: any, recordSchemaType?: ClassType<RecordSchema>, otherData?: recordSchemaOtherData): RecordSchema => (
-	isNotRecordSchemaButObject(el)
-	? new (recordSchemaType ?? RecordSchema)(el, otherData)
-	: el
-)
 
-export const castByArrayItemSchema = (
+export const castToRecordSchema = (
 	value: any,
-	arrayItemSchema: arrayItemSchemaType,
+	schema?: arrayItemSchemaType,
 	otherData?: recordSchemaOtherData
 ): RecordSchema => {
-	if (!value) {
-		throw new Error('Value is required');
-	}
-
-	if (isNotRecordSchemaButObject(value)) {
-		if (arrayItemSchema) {
-			if (SchemaChoicer.isPrototypeOf(arrayItemSchema)) {
+	if (value !== null && value !== undefined && isNotRecordSchemaButObject(value)) {
+		if (schema) {
+			if (SchemaChoicer.isPrototypeOf(schema)) {
 				const choosedSchema: SchemaChoice = (
-					(arrayItemSchema as typeof SchemaChoicer).getSchema(value)
-					?? (arrayItemSchema as typeof SchemaChoicer).schemas[0]
+					(schema as typeof SchemaChoicer).getSchema(value)
+					?? (schema as typeof SchemaChoicer).schemas[0]
 				);
 
 				return new choosedSchema.schema(value, {
 					...otherData,
-					schemaChooser: arrayItemSchema,
+					schemaChooser: schema,
 					choosedSchema: choosedSchema,
 				});
-			} else {
-				return new (arrayItemSchema as ClassType<RecordSchema>)(value, otherData) as RecordSchema;
 			}
+
+			return new (schema as ClassType<RecordSchema>)(value, otherData) as RecordSchema;
 		}
 
-		return castToRecordSchema(value, undefined, otherData);
+		return new RecordSchema(value, otherData);
 	}
 	return value
 }
-
-export const castByArrayItemSchemaInField = (el: any[], index: number, field: Field): RecordSchema => {
-	const value = el[index]
-	if (!value) {
-		throw new Error()
-	}
-
-	if (isNotRecordSchemaButObject(value)) {
-		if (field.arrayItemSchema) {
-			if (SchemaChoicer.isPrototypeOf(field.arrayItemSchema)) {
-				const choosedSchema: SchemaChoice | null = (field.arrayItemSchema as typeof SchemaChoicer).getSchema(value);
-				if (choosedSchema) {
-					return new choosedSchema.schema(value, {
-						schemaChooser: field.arrayItemSchema,
-						choosedSchema: choosedSchema,
-					});
-				}
-			} else
-				return (new field.arrayItemSchema(value)) as RecordSchema;
-		}
-
-		return castToRecordSchema(value);
-	}
-
-	return value
-}
-
-export const castByNestedSchemaInField = (el: any, field: Field): RecordSchema => (
-	isNotRecordSchemaButObject(el) && field.nestedSchema
-	? new field.nestedSchema(el)
-	: castToRecordSchema(el)
-)
 
 function resolveDefaultValue(field: Field, data: SchemaData): any {
     let val = field.getDefaultValue ? field.getDefaultValue(data) : field.defaultValue;
@@ -199,7 +156,10 @@ export class LocalizationField extends Field {
 
 	getDefaultValue(data: SchemaData): string {
 		const key = this.key;
-		return `${data["_id"]} ${key}`;
+		const id = data["id"] ?? data["_id"];
+		if (key)
+			return `${id} ${key}`;
+		return id;
 	}
 }
 
@@ -207,10 +167,6 @@ export class VirtualLocalizationField extends LocalizationField {
 	type: FieldType = 'localization';
 	virtual: boolean = true;
 	editable: boolean = false;
-
-	getDefaultValue(data: SchemaData): string {
-		return data["id"] ?? data["_id"];
-	}
 }
 
 export type recordSchemaOtherData = {
@@ -238,7 +194,7 @@ export class RecordSchema {
 		const nestedData = this.get(key);
 		if (!nestedData) return [];
 		if (!Array.isArray(nestedData)) return [];
-		return nestedData.map((item: any) => castByArrayItemSchema(item, field.arrayItemSchema))
+		return nestedData.map((item: any) => castToRecordSchema(item, field.arrayItemSchema))
 	}
 
 	getCastedData(key: string): RecordSchema {
@@ -468,10 +424,6 @@ export class RecordSchema {
 	getField(key: string): Field | undefined {
 		const fields = this.getFields();
 		return fields.find(f => f.key === key);
-	}
-
-	copy(): RecordSchema {
-
 	}
 
 	resolveType(key: string): FieldType {

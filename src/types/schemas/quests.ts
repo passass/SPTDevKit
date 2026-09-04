@@ -1,9 +1,9 @@
 // src/types/fieldsQuests.ts
 
-import { RecordSchema, Field, UnneccesaryField, HiddenField, AdvSelectField, LocalizationField } from "./fields";
-import { IdField } from "./fieldsClasses";
-import { QuestConditions } from "./fieldsQuestsConditions";
-import { RewardsSchemas } from "./rewards/rewards";
+import { RecordSchema, Field, UnneccesaryField, HiddenField, AdvSelectField, LocalizationField } from "../fields/fields";
+import { IdField } from "../fields/fieldsClasses";
+import { QuestConditions } from "./questsConditions";
+import { RewardsSchemas } from "../fields/rewards/rewards";
 
 /**
  * Схема для квеста из EFT
