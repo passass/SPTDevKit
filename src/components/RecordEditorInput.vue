@@ -45,7 +45,7 @@
 
             <div v-if="dataRef.schemaChooser" class="form-frame__chooser">
                 <label>Тип схемы:</label>
-                <SchemaChooserInput :record-data="dataRef" @schemaСhoose="handleSchemaChoose" />
+                <SchemaChooserInput :record-schema="dataRef" @schemaСhoose="handleSchemaChoose" />
             </div>
 
             <div
@@ -97,7 +97,7 @@
                     :field="field"
                 />
 
-                <CompareInput v-else-if="isCompareInput(field)" v-model="getData[field.key]" />
+                <CompareInput v-else-if="isCompareInput(field)" :data="getData[field.key]" />
 
                 <ParentInput
                     v-else-if="field.key === 'parentId'"
@@ -113,7 +113,7 @@
                                 default: field.label,
                             })
                         }}</label>
-                        <CompareInput v-model="getData" />
+                        <CompareInput :data="getData" />
                     </div>
                 </div>
 

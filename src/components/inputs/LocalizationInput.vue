@@ -32,7 +32,6 @@
 import { computed, ref, onMounted } from "vue";
 import { gameLocalization, availableLocales, type locales, type localizationTextParams } from "@/types/localization";
 import type { Field, SchemaData } from "@/types/fields/fields";
-import { CONNREFUSED } from "node:dns";
 
 const props = defineProps<{
     modelValue?: string;

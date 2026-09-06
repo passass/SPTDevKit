@@ -30,14 +30,13 @@ import { onMounted, computed } from 'vue';
 
 
 const props = defineProps<{
-	modelValue: Record<string, any>;
+	data: SchemaData;
 }>();
 
 const items = computed<SchemaData>(() => {
-	const data = props.modelValue instanceof RecordSchema ? props.modelValue.data : props.modelValue
-	props.modelValue["compareMethod"] ??= ">="
-	props.modelValue["value"] ??= 0
-	return data
+	props.data["compareMethod"] ??= ">="
+	props.data["value"] ??= 0
+	return props.data
 });
 </script>
 

@@ -389,26 +389,27 @@ export class RecordSchema {
 	}
 
 	/** Получить значение поля */
-	get(key: string): any {
-		return this.data[key];
+	get(key: string | Field): any {
+		return this.data[key instanceof Field ? key.key : key];
 	}
 
 	/** Установить значение поля */
-	set(key: string, value: any): void {
-		const field = this.getField(key);
+	set(key: string | Field, value: any): void {
+		const fieldKey = key instanceof Field ? key.key : key;
+		const field = this.getField(fieldKey);
 
 		// Если поле array и есть arrayItemSchema, преобразуем элементы
 		if (field?.type === 'array' && field.arrayItemSchema && Array.isArray(value)) {
-			this.data[key] = value.map(item =>
+			this.data[fieldKey] = value.map(item =>
 				item instanceof RecordSchema ? item : new field.arrayItemSchema!(item)
 			);
 		}
 		// Если поле object и есть nestedSchema, преобразуем
 		else if (field?.type === 'object' && field.nestedSchema && value && typeof value === 'object') {
-			this.data[key] = value instanceof RecordSchema ? value : new field.nestedSchema(value);
+			this.data[fieldKey] = value instanceof RecordSchema ? value : new field.nestedSchema(value);
 		}
 		else {
-			this.data[key] = value;
+			this.data[fieldKey] = value;
 		}
 	}
 

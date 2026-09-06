@@ -4,7 +4,7 @@
     <OptionsInput
       v-model="selectedSchema"
       :field="schemaField"
-      :data="recordData"
+      :data="recordSchema.getData()"
     />
   </div>
 </template>
@@ -17,7 +17,7 @@ import { gameLocalization } from "@/types/localization";
 import OptionsInput from "./OptionsInput.vue";
 
 const props = defineProps<{
-  recordData: RecordSchema
+  recordSchema: RecordSchema
 }>();
 
 const emit = defineEmits<{
@@ -25,11 +25,11 @@ const emit = defineEmits<{
 }>();
 
 const schemas = computed(() => {
-  return (props.recordData.schemaChooser as typeof SchemaChoicer).schemas || [];
+  return (props.recordSchema.schemaChooser as typeof SchemaChoicer).schemas || [];
 });
 
 const selectedSchema = computed(() => {
-  const currentSchema = props.recordData.choosedSchema;
+  const currentSchema = props.recordSchema.choosedSchema;
   return currentSchema ? currentSchema.name : "";
 });
 
@@ -47,13 +47,13 @@ const schemaField = computed(() => {
     onChange: (_data: any, event: Event) => {
       const target = event.target as HTMLSelectElement;
       const name = target.value;
-      if (!isObjectNotArray(props.recordData)) return;
+      if (!isObjectNotArray(props.recordSchema)) return;
       const choosedSchema = schemas.value.find(s => s.name === name);
       if (choosedSchema) {
-        emit("schemaСhoose", props.recordData.castToNewSchema(
+        emit("schemaСhoose", props.recordSchema.castToNewSchema(
           choosedSchema.schema,
           {
-            schemaChooser: props.recordData.schemaChooser,
+            schemaChooser: props.recordSchema.schemaChooser,
             choosedSchema: choosedSchema,
           }
         ));
