@@ -1,6 +1,8 @@
 // src/types/fieldsQuests.ts
 
-import { RecordSchema, Field, UnneccesaryField, HiddenField, AdvSelectField, LocalizationField } from "../fields/fields";
+import { RecordSchema, Field, AdvSelectField, LocalizationField } from "../fields/fields";
+import { HiddenField, UnneccesaryField } from "../fields/fieldsClasses";
+
 import { IdField } from "../fields/fieldsClasses";
 import { QuestConditions } from "./questsConditions";
 import { RewardsSchemas } from "../fields/rewards/rewards";

@@ -90,7 +90,7 @@ export class Navigator {
 			let schema: RecordSchema | null = null;
 
 			const parent = lastPathItem?.schema ?? lastPathItem?.value
-			schema = castToRecordSchema(target, lastPathItem?.arrayItemSchema ?? field.nestedSchema, {parent: parent});
+			schema = castToRecordSchema(target, lastPathItem?.arrayItemSchema ?? field?.nestedSchema, {parent: parent});
 
 			this.pathStack.push({
 				key: key

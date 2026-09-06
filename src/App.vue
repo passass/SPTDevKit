@@ -6,9 +6,6 @@ import { gameLocalization } from "@/types/localization";
 import { useDataStore } from "@/stores/dataStore";
 import { QuestSchema } from "./types/schemas/quests";
 import { loadAllLazySchemas } from "./utils/lazySchemaLoader";
-import { isElectron } from "./utils/utils";
-import Traders from "./project/Traders";
-import { generateSchemasInFile } from "./utils/schemaGenerator";
 import Project from "./project/Project";
 import { itemsSchema } from "@/types/schemas/items";
 // import pathResolver from '@/utils/pathUtils.ts';
@@ -20,7 +17,6 @@ const error = ref<string | null>(null)
 async function loadData() {
 	try {
 		await loadAllLazySchemas();
-		await console.log("itemsSchema", (itemsSchema as typeof SchemaChoicer).schemas)
 		await Promise.all([
 			dataStore.registerMultiple({
 				quests: {

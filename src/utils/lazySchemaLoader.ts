@@ -33,7 +33,6 @@ async function loadTree(filePath: string): Promise<SchemaNode> {
         const outputJson = await fileStore.read(filePath);
 		const tree = generateAllSchemas(outputJson.data);
         cachedTrees.set(filePath, tree);
-        console.log("loadTree", filePath, tree, cachedTrees)
 
         const newAdditionalFields = additionalFields?.get(filePath);
         if (newAdditionalFields) {
@@ -169,7 +168,10 @@ export function createLazySchemaChoicer(
     return LazySchemaChoicer;
 }
 
-export function createLazyRecordSchema(filePath: string, path: string, className: string): ClassType<RecordSchema> {
+export function createLazyRecordSchema(filePath: string, className: string): ClassType<RecordSchema> {
+	// , newAdditionalFields: lazyParams = {}
+	// additionalFields.set(filePath, additionalFields.get(filePath) ?? new Map());
+ //    additionalFields.get(filePath)?.set(path, newAdditionalFields);
     let cachedSchema: any = null;
     let isLoaded = false;
 
@@ -193,9 +195,11 @@ export function createLazyRecordSchema(filePath: string, path: string, className
 
             try {
                 const tree = await loadTree(filePath);
-                const node = findSchemaByPath(tree, path);
+				const node = tree.children[0];
 
-                if (node && node.schema) {
+				console.log("tree", tree)
+
+				if (node && node.schema) {
                     cachedSchema = node.schema;
 
                     // Копируем поля
@@ -209,7 +213,7 @@ export function createLazyRecordSchema(filePath: string, path: string, className
 
                     isLoaded = true;
                 } else {
-                    throw new Error(`Schema not found for path: ${path}`);
+                    throw new Error(`Schema not found for path: ${className}`);
                 }
             } catch (error) {
                 console.error(`Failed to load schema "${className}":`, error);

@@ -1,6 +1,7 @@
 // src/types/fieldsQuestsConditions.ts
 
-import { RecordSchema, Field, VirtualLocalizationField, UnneccesaryField, AdvSelectField, HiddenField } from "@/types/fields/fields";
+import { RecordSchema, Field, VirtualLocalizationField, AdvSelectField } from "@/types/fields/fields";
+import { HiddenField, UnneccesaryField } from "@/types/fields/fieldsClasses";
 import { createLazySchemaChoicer } from "@/utils/lazySchemaLoader";
 import { type SchemaData } from "@/types/fields/fields";
 import { createSchemaChoiceForCondition } from "@/types/fields/fieldsSchemaChoicer";

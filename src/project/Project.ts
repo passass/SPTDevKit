@@ -5,6 +5,7 @@ import { availableLocales, suffixes } from "@/types/localization";
 import { Path, PathArray } from "@/utils/pathUtils";
 import { isElectron } from "@/utils/utils";
 import { useProfilesStore } from "@/stores/profileStore";
+import Items from "./Items";
 
 export const currentProjectTag = "currentProject";
 export const modTag = "mod";
@@ -62,6 +63,7 @@ class Project {
     async loadSPTFolder(projectArgs: ProjectArgs) {
         await Promise.all([
             Quests.loadQuests(projectArgs),
+            Items.loadItems(projectArgs),
             this.loadTraders(projectArgs),
             this.loadLocale(projectArgs),
         ]);
@@ -78,13 +80,14 @@ class Project {
     async loadEFTMods(folderPath: Path) {
 		this.EFTFolder = folderPath;
         const profilesStore = useProfilesStore();
-        for (const folderPath of await new Path(this.EFTFolder, "*/user/mods/*").findFolders()) {
+        for (const folderPath of await new Path(this.EFTFolder, "SPT*/user/mods/*").findFolders()) {
             await this.loadSPTFolder({
                 folderPath: folderPath,
                 tags: ["mod"],
                 notLoadImmediately: true,
             });
-        }
+		}
+        console.log("load all")
 		await Promise.all([
 			profilesStore.load(this.EFTFolder),
             this.dataStore?.load("quests"),
@@ -93,6 +96,7 @@ class Project {
                     for (const suffix of Object.values(suffixes)) this.dataStore?.load(`${locale}${suffix}`);
             },
             this.dataStore?.load("traders"),
+            this.dataStore?.load("items"),
         ]);
     }
 

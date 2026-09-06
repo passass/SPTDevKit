@@ -32,47 +32,41 @@ export type FieldType = 'text'
 	| 'arrayAdvancedSelect'
 	| 'arrayArrayAdvancedSelect';
 
-export class Field extends Data {
-	key: string = "";
-	label!: string;
-	description?: string = "";
-	placeholder?: string = "";
-	type!: FieldType;
-	visible?: boolean = true;
-	editable?: boolean = true;
-	order?: number = 1;
-	options?: string[] | Record<any, string>;
-	defaultValue?: any;
-	validate?: (value: any, record: SchemaData) => true | string;
-	nestedSchema?: ClassType<RecordSchema>;
-	arrayItemSchema?: arrayItemSchemaType;
-	virtual?: boolean;
+	export class Field extends Data {
+    key: string = "";
+    label!: string;
+    description?: string = "";
+    placeholder?: string = "";
+    type!: FieldType;
+    visible?: boolean = true;
+    editable?: boolean = true;
+    order?: number = 1;
+    options?: string[] | Record<any, string>;
+    defaultValue?: any;
+    validate?: (value: any, record: SchemaData) => true | string;
+    nestedSchema?: ClassType<RecordSchema>;
+    arrayItemSchema?: arrayItemSchemaType;
+    virtual?: boolean;
+    extraKeys?: string[];
 
-	initialValue?: (data: SchemaData) => any;
-	onChange?: (data: SchemaData, event: Event) => void;
+    initialValue?: (data: SchemaData) => any;
+    onChange?: (data: SchemaData, event: Event) => void;
+    onIfInData?: (data: SchemaData) => void;
 
-	hidden?: boolean;
-	unneccesary?: boolean;
+    hidden?: boolean;
+    unneccesary?: boolean;
 
 	getDefaultValue?(data: SchemaData): any;
 
-	isArray(): boolean {
-		return this.type && this.type.toLocaleLowerCase().includes("array")
-	};
+    isArray(): boolean {
+        return this.type && this.type.toLocaleLowerCase().includes("array")
+    };
 }
 
 export class AdvSelectField extends Field {
 	type: FieldType = 'arrayAdvancedSelect';
 
 	storeId!: string;
-}
-
-export class HiddenField extends Field {
-	hidden = true;
-}
-
-export class UnneccesaryField extends Field {
-	unneccesary = true;
 }
 
 function autoDetectType(value: any): FieldType {
@@ -282,9 +276,25 @@ export class RecordSchema {
 		for (const field of fields) {
 			if (!field.key) continue;
             usedKeys.add(field.key);
-            if (field.key in this.data) continue;
+			if (field.key in this.data) {
+				if (field.onIfInData) field.onIfInData(this.data);
+				continue
+			};
 
-            const defVal = resolveDefaultValue(field, data);
+			if (field.extraKeys) {
+				for (const extraKey of field.extraKeys) {
+					usedKeys.add(extraKey);
+					if (extraKey in this.data) {
+
+						this.data[field.key] = this.data[extraKey];
+						delete this.data[extraKey];
+						continue;
+					}
+				}
+				if (field.key in this.data) continue;
+			}
+
+			const defVal = resolveDefaultValue(field, data);
 
             if (typeof defVal === "function") {
                 lazyLoadFunctions.set(field.key, defVal);

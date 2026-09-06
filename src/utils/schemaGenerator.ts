@@ -1,11 +1,10 @@
 // src/utils/schemaGenerator.ts
 
-import { RecordSchema, Field, idsFields, type FieldType, HiddenField, AdvSelectField, UnneccesaryField } from "@/types/fields/fields";
+import { RecordSchema, Field, idsFields, type FieldType, AdvSelectField } from "@/types/fields/fields";
 import { IdField } from "@/types/fields/fieldsClasses";
-import { getStaticField, type ClassType } from "@/utils/classUtils";
+import { type ClassType } from "@/utils/classUtils";
 import { SchemaChoicer, type SchemaChoice, createSchemaChoiceForCondition } from "@/types/fields/fieldsSchemaChoicer";
 import { useFileDataStore } from "@/stores/fileStore";
-import { useDataStore } from "@/stores/dataStore";
 
 
 interface FieldInfo {

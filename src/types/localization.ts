@@ -30,7 +30,8 @@ export interface localizationTextParams {
 }
 
 export class GameLocalization {
-    locales: Map<string, FileConfig<Record<string, string>>> = new Map();
+	locales: Map<string, FileConfig<Record<string, string>>> = new Map();
+    defaultLocale: locales = "en";
     currentLocale: Ref<locales> = ref("ru");
     dataStore: ReturnType<typeof useDataStore> | null = null;
 

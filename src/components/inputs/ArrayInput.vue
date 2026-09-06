@@ -32,7 +32,7 @@
         <!-- Режим optionsArray: select -->
         <div v-if="isOptionsArray" class="array-input__editor">
             <template v-if="selectedIndex !== null">
-            	{{ console.log("items[selectedIndex]", items[selectedIndex], selectedIndex) }}
+                {{ console.log("items[selectedIndex]", items[selectedIndex], selectedIndex) }}
                 <OptionsInput v-model="items[selectedIndex]" :field="field" :data="items" />
             </template>
         </div>
@@ -204,7 +204,13 @@ function addItem() {
         items.value.push([]);
         selectedIndex.value = items.value.length - 1;
     } else if (isOptionsArray.value) {
-        const defaultOption = props.field.options?.[0] ?? "";
+        if (props.field.options?.length === 0) return;
+        const defaultOption =
+			(props.field.options && (
+				Array.isArray(props.field.options)
+					? props.field.options[0]
+					: Object.values(props.field.options)[0]
+			)) ?? "";
         items.value.push(defaultOption);
         selectedIndex.value = items.value.length - 1;
     } else if (isNumberArray.value) {

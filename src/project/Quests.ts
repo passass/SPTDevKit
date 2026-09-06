@@ -2,17 +2,9 @@ import { useDataStore } from "@/stores/dataStore";
 import { RecordSchema } from "@/types/fields/fields";
 import { availableLocales, gameLocalization, suffixes, type locales } from "@/types/localization";
 import { Path } from "@/utils/pathUtils";
-import { currentProjectTag } from "./Project";
-import { deepClone } from "@/utils/utils";
-import { generateUUID24chars } from "@/utils/uuidUtils";
+import { currentProjectTag, type ProjectArgs } from "./Project";
 import { copyRecordSchema } from "@/utils/copyUtils";
 
-
-interface ProjectArgs {
-    folderPath: Path;
-    tags: string[];
-    notLoadImmediately?: boolean;
-}
 
 function getAllLocalizations(data: RecordSchema): string[] {
     let localizations: string[] = [];

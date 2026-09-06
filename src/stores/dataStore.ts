@@ -113,7 +113,10 @@ export const useDataStore = defineStore("dataStore", () => {
                         // if (!store.has(id)) {
                         let value: any;
                         if (schemaType && itemData && typeof itemData === "object") {
-                            value = castToRecordSchema(itemData, schemaType);
+							value = castToRecordSchema(itemData, schemaType);
+                            if (!value.getId()) {
+                                value.set("id", id)
+                            }
                             value.storeId = key;
                         } else {
                             value = itemData;

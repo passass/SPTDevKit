@@ -7,7 +7,13 @@ export class AdvSelectField extends Field {
 	storeId!: string;
 }
 
-export class HiddenField extends Field {}
+export class HiddenField extends Field {
+	hidden = true;
+}
+
+export class UnneccesaryField extends Field {
+	unneccesary = true;
+}
 
 export class IdField extends Field {
 	type: FieldType = "text"
