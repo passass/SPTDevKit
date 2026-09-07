@@ -8,6 +8,7 @@ const { app, contextBridge, ipcRenderer } = require("electron");
 // Экспонируем безопасные API для рендерера
 contextBridge.exposeInMainWorld("electronAPI", {
 	getDataDir: () => ipcRenderer.invoke('data-dir'),
+	getVersions: () => ipcRenderer.invoke('get-versions'),
 	// getRootDir: () => ROOT_DIR,
 
 	selectFolder: () => ipcRenderer.invoke('select-folder'),

@@ -112,7 +112,7 @@ export const castToRecordSchema = (
 	return value
 }
 
-function resolveDefaultValue(field: Field, data: SchemaData): any {
+export function resolveDefaultValue(field: Field, data: SchemaData): any {
     let val = field.getDefaultValue ? field.getDefaultValue(data) : field.defaultValue;
 
     if (val === undefined) {
@@ -133,7 +133,6 @@ function resolveDefaultValue(field: Field, data: SchemaData): any {
         return null;
     }
 
-    // Глубокое клонирование объектов и массивов, чтобы избежать共享 ссылок между экземплярами
     if (val !== null && typeof val === 'object') {
         try {
             return structuredClone(val);
@@ -167,6 +166,7 @@ export type recordSchemaOtherData = {
 	schemaChooser?: ClassType<SchemaChoicer> | null,
 	choosedSchema?: SchemaChoice | null,
 	parent?: Record<string, any> | Array<object> | RecordSchema | null,
+	fillWithDefault?: boolean,
 }
 
 export class RecordSchema {
@@ -294,14 +294,16 @@ export class RecordSchema {
 				if (field.key in this.data) continue;
 			}
 
-			const defVal = resolveDefaultValue(field, data);
+			if (otherData?.fillWithDefault) {
+				const defVal = resolveDefaultValue(field, data);
 
-            if (typeof defVal === "function") {
-                lazyLoadFunctions.set(field.key, defVal);
-            } else {
-                this.data[field.key] = defVal;
-            }
-        }
+				if (typeof defVal === "function") {
+					lazyLoadFunctions.set(field.key, defVal);
+				} else {
+					this.data[field.key] = defVal;
+				}
+			}
+		}
 
         for (const [key, value] of Object.entries(this.data)) {
             if (!usedKeys.has(key)) {

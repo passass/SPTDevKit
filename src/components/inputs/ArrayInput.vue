@@ -117,14 +117,16 @@ const frameNavigator = inject<Navigator>("frameNavigator");
 const props = defineProps<{
     modelValue: InputType;
     field: Field;
+    selectedIndex?: number;
+    navigateHandler?: (key: any) => void;
 }>();
 
 const emit = defineEmits<{
     (e: "update:modelValue", value: InputType): void;
-    (e: "change", value: InputType): void;
+    (e: "onNavigate", key: any): void;
 }>();
 
-const selectedIndex = ref<number | null>(props.modelValue && props.modelValue.length > 0 ? 0 : null);
+const selectedIndex = ref<number | null>(props.selectedIndex ?? (props.modelValue && props.modelValue.length > 0 ? 0 : null));
 
 const items = computed({
     get: () => {
@@ -132,7 +134,6 @@ const items = computed({
     },
     set: (val: InputType) => {
         emit("update:modelValue", val);
-        emit("change", val);
     },
 });
 
@@ -189,11 +190,12 @@ function prevItem() {
 
 function deleteItem() {
     if (selectedIndex.value === null || selectedIndex.value < 0 || selectedIndex.value > items.value.length - 1) return;
-
     items.value.splice(selectedIndex.value, 1);
 
     if (selectedIndex.value !== 0) {
         selectedIndex.value--;
+    } else {
+        selectedIndex.value = null;
     }
 }
 
@@ -201,6 +203,7 @@ function addItem() {
     if (isArrayArrayAdvancedSelect.value) {
         items.value.push([]);
         selectedIndex.value = items.value.length - 1;
+        emit('update:modelValue', items.value)
     } else if (isOptionsArray.value) {
         if (props.field.options?.length === 0) return;
         const defaultOption =
@@ -211,44 +214,52 @@ function addItem() {
 			)) ?? "";
         items.value.push(defaultOption);
         selectedIndex.value = items.value.length - 1;
+        emit('update:modelValue', items.value)
     } else if (isNumberArray.value) {
         items.value.push(0);
         selectedIndex.value = items.value.length - 1;
+        emit('update:modelValue', items.value)
     } else if (isStringArray.value || isAdvancedSelectArray.value) {
         items.value.push("");
         selectedIndex.value = items.value.length - 1;
+        emit('update:modelValue', items.value)
     } else {
         const arrayItemSchema = props.field.arrayItemSchema;
+        let resultSchema: RecordSchema | undefined;
 
         if (arrayItemSchema) {
             if (SchemaChoicer.isPrototypeOf(arrayItemSchema)) {
                 const choosedSchema = getStaticField<SchemaChoice[]>(arrayItemSchema, "schemas")?.[0];
 
                 if (choosedSchema) {
-                    const schema = new choosedSchema.schema(
+                    resultSchema = new choosedSchema.schema(
                         {},
                         {
                             schemaChooser: props.field.arrayItemSchema,
                             choosedSchema: choosedSchema,
+                            fillWithDefault: true,
                         }
                     );
-                    items.value.push(schema.getData());
-
-                    frameNavigator?.navigate([props.field.key, items.value.length - 1]);
-                    return;
                 }
             } else if (RecordSchema.isPrototypeOf(arrayItemSchema)) {
-                const schema = new arrayItemSchema({}) as RecordSchema;
-                items.value.push(schema.getData());
-                frameNavigator?.navigate([props.field.key, items.value.length - 1]);
-                return;
+                resultSchema = new arrayItemSchema({}, {
+                    fillWithDefault: true,
+                }) as RecordSchema;
             }
         }
 
-        const nestedSchema: Field["nestedSchema"] = props.field.nestedSchema;
-        if (nestedSchema) {
-            const schema = new nestedSchema({});
-            items.value.push(schema.getData());
+        if (!resultSchema) {
+            const nestedSchema: Field["nestedSchema"] = props.field.nestedSchema;
+            if (nestedSchema) {
+                resultSchema = new nestedSchema({}, {
+                    fillWithDefault: true,
+                });
+            }
+        }
+
+        if (resultSchema) {
+            items.value.push(resultSchema.getData());
+           	emit('update:modelValue', items.value)
             frameNavigator?.navigate([props.field.key, items.value.length - 1]);
         }
     }
@@ -270,9 +281,24 @@ function removeSubItem(index: number | string) {
 }
 
 function handleNavigate() {
-    if (selectedIndex.value === null) return;
-    frameNavigator?.navigate?.([props.field.key, selectedIndex.value]);
+	if (props.navigateHandler) props.navigateHandler([props.field.key, selectedIndex.value])
 }
+
+function getSavedData() {
+    return {
+    	selectedIndex: selectedIndex.value,
+    };
+}
+
+function loadSavedData(data: Record<string, any>) {
+	if (!selectedIndex) return;
+    selectedIndex.value = data.selectedIndex;
+}
+
+defineExpose({
+	getSavedData,
+	loadSavedData
+})
 
 watch(
     () => props.modelValue,

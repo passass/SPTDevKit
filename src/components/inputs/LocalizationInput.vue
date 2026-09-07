@@ -29,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from "vue";
+import { computed, ref, onMounted, watch } from "vue";
 import { gameLocalization, availableLocales, type locales, type localizationTextParams } from "@/types/localization";
 import type { Field, SchemaData } from "@/types/fields/fields";
 
@@ -45,7 +45,6 @@ const emit = defineEmits<{
 
 const selectedLocale = ref<locales>(gameLocalization.currentLocale.value);
 
-// Вычисляем отображаемый ключ локализации
 const localizedId = computed(() => {
     if (props.field.virtual) {
         return props.field.getDefaultValue ? props.field.getDefaultValue(props.data) : props.modelValue;
@@ -78,7 +77,6 @@ const localizedText = computed({
     },
 });
 
-// Обработчик изменения ключа (только если не виртуальное)
 function handleIdChange(event: Event) {
     if (props.field.virtual) return;
     const value = (event.target as HTMLInputElement).value;

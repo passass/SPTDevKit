@@ -4,6 +4,7 @@ import { availableLocales, gameLocalization, suffixes, type locales } from "@/ty
 import { Path } from "@/utils/pathUtils";
 import { currentProjectTag, type ProjectArgs } from "./Project";
 import { copyRecordSchema } from "@/utils/copyUtils";
+import { toJsonObject } from "@/utils/utils";
 
 
 function getAllLocalizations(data: RecordSchema): string[] {
@@ -19,33 +20,6 @@ function getAllLocalizations(data: RecordSchema): string[] {
         }
     }
     return localizations;
-}
-
-function toJsonObject(obj: any): any {
-    if (obj instanceof Map) {
-        const result: Record<string, any> = {};
-        for (const [key, value] of obj.entries()) {
-            result[key] = toJsonObject(value);
-        }
-        return result;
-    } else if (obj instanceof RecordSchema) {
-        return obj.toJSON();
-    } else if (Array.isArray(obj)) {
-        return obj.map((v) => toJsonObject(v));
-    } else if (obj && typeof obj === "object") {
-        const result: Record<string, any> = {};
-        for (const [key, value] of Object.entries(obj)) {
-            if (value instanceof Map) {
-                result[key] = toJsonObject(value);
-            } else if (Array.isArray(value) && value.some((v) => v instanceof RecordSchema)) {
-                result[key] = value.map((v) => (v instanceof RecordSchema ? v.toJSON() : v));
-            } else {
-                result[key] = value;
-            }
-        }
-        return result;
-    }
-    return obj;
 }
 
 class Quests {

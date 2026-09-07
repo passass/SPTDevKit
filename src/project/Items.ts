@@ -1,7 +1,7 @@
-import { type ProjectArgs } from "./Project";
+import { type ProjectArgs, currentProjectTag } from "./Project";
 import { Path } from "../utils/pathUtils";
 import { useDataStore } from "@/stores/dataStore";
-import { itemsSchema } from "@/types/schemas/items2";
+import { itemsSchema } from "@/types/schemas/items";
 
 class Items {
     async loadItems(projectArgs: ProjectArgs) {
@@ -14,6 +14,16 @@ class Items {
 	        });
 	    }
 	    if (!projectArgs.notLoadImmediately) await dataStore.load("items");
+	}
+
+	async saveProject(currentProjectFolder: Path) {
+		const dataStore = useDataStore();
+		const res = new Map();
+        for (const [itemId, item] of dataStore.getByTagInStore("items", currentProjectTag).entries()) {
+            res.set(itemId, item.data);
+        }
+
+		await new Path(currentProjectFolder, `db/CustomItems/items.json`).saveFile(res);
 	}
 
 	async load() {

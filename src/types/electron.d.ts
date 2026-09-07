@@ -15,7 +15,14 @@ export interface ElectronAPI {
 		error?: string;
 		path?: string;
 	}>;
-	
+
+	getVersions: () => Promise<{
+        node: string;
+        electron: string;
+        chrome: string;
+        app: string;
+    }>;
+
 	writeJson: (
 		filePath: string,
 		data: any,

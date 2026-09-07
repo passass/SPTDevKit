@@ -1,5 +1,5 @@
 
-import { isElectron } from "./utils";
+import { isElectron, toJsonObject } from "./utils";
 
 export class PathArray {
     filePaths: Array<Path> = []
@@ -45,6 +45,10 @@ export class Path {
 		this.filePath = window.electronAPI.pathUtils.join(
 			...parts.map((el: any) => (el instanceof Path ? el.filePath : el)),
 		);
+	}
+
+	async saveFile(content: any) {
+		await window.electronAPI.writeJson(this.filePath, JSON.stringify(toJsonObject(content), null, 2));
 	}
 
 	async findFiles(...parts: Array<string | Path>): Promise<Path[]> {

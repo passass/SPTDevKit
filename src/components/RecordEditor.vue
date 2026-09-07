@@ -1,5 +1,5 @@
 <script setup lang="tsx">
-	import RecordEditorInput from "./RecordEditorInput.vue";
+	import RecordEditorInput from "./RecordEditorInput_tsx.vue";
 	import ListTabs from "./ListTabs.vue";
 	import type { Tab } from "@/tabs/tabs.ts";
 	import type { PropType } from "vue";
@@ -9,7 +9,7 @@
 
 	const props = defineProps<{
 		itemsData: Tab[]
-		schemaType?: ClassType<RecordSchema>
+		schemaType?: Tab["schemaType"]
 		fileData?: Map<string, dataMapRecordType>
 		storeId?: string
 	}>()

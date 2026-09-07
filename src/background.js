@@ -1,5 +1,5 @@
 // src/background.cjs
-const { app, BrowserWindow, ipcMain, dialog  } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog, Menu  } = require("electron");
 const path = require("path");
 const { fileURLToPath } = require("url");
 const fs = require("fs").promises;
@@ -10,8 +10,8 @@ const fs = require("fs").promises;
 
 const ROOT_DIR = app.getAppPath()
 const DATA_DIR = path.join(app.getAppPath(), 'data');
-// process.env.NODE_ENV === 'development' 
-// ? path.join(__dirname, '../..') 
+// process.env.NODE_ENV === 'development'
+// ? path.join(__dirname, '../..')
 // : path.join(__dirname, '../');
 
 
@@ -20,17 +20,21 @@ let mainWindow = null;
 function createWindow() {
 	const isDev = !app.isPackaged;
 	const exePath = isDev ? process.execPath : app.getPath('exe');
+	const preloadPath = path.join(ROOT_DIR, 'src', 'preload.js');
+
 	mainWindow = new BrowserWindow({
         width: 1200,
-        height: 800,
+		height: 800,
+
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
-            preload: path.join(__dirname, "preload.js"),
+            sandbox: false,
+            preload: preloadPath, //path.join(__dirname, "preload.js"),
         },
     })
 
-	// Загружаем приложение
+	// Menu.setApplicationMenu(null)
 	if (process.env.WEBPACK_DEV_SERVER_URL) {
 		mainWindow.loadURL(process.env.WEBPACK_DEV_SERVER_URL);
 		mainWindow.webContents.openDevTools();
@@ -109,7 +113,7 @@ ipcMain.handle('read-local-json', async (event, filename) => {
     try {
         const safeFilename = path.basename(filename);
         const filePath = path.join(DATA_DIR, safeFilename);
-        
+
         const fileContent = await fs.readFile(filePath, 'utf-8');
         return {
             success: true,
@@ -139,11 +143,11 @@ ipcMain.handle('write-local-json', async (event, { filename, data }) => {
     try {
         const safeFilename = path.basename(filename);
         const filePath = path.join(DATA_DIR, safeFilename);
-        
+
         // Создаем директорию, если её нет
         await fs.mkdir(path.dirname(filePath), { recursive: true });
         await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
-        
+
         return { success: true };
     } catch (error) {
         return { success: false, error: error.message };
@@ -184,7 +188,7 @@ ipcMain.handle('find-files-sync', (event, pattern, options) => {
     try {
         // fast-glob строго требует прямые слеши '/' даже в Windows
         const normalizedPattern = pattern.replace(/\\/g, '/');
-        
+
         const files = fg.sync(normalizedPattern, {
             absolute: true,
             onlyFiles: true,
@@ -202,7 +206,7 @@ ipcMain.handle('find-folders', async (event, pattern, options) => {
     try {
         // fast-glob строго требует прямые слеши '/' даже в Windows
         const normalizedPattern = pattern.replace(/\\/g, '/');
-        
+
         const dirs = await fg(normalizedPattern, {
             absolute: true,
             onlyDirectories: true,
@@ -220,7 +224,7 @@ ipcMain.handle('find-files', async (event, pattern, options) => {
     try {
         // fast-glob строго требует прямые слеши '/' даже в Windows
         const normalizedPattern = pattern.replace(/\\/g, '/');
-        
+
         const files = await fg(normalizedPattern, {
             absolute: true,
             onlyFiles: true,
@@ -232,4 +236,13 @@ ipcMain.handle('find-files', async (event, pattern, options) => {
         console.error('Error finding files:', error);
         throw error;
     }
+});
+
+ipcMain.handle("get-versions", () => {
+    return {
+        node: process.versions.node,
+        electron: process.versions.electron,
+        chrome: process.versions.chrome,
+        app: app.getVersion()
+    };
 });

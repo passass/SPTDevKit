@@ -5,7 +5,7 @@ import CompareInput from "@/components/inputs/CompareInput.vue";
 import ParentInput from "@/components/inputs/ParentInput.vue";
 import OptionsInput from "@/components/inputs/OptionsInput.vue";
 import ArrayInput from "@/components/inputs/ArrayInput.vue";
-import { Field, type SchemaData } from "@/types/fields/fields";
+import { Field, resolveDefaultValue, type SchemaData } from "@/types/fields/fields";
 import { type WeaponBuildItem } from "@/stores/profileStore";
 import { type Component, h } from "vue";
 import { gameLocalization } from "@/types/localization";
@@ -15,7 +15,10 @@ interface RenderRule {
     condition: (field: Field, recordSchema: RecordSchema) => boolean;
     component?: (field: Field, recordSchema: RecordSchema) => Component;
 	componentTemplate?: Component | string;
-    componentTemplateProps?: Record<string, any>;
+	componentTemplateProps?: Record<string, any>;
+
+	hasOnInputEmit?: boolean;
+	hasOnChangeEmit?: boolean;
 }
 
 function getObjectSummary(value: Record<string, any>): string {
@@ -35,6 +38,10 @@ function getObjectSummary(value: Record<string, any>): string {
 
     const preview = translatedKeys.join(", ");
     return keys.length > 3 ? `{ ${preview}... (${keys.length} полей) }` : `{ ${preview} }`;
+}
+
+function hasCompareInput(recordSchema: RecordSchema): boolean {
+    return recordSchema.getFieldByKey("compareMethod") && recordSchema.getFieldByKey("value");
 }
 
 const compareInputFields: string[] = ["compareMethod", "value"];
@@ -70,20 +77,6 @@ function getRewardDisplay(items: WeaponBuildItem[]): string {
 
 const renderRules: RenderRule[] = [
     {
-        condition: (field: Field, recordSchema: RecordSchema) => field.key === "items" && field.isArray(),
-        component: (field: Field, recordSchema: RecordSchema) => (
-            <>
-                <LoadWeaponBuildInput field={field} data={recordSchema.getData()} />
-                {recordSchema.get(field.key)?.filter((item: WeaponBuildItem) => !item.parentId).length > 0 && (
-                    <div class="weapon-build-reward">
-                        <span class="weapon-build-reward__label">Предметы:</span>
-                        <span class="weapon-build-reward__value">{getRewardDisplay(recordSchema.get(field.key))}</span>
-                    </div>
-                )}
-            </>
-        ),
-    },
-    {
         condition: (field: Field) => field.type === "localization",
         componentTemplate: LocalizationInput,
     },
@@ -102,7 +95,7 @@ const renderRules: RenderRule[] = [
 
     {
         condition: (field: Field, recordSchema: RecordSchema) =>
-            compareInputFields.includes(field.key),
+            compareInputFields.includes(field.key) && hasCompareInput(recordSchema),
         component: (field: Field, recordSchema: RecordSchema) => {
             // Внутри был ещё один v-if для field.key === 'value'
 			if (field.key === "value") {
@@ -119,31 +112,35 @@ const renderRules: RenderRule[] = [
         condition: (field: Field, recordSchema: RecordSchema) => !!(field.type === "text" || field.hidden),
         componentTemplate: "input",
         componentTemplateProps: { type: "text" },
+        hasOnInputEmit: true,
     },
 
     {
         condition: (field: Field, recordSchema: RecordSchema) => field.type === "number",
         componentTemplate: "input",
         componentTemplateProps: { type: "number" },
+        hasOnInputEmit: true,
     },
 
     {
         condition: (field: Field) => field.type === "boolean",
         componentTemplate: "input",
         componentTemplateProps: { type: "checkbox" },
+        hasOnChangeEmit: true,
     },
 
     // 10. field.type === 'textarea'
     {
         condition: (field: Field) => field.type === "textarea",
         componentTemplate: 'textarea',
-        componentTemplateProps: { rows: 3 },
+		componentTemplateProps: { rows: 3 },
+        hasOnInputEmit: true,
     },
 
     // 11. field.type === 'select'
     {
         condition: (field: Field) => field.type === "select",
-        componentTemplate: OptionsInput
+		componentTemplate: OptionsInput,
     },
 
     // 12. field.isArray() (но это уже не 'items', потому что первое правило перехватило бы)
@@ -161,16 +158,70 @@ const renderRules: RenderRule[] = [
     },
 ];
 
-export function fieldsRenderer(recordSchema: RecordSchema, field: Field) {
-    for (const renderRule of renderRules) {
+const extraRenderRules: RenderRule[] = [
+	{
+        condition: (field: Field, recordSchema: RecordSchema) => field.key === "items" && field.isArray(),
+        component: (field: Field, recordSchema: RecordSchema) => (
+            <>
+                <LoadWeaponBuildInput field={field} data={recordSchema.getData()} />
+                {recordSchema.get(field.key)?.filter((item: WeaponBuildItem) => !item.parentId).length > 0 && (
+                    <div class="weapon-build-reward">
+                        <span class="weapon-build-reward__label">Предметы:</span>
+                        <span class="weapon-build-reward__value">{getRewardDisplay(recordSchema.get(field.key))}</span>
+                    </div>
+                )}
+            </>
+        ),
+    },
+];
+
+export function extraFieldRender(recordSchema: RecordSchema, field: Field) {
+	return fieldRender({recordSchema, field, exactRenderRules: extraRenderRules})
+}
+
+export interface fieldRenderParams {
+	recordSchema: RecordSchema;
+	field: Field;
+	exactRenderRules?: RenderRule[];
+	handleNavigate?: (key: any) => void;
+}
+export function fieldRender({ recordSchema, field, exactRenderRules, handleNavigate }: fieldRenderParams): Component | undefined {
+    for (const renderRule of exactRenderRules ?? renderRules) {
         if (renderRule.condition(field, recordSchema)) {
 			if (renderRule.componentTemplate) {
-				const OnInput = (e: Event): void => {
-					recordSchema.set(field, (e.target as HTMLInputElement)?.value as any);
+                const OnInput = (e: Event): void => {
+                    recordSchema.set(field, (e.target as HTMLInputElement)?.value as any);
+                };
+                const OnChange = (e: Event): void => {
+                    const target = e.target as HTMLInputElement;
+                    if (target.type === 'checkbox') {
+                        recordSchema.set(field, target.checked);
+                    } else {
+                        recordSchema.set(field, target.value);
+                    }
+                };
+
+				const OnModelValueInput = (val: any): void => {
+					console.log("OnModelValueInput", val)
+					recordSchema.set(field, val);
 				}
-				const initValue = recordSchema.get(field);
+
+				let initValue = recordSchema.get(field);
+				if (initValue === undefined) {
+					initValue = resolveDefaultValue(field, recordSchema.getData());
+				}
+
+				const eventHandlers: Record<string, any> = {
+					"onUpdate:modelValue": OnModelValueInput,
+					'onNavigate': handleNavigate,
+					'navigateHandler': handleNavigate,
+				};
+				if (renderRule.hasOnInputEmit) eventHandlers.onInput = OnInput;
+				if (renderRule.hasOnChangeEmit) eventHandlers.onChange = OnChange;
+
 
 	            return h(renderRule.componentTemplate, {
+					key: field.key,
 	                field: field,
 					recordSchema: recordSchema,
 					data: recordSchema.data,
@@ -182,17 +233,18 @@ export function fieldsRenderer(recordSchema: RecordSchema, field: Field) {
 					checked: initValue,
 					'v-model': initValue,
 
-     				"onChange": OnInput,
-     				"onInput": OnInput,
-	                "onUpdate:modelValue": OnInput,
+					...eventHandlers,
 					...renderRule.componentTemplateProps
 	            });
             }
 
             if (renderRule.component) {
-                return renderRule.component(field, recordSchema);
+	            const vnode = renderRule.component(field, recordSchema);
+	            if (vnode && typeof vnode === 'object' && !Array.isArray(vnode) && !vnode.key) {
+	                vnode.key = field.key;
+	            }
+	            return vnode;
             }
         }
     }
-    // return renderRules.find((rule) => rule.condition(field, recordSchema))?.component(field, recordSchema);
 }

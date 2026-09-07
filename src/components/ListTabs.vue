@@ -68,7 +68,6 @@
 
         <!-- Правая панель -->
         <div class="tab-content">
-            {{ console.log(this) }}
             <ListTabsFrame
                 v-if="currentTab"
                 :tab="currentTab"
@@ -112,7 +111,7 @@ export default defineComponent({
     },
     props: {
         tabs: { type: Array as () => Tab[], required: true },
-        schemaType: { type: Object as () => ClassType<RecordSchema> },
+        schemaType: { type: Object as () => Tab["schemaType"] },
         storeId: { type: String },
         fileData: { type: Object as () => Map<string, dataMapRecordType> },
         isSearch: { type: Boolean },

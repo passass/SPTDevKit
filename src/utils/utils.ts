@@ -7,6 +7,33 @@ export function isElectron() {
     return window && window.electronAPI !== undefined;
 }
 
+export function toJsonObject(obj: any): any {
+    if (obj instanceof Map) {
+        const result: Record<string, any> = {};
+        for (const [key, value] of obj.entries()) {
+            result[key] = toJsonObject(value);
+        }
+        return result;
+    } else if ("toJSON" in obj) {
+        return obj.toJSON();
+    } else if (Array.isArray(obj)) {
+        return obj.map((v) => toJsonObject(v));
+    } else if (obj && typeof obj === "object") {
+        const result: Record<string, any> = {};
+        for (const [key, value] of Object.entries(obj)) {
+            if (value instanceof Map) {
+                result[key] = toJsonObject(value);
+            } else if (Array.isArray(value) && value.some((v) => "toJSON" in v)) {
+                result[key] = value.map((v) => ("toJSON" in v ? v.toJSON() : v));
+            } else {
+                result[key] = value;
+            }
+        }
+        return result;
+    }
+    return obj;
+}
+
 export function allElementsInArray<T>(arr: T[], targetArr: T[]): boolean {
     const targetSet = new Set(targetArr);
     return arr.every((element) => targetSet.has(element));

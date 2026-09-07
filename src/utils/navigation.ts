@@ -1,31 +1,37 @@
 // src/utils/navigation.ts
-import { RecordSchema, castToRecordSchema, type arrayItemSchemaType, type recordSchemaOtherData } from "@/types/fields/fields";
+import { RecordSchema, castToRecordSchema, type arrayItemSchemaType } from "@/types/fields/fields";
 import type { Tab } from "@/tabs/tabs.ts";
+import { nextTick, type Component } from "vue";
 
-export interface NavigatorOptions { tab: Tab; }
+export interface NavigatorOptions {
+    tab: Tab;
+}
 
 export interface PathItem {
     key: string | number;
-    type: 'object' | 'array' | 'record';
+    type: "object" | "array" | "record";
     value: Record<string, any> | Array<object>;
-	label?: string | null;
+    label?: string | null;
     schema?: RecordSchema | null;
     arrayItemSchema?: arrayItemSchemaType | null;
+
+    lastScrollPosition?: ScrollPosition;
+    lastSavedData?: Map<string, any>;
 }
 
 export function isNavigable(value: any): boolean {
-	return (
-		value !== null &&
-		(
-			typeof value === "object" ||
-			Array.isArray(value) ||
-			value instanceof RecordSchema
-		)
-	);
+    return value !== null && (typeof value === "object" || Array.isArray(value) || value instanceof RecordSchema);
 }
+
+interface ScrollPosition {
+    scrollLeft: number;
+    scrollTop: number;
+}
+
 export class Navigator {
     tab: Tab;
     pathStack: PathItem[];
+    container?: HTMLElement;
 
     constructor(options: NavigatorOptions) {
         this.tab = options.tab;
@@ -36,15 +42,24 @@ export class Navigator {
         return castToRecordSchema(this.tab.data) ?? undefined;
     }
 
-    get displayData(): any {
+    get displayData(): RecordSchema | any {
         if (this.pathStack.length === 0) return this.sourceData;
         const last = this.pathStack[this.pathStack.length - 1];
         return last?.schema ?? last?.value;
     }
 
-    getPathKeys(): string[] { return this.pathStack.map(item => String(item.key)); }
-    getPathItem(index: number): PathItem | undefined { return this.pathStack[index]; }
-    getCurrentSchema(): RecordSchema | undefined { return this.displayData; }
+    getPathKeys(): string[] {
+        return this.pathStack.map((item) => String(item.key));
+	}
+    getLastPathItem(): PathItem | undefined {
+        return this.pathStack[this.pathStack.length - 1];
+    }
+    getPathItem(index: number): PathItem | undefined {
+        return this.pathStack[index];
+    }
+    getCurrentSchema(): RecordSchema | undefined {
+        return this.displayData;
+    }
 
     changeCurrentSchema(newSchema: RecordSchema): void {
         if (this.pathStack.length === 0) {
@@ -58,9 +73,9 @@ export class Navigator {
         }
     }
 
-    navigate(key: any): boolean {
+    navigate(key: any, vnodes?: Map<string, Array<Component | undefined>>): boolean {
         if (Array.isArray(key)) {
-            return key.every(k => this.navigate(k));
+            return key.every((k) => this.navigate(k, vnodes));
         }
 
         const currentData = this.displayData;
@@ -68,14 +83,14 @@ export class Navigator {
 
         const field = currentData instanceof RecordSchema ? currentData.getFieldByKey(key) : null;
 
-		const lastPathItem: PathItem | undefined = this.pathStack[this.pathStack.length - 1];
-		const label = field?.label
+        const lastPathItem: PathItem | undefined = this.pathStack[this.pathStack.length - 1];
+        const label = field?.label;
 
         let target: Record<string, any> | Array<object>;
         if (currentData instanceof RecordSchema) {
             target = currentData.get(key);
         } else if (Array.isArray(currentData)) {
-            const idx = typeof key === 'number' ? key : parseInt(key);
+            const idx = typeof key === "number" ? key : parseInt(key);
             if (isNaN(idx) || idx < 0 || idx >= currentData.length) return false;
             target = currentData[idx];
         } else {
@@ -84,34 +99,74 @@ export class Navigator {
 
         if (!isNavigable(target)) return false;
 
+        let lastScrollPosition: ScrollPosition | undefined;
+        if (this.container) {
+            lastScrollPosition = {
+                scrollLeft: this.container.scrollLeft,
+                scrollTop: this.container.scrollTop,
+            };
+        }
+
+        console.log("lastPathItem && vnodes", lastPathItem, vnodes)
+		if (lastPathItem && vnodes) {
+	        const lastSavedData = new Map<string, any>();
+			for (const [fieldKey, vnode] of vnodes.entries()) {
+				console.log("getSavedData" in vnode, typeof vnode.getSavedData, vnode?.getSavedData)
+                if ("getSavedData" in vnode && typeof vnode.getSavedData === "function" && "loadSavedData" in vnode) {
+                    lastSavedData.set(fieldKey, vnode.getSavedData());
+                }
+            }
+			lastPathItem.lastSavedData = lastSavedData;
+            console.log("save")
+        }
+
         if (Array.isArray(target)) {
-            this.pathStack.push({ key, type: 'array', label: label, value: target, arrayItemSchema: field?.arrayItemSchema });
-        } else if (typeof target === 'object') {
-			let schema: RecordSchema | null = null;
+            this.pathStack.push({
+                key,
+                type: "array",
+                label: label,
+                value: target,
+                arrayItemSchema: field?.arrayItemSchema,
+				lastScrollPosition: lastScrollPosition,
+            });
+        } else if (typeof target === "object") {
+            let schema: RecordSchema | null = null;
 
-			const parent = lastPathItem?.schema ?? lastPathItem?.value
-			schema = castToRecordSchema(target, lastPathItem?.arrayItemSchema ?? field?.nestedSchema, {parent: parent});
+            const parent = lastPathItem?.schema ?? lastPathItem?.value;
+            schema = castToRecordSchema(target, lastPathItem?.arrayItemSchema ?? field?.nestedSchema, {
+                parent: parent,
+            });
 
-			this.pathStack.push({
-				key: key
-				, schema: schema
-				, type: 'record'
-				, value: target
-				, label: label
-			});
+            this.pathStack.push({
+                key: key,
+                schema: schema,
+                type: "record",
+                value: target,
+                label: label,
+                lastScrollPosition: lastScrollPosition,
+            });
         }
 
         return true;
     }
 
     goBack(): void {
-        this.pathStack.pop();
-        while (Array.isArray(this.pathStack[this.pathStack.length-1]?.value)) {
-            this.pathStack.pop();
+        let lastPathItem = this.pathStack.pop();
+        while (Array.isArray(this.pathStack[this.pathStack.length - 1]?.value)) {
+            lastPathItem = this.pathStack.pop();
+        }
+        const lastScrollPosition = lastPathItem?.lastScrollPosition;
+
+        if (lastScrollPosition) {
+            nextTick(() => {
+                this.container?.scrollTo(lastScrollPosition.scrollLeft, lastScrollPosition.scrollTop);
+            });
         }
     }
 
-    goRoot(): void { this.pathStack = []; }
+    goRoot(): void {
+        this.pathStack = [];
+    }
 
     jumpToLevel(index: number): void {
         if (index >= 0 && index < this.pathStack.length) {
@@ -119,7 +174,13 @@ export class Navigator {
         }
     }
 
-    reset(): void { this.pathStack = []; }
-    getPathStack(): PathItem[] { return this.pathStack; }
-    getDisplayData(): RecordSchema | undefined { return this.displayData; }
+    reset(): void {
+        this.pathStack = [];
+    }
+    getPathStack(): PathItem[] {
+        return this.pathStack;
+    }
+    getDisplayData(): RecordSchema | undefined {
+        return this.displayData;
+    }
 }

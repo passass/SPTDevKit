@@ -28,13 +28,13 @@
                 </div>
             </div>
 
-            <div class="frame-actions">
+            <div class="frame-actions" v-if="hasCloseReloadButtons">
                 <button @click="handleRefresh" title="Обновить">⟳</button>
                 <button @click="handleClose" title="Закрыть">✕</button>
             </div>
         </div>
 
-        <div class="frame-body">
+        <div class="frame-body" ref="container">
             <component
                 v-if="tab.component"
                 :is="tab.component"
@@ -55,13 +55,10 @@
 </template>
 
 <script lang="ts">
-import { capitalize, computed, type PropType } from "vue";
+import { capitalize, type PropType } from "vue";
 import type { Tab } from "@/tabs/tabs.ts";
 import { Navigator, type PathItem } from "@/utils/navigation";
 import { gameLocalization } from "@/types/localization";
-import { type locales } from "@/types/localization";
-import { getStaticField } from "@/utils/classUtils";
-import type { Field } from "@/types/fields/fields";
 
 export default {
     name: "ListTabsFrame",
@@ -70,6 +67,10 @@ export default {
         tab: {
             type: Object as PropType<Tab>,
             required: true,
+        },
+        hasCloseReloadButtons: {
+			type: Boolean,
+            default: true,
         },
         listTabs: {
             type: Object,
@@ -84,7 +85,9 @@ export default {
 
     data() {
         return {
-            navigator: new Navigator({ tab: this.tab }),
+            navigator: new Navigator({
+                tab: this.tab,
+            }),
         };
     },
 
@@ -122,6 +125,10 @@ export default {
             },
             deep: false,
         },
+    },
+
+    mounted() {
+        this.navigator.container = this.$refs.container as HTMLElement;
     },
 
     methods: {

@@ -7,41 +7,41 @@
         </div>
 
         <div class="form-frame__fields">
-	        <div class="toolbar">
-	            <div class="toolbar-buttons">
-	                <button
-	                    v-if="(frameNavigator?.getPathStack()?.length ?? 0) === 0"
-	                    class="toolbar-btn toolbar-btn--danger"
-	                    @click="deleteCurrentTab()"
-	                >
-	                    🗑 удалить
-	                </button>
-	                <button
-	                    v-if="(frameNavigator?.getPathStack()?.length ?? 0) === 0"
-	                    class="toolbar-btn toolbar-btn--primary"
-	                    @click="copyCurrentTab()"
-	                >
-	                    📋 копировать
-	                </button>
-	            </div>
+            <div class="toolbar">
+                <div class="toolbar-buttons">
+                    <button
+                        v-if="(frameNavigator?.getPathStack()?.length ?? 0) === 0"
+                        class="toolbar-btn toolbar-btn--danger"
+                        @click="deleteCurrentTab()"
+                    >
+                        🗑 удалить
+                    </button>
+                    <button
+                        v-if="(frameNavigator?.getPathStack()?.length ?? 0) === 0"
+                        class="toolbar-btn toolbar-btn--primary"
+                        @click="copyCurrentTab()"
+                    >
+                        📋 копировать
+                    </button>
+                </div>
 
-	            <div class="toolbar-checkbox" v-if="isShowUnneccesaryFieldsCheckmark">
-	                <label for="ShowUnneccesaryFields">Показывать неважные поля</label>
-	                <input v-model="isShowUnneccesaryFields" id="ShowUnneccesaryFields" type="checkbox" />
-	            </div>
+                <div class="toolbar-checkbox" v-if="isShowUnneccesaryFieldsCheckmark">
+                    <label for="ShowUnneccesaryFields">Показывать неважные поля</label>
+                    <input v-model="isShowUnneccesaryFields" id="ShowUnneccesaryFields" type="checkbox" />
+                </div>
 
-	            <div class="toolbar-search">
-	                <input
-	                    type="text"
-	                    v-model="fieldSearchQuery"
-	                    placeholder="Поиск полей..."
-	                    class="field-search-input"
-	                />
-	                <!-- <span v-if="fieldSearchQuery" class="search-results-info">
+                <div class="toolbar-search">
+                    <input
+                        type="text"
+                        v-model="fieldSearchQuery"
+                        placeholder="Поиск полей..."
+                        class="field-search-input"
+                    />
+                    <!-- <span v-if="fieldSearchQuery" class="search-results-info">
 	                    {{ filteredDisplayFields.length }} / {{ displayFields.length }}
 	                </span> -->
-	            </div>
-	        </div>
+                </div>
+            </div>
 
             <div v-if="dataRef.schemaChooser" class="form-frame__chooser">
                 <label>Тип схемы:</label>
@@ -54,7 +54,7 @@
                 class="form-field"
                 :class="{ 'field-hidden': field.hidden || (field.unneccesary && !isShowUnneccesaryFields) }"
             >
-                <div class="form-field__header" v-if="!(field.key === 'compareMethod' && hasCompareInput)">
+                <div class="form-field__header">
                     <label :for="field.key">{{
                         gameLocalization.getUIText({
                             localeId: field.key !== "" ? [field.key, field.label] : field.label,
@@ -71,20 +71,9 @@
                     </button>
                 </div>
 
-                <div v-if="field.key === 'items' && field.isArray()">
-                    <LoadWeaponBuildInput :field="field" :data="getData" />
-                    <div
-                        v-if="getData[field.key]?.filter((item: WeaponBuildItem) => !item.parentId).length > 0"
-                        class="weapon-build-reward"
-                    >
-                        <span class="weapon-build-reward__label">Предметы:</span>
-                        <span class="weapon-build-reward__value">
-                            {{ getRewardDisplay(getData[field.key]) }}
-                        </span>
-                    </div>
-                </div>
-
-                <component :is="fieldsRenderer(dataRef, field)" />
+                <template v-for="vnode in getFieldVnodes(field)">
+                    <VNodeRenderer :vnode="vnode" />
+                </template>
 
                 <div v-if="field.description" class="field-description">
                     {{ field.description }}
@@ -105,21 +94,18 @@
 <!-- src/components/RecordEditorInput.vue -->
 
 <script setup lang="tsx">
-import { inject, ref, watch, computed, triggerRef, toValue, nextTick } from "vue";
+import { inject, ref, watch, computed, triggerRef, toValue, nextTick, defineComponent, type Component } from "vue";
 
 import SchemaChooserInput from "@/components/inputs/SchemaChooserInput.vue";
 import { RecordSchema, Field } from "@/types/fields/fields";
 import { gameLocalization } from "@/types/localization";
 import { Navigator, isNavigable } from "@/utils/navigation";
 import { Tab } from "@/tabs/tabs";
-import LoadWeaponBuildInput from "./inputs/LoadWeaponBuildInput.vue";
 import ListTabs from "./ListTabs.vue";
-import { WeaponBuildItem } from "@/stores/profileStore";
 import { useDataStore } from "@/stores/dataStore";
 import { currentProjectTag } from "@/project/Project";
 import Quests from "@/project/Quests";
-import { fieldsRenderer } from "@/types/fields/fieldsRender";
-
+import { fieldRender, extraFieldRender } from "@/types/fields/fieldsRender";
 
 const props = defineProps<{
     data: any;
@@ -153,18 +139,20 @@ const displayFields = computed<Field[]>(() => {
 });
 
 const getData = computed(() => {
-    console.log("fields", dataRef.value.getFields(), dataRef.value.getData());
+    // console.log("fields", dataRef.value.getFields(), dataRef.value.getData());
     return dataRef.value.getData();
 });
 
 const fieldSearchQuery = ref("");
 
 const filteredDisplayFields = computed(() => {
+    let res = displayFields.value.filter((field) => !(field.key === "compareMethod" && hasCompareInput));
+
     if (!fieldSearchQuery.value.trim()) {
-        return displayFields.value;
+        return res;
     }
     const query = fieldSearchQuery.value.toLowerCase().trim();
-    return displayFields.value.filter(field => {
+    return res.filter((field) => {
         const label = (field.label || "").toLowerCase();
         const key = (field.key || "").toLowerCase();
         return label.includes(query) || key.includes(query);
@@ -176,14 +164,13 @@ const isShowUnneccesaryFieldsCheckmark = computed<boolean>(() => {
     return displayFields.value.some((el) => el.unneccesary);
 });
 
-const compareInputFields: string[] = ["compareMethod", "value"];
 const hasCompareInput = computed<boolean>(() => {
     return toValue(dataRef as any)?.getFieldByKey("compareMethod") && toValue(dataRef as any)?.getFieldByKey("value");
 });
 
-function handleNavigate(key: string) {
-	fieldSearchQuery.value = "";
-    frameNavigator?.navigate?.(key);
+function handleNavigate(key: any) {
+    fieldSearchQuery.value = "";
+    frameNavigator?.navigate?.(key, vnodes.value);
 }
 
 function handleSchemaChoose(newInstance: RecordSchema) {
@@ -200,25 +187,26 @@ function isCompareInput(field: Field): boolean {
     );
 }
 
-function getRewardDisplay(items: WeaponBuildItem[]): string {
-    const rootItems = items.filter((item) => !item.parentId);
-    if (rootItems.length === 0) return "";
+const VNodeRenderer = defineComponent({
+    props: ["vnode"],
+    render() {
+        return this.vnode;
+    },
+});
 
-    const grouped: Record<string, { tpl: string; count: number }> = {};
-    for (const item of rootItems) {
-        const tpl = item._tpl;
-        if (!grouped[tpl]) grouped[tpl] = { tpl, count: 0 };
-        grouped[tpl].count += item?.upd?.StackObjectsCount ?? 1;
-    }
+const vnodes = computed(() => {
+	console.log("vnodes", frameNavigator?.getLastPathItem())
+	const res: Map<string, Array<Component | undefined>> = new Map();
+	for (const field of filteredDisplayFields.value) {
+		const extra = extraFieldRender(dataRef.value, field);
+		const main = fieldRender({recordSchema: dataRef.value, field, handleNavigate});
+		res.set(field.key, [extra, main]);
+	}
+	return res;
+});
 
-    const parts: string[] = [];
-    for (const [tpl, data] of Object.entries(grouped)) {
-        const name = gameLocalization.getObjectLocalization({ instance: { _id: tpl } });
-        const count = data.count;
-        const display = count > 1 ? `${name} x ${count}` : name;
-        parts.push(display);
-    }
-    return parts.join(", ");
+function getFieldVnodes(field: Field) {
+	return vnodes.value.get(field.key);
 }
 
 function getCurrentTab() {
@@ -500,10 +488,10 @@ watch(
 }
 
 .toolbar-btn--primary {
-    background: #007FFF;
+    background: #007fff;
 }
 .toolbar-btn--primary:hover {
-    background: #0056B3;
+    background: #0056b3;
 }
 
 .toolbar-checkbox {

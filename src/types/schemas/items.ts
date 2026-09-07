@@ -94,7 +94,7 @@ export class itemsSchema extends RecordSchema {
         Field.create({
 			key: "overrideProperties",
             extraKeys: ["_props"],
-            label: "Дополнительные свойства!",
+            label: "Дополнительные свойства",
             type: "object",
             order: 3,
             nestedSchema: createLazyRecordSchema("itemsOverrideProperties.json", "overrideProperties")
