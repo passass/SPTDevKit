@@ -42,7 +42,6 @@ export const useProfilesStore = defineStore("profiles", {
                     if (!this.selectedProfile) this.selectedProfile = username;
                 }
             }
-            console.log(this.selectedProfile);
         },
         getProfile(name: string): any {
             return this.profiles[name];

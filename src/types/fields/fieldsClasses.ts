@@ -21,7 +21,7 @@ export class IdField extends Field {
 	label: string = 'ID';
 	order = 1;
 
-	getDefaultValue(data: SchemaData) {
+	getDefaultValue(data: SchemaData): any {
 		return generateUUID24chars()
 	}
 }

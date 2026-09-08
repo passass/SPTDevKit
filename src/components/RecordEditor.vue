@@ -1,10 +1,7 @@
 <script setup lang="tsx">
-	import RecordEditorInput from "./RecordEditorInput_tsx.vue";
+	import RecordEditorInput from "./RecordEditorInput.vue";
 	import ListTabs from "./ListTabs.vue";
 	import type { Tab } from "@/tabs/tabs.ts";
-	import type { PropType } from "vue";
-	import { RecordSchema } from "@/types/fields/fields";
-	import { type ClassType } from "@/utils/classUtils";
 	import { type dataMapRecordType } from "@/stores/dataStore";
 
 	const props = defineProps<{

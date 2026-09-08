@@ -146,7 +146,7 @@ ipcMain.handle('write-local-json', async (event, { filename, data }) => {
 
         // Создаем директорию, если её нет
         await fs.mkdir(path.dirname(filePath), { recursive: true });
-        await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
+        await fs.writeFile(filePath, typeof data === "string" ? data : JSON.stringify(data, null, 2), 'utf-8');
 
         return { success: true };
     } catch (error) {

@@ -5,6 +5,27 @@ import { availableLocales, suffixes } from "@/types/localization";
 import { deepClone } from "./utils";
 import { generateUUID24chars } from "./uuidUtils";
 
+export function getAllLocalizationKeys(instance: RecordSchema): string[] {
+    let keys: string[] = [];
+    for (const field of instance.getFields()) {
+        if (
+            (field instanceof LocalizationField || field instanceof VirtualLocalizationField) &&
+            field.getDefaultValue
+        ) {
+            keys.push(field.getDefaultValue(instance.getData()));
+        } else if (field.nestedSchema) {
+            const castedData = instance.getCastedData(field.key);
+            if (castedData) keys = keys.concat(getAllLocalizationKeys(castedData));
+        } else if (field.arrayItemSchema) {
+            const castedArray = instance.getArrayCastedData(field.key);
+            for (const item of castedArray) {
+                keys = keys.concat(getAllLocalizationKeys(item));
+            }
+        }
+    }
+    return keys;
+}
+
 export function copyRecordSchema<T extends RecordSchema>(
     original: T,
     dataStore: ReturnType<typeof useDataStore>,
@@ -35,29 +56,8 @@ export function copyRecordSchema<T extends RecordSchema>(
 
     changeAllIds(copiedData, true);
 
-    function getAllLocalizationKeys(instance: RecordSchema): string[] {
-        let keys: string[] = [];
-        for (const field of instance.getFields()) {
-            if (
-                (field instanceof LocalizationField || field instanceof VirtualLocalizationField) &&
-                field.getDefaultValue
-            ) {
-                keys.push(field.getDefaultValue(instance.getData()));
-            } else if (field.nestedSchema) {
-                keys = keys.concat(getAllLocalizationKeys(instance.getCastedData(field.key)));
-            } else if (field.arrayItemSchema) {
-                const castedArray = instance.getArrayCastedData(field.key);
-                for (const item of castedArray) {
-                    keys = keys.concat(getAllLocalizationKeys(item));
-                }
-            }
-        }
-        return keys;
-    }
-
     const oldLocaleKeys = getAllLocalizationKeys(original);
-	const localeMapping = new Map<string, string>();
-    console.log(oldLocaleKeys)
+    const localeMapping = new Map<string, string>();
 
     for (const oldKey of oldLocaleKeys) {
         if (typeof oldKey === "string") {
@@ -83,8 +83,8 @@ export function copyRecordSchema<T extends RecordSchema>(
     }
 
     const Constructor = original.constructor as typeof RecordSchema;
-	return new Constructor(copiedData, {
-		choosedSchema: original.choosedSchema,
-		schemaChooser: original.schemaChooser,
+    return new Constructor(copiedData, {
+        choosedSchema: original.choosedSchema,
+        schemaChooser: original.schemaChooser,
     }) as T;
 }

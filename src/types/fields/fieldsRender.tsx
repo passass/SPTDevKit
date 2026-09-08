@@ -10,6 +10,7 @@ import { type WeaponBuildItem } from "@/stores/profileStore";
 import { type Component, h } from "vue";
 import { gameLocalization } from "@/types/localization";
 import { RecordSchema } from "@/types/fields/fields";
+import { useLootSpawns } from "@/project/LootSpawns";
 
 interface RenderRule {
     condition: (field: Field, recordSchema: RecordSchema) => boolean;
@@ -175,24 +176,28 @@ const extraRenderRules: RenderRule[] = [
     },
 ];
 
-export function extraFieldRender(recordSchema: RecordSchema, field: Field) {
-	return fieldRender({recordSchema, field, exactRenderRules: extraRenderRules})
-}
-
 export interface fieldRenderParams {
 	recordSchema: RecordSchema;
 	field: Field;
 	exactRenderRules?: RenderRule[];
+	extraProps?: Record<string, any>;
 	handleNavigate?: (key: any) => void;
 }
-export function fieldRender({ recordSchema, field, exactRenderRules, handleNavigate }: fieldRenderParams): Component | undefined {
+export function extraFieldRender({ recordSchema, field }: fieldRenderParams) {
+	return fieldRender({recordSchema, field, exactRenderRules: extraRenderRules})
+}
+
+export function fieldRender({ recordSchema, field, exactRenderRules, handleNavigate, extraProps }: fieldRenderParams): Component | undefined {
+	const data = recordSchema.getData()
     for (const renderRule of exactRenderRules ?? renderRules) {
         if (renderRule.condition(field, recordSchema)) {
 			if (renderRule.componentTemplate) {
-                const OnInput = (e: Event): void => {
-                    recordSchema.set(field, (e.target as HTMLInputElement)?.value as any);
-                };
-                const OnChange = (e: Event): void => {
+				const OnInput = (e: Event): void => {
+					if (field.virtual) return;
+					recordSchema.set(field, (e.target as HTMLInputElement)?.value);
+				};
+				const OnChange = (e: Event): void => {
+                    if (field.virtual) return;
                     const target = e.target as HTMLInputElement;
                     if (target.type === 'checkbox') {
                         recordSchema.set(field, target.checked);
@@ -202,8 +207,9 @@ export function fieldRender({ recordSchema, field, exactRenderRules, handleNavig
                 };
 
 				const OnModelValueInput = (val: any): void => {
-					console.log("OnModelValueInput", val)
-					recordSchema.set(field, val);
+					if (field.onUpdateModelValue) field.onUpdateModelValue(recordSchema, val);
+					if (!field.virtual)
+						recordSchema.set(field, val);
 				}
 
 				let initValue = recordSchema.get(field);
@@ -220,7 +226,8 @@ export function fieldRender({ recordSchema, field, exactRenderRules, handleNavig
 				if (renderRule.hasOnChangeEmit) eventHandlers.onChange = OnChange;
 
 
-	            return h(renderRule.componentTemplate, {
+				return h(renderRule.componentTemplate, {
+					// ref: onRef ? (el: any) => onRef(el, field.key) : undefined,
 					key: field.key,
 	                field: field,
 					recordSchema: recordSchema,
@@ -233,6 +240,7 @@ export function fieldRender({ recordSchema, field, exactRenderRules, handleNavig
 					checked: initValue,
 					'v-model': initValue,
 
+					...(extraProps ?? {}),
 					...eventHandlers,
 					...renderRule.componentTemplateProps
 	            });

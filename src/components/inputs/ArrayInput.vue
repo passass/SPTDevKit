@@ -281,7 +281,13 @@ function removeSubItem(index: number | string) {
 }
 
 function handleNavigate() {
-	if (props.navigateHandler) props.navigateHandler([props.field.key, selectedIndex.value])
+	if (props.navigateHandler) {
+		if (props.field.onArrayNavigate && selectedIndex.value !== null)
+			props.field.onArrayNavigate(selectedIndex.value, items.value[selectedIndex.value], props.navigateHandler)
+		else
+			props.navigateHandler([props.field.key, selectedIndex.value])
+	}
+
 }
 
 function getSavedData() {
@@ -290,14 +296,8 @@ function getSavedData() {
     };
 }
 
-function loadSavedData(data: Record<string, any>) {
-	if (!selectedIndex) return;
-    selectedIndex.value = data.selectedIndex;
-}
-
 defineExpose({
-	getSavedData,
-	loadSavedData
+	getSavedData
 })
 
 watch(

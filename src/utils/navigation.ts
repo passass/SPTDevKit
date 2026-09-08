@@ -2,6 +2,7 @@
 import { RecordSchema, castToRecordSchema, type arrayItemSchemaType } from "@/types/fields/fields";
 import type { Tab } from "@/tabs/tabs.ts";
 import { nextTick, type Component } from "vue";
+import { getId } from "./objectId";
 
 export interface NavigatorOptions {
     tab: Tab;
@@ -10,7 +11,7 @@ export interface NavigatorOptions {
 export interface PathItem {
     key: string | number;
     type: "object" | "array" | "record";
-    value: Record<string, any> | Array<object>;
+    value?: Record<string, any> | Array<object>;
     label?: string | null;
     schema?: RecordSchema | null;
     arrayItemSchema?: arrayItemSchemaType | null;
@@ -29,16 +30,25 @@ interface ScrollPosition {
 }
 
 export class Navigator {
-    tab: Tab;
-    pathStack: PathItem[];
+	tab!: Tab;
+    sourcePathItem!: PathItem;
+    pathStack!: PathItem[];
     container?: HTMLElement;
 
     constructor(options: NavigatorOptions) {
-        this.tab = options.tab;
-        this.pathStack = new Array();
-    }
+		this.setTab(options.tab)
+	}
 
-    get sourceData(): RecordSchema | undefined {
+	setTab(tab: Tab) {
+		this.tab = tab;
+		this.sourcePathItem = {
+			key: 0
+			, type: "record"
+		};
+		this.pathStack = new Array();
+	}
+
+	get sourceData(): RecordSchema | undefined {
         return castToRecordSchema(this.tab.data) ?? undefined;
     }
 
@@ -52,7 +62,7 @@ export class Navigator {
         return this.pathStack.map((item) => String(item.key));
 	}
     getLastPathItem(): PathItem | undefined {
-        return this.pathStack[this.pathStack.length - 1];
+        return this.pathStack[this.pathStack.length - 1] ?? this.sourcePathItem;
     }
     getPathItem(index: number): PathItem | undefined {
         return this.pathStack[index];
@@ -73,17 +83,37 @@ export class Navigator {
         }
     }
 
-    navigate(key: any, vnodes?: Map<string, Array<Component | undefined>>): boolean {
+	navigate(key: any, vnodes?: Map<string, Array<Component | undefined>>): boolean {
         if (Array.isArray(key)) {
             return key.every((k) => this.navigate(k, vnodes));
+		}
+
+		let lastScrollPosition: ScrollPosition | undefined;
+        if (this.container) {
+            lastScrollPosition = {
+                scrollLeft: this.container.scrollLeft,
+                scrollTop: this.container.scrollTop,
+            };
         }
 
-        const currentData = this.displayData;
+		if (key instanceof RecordSchema) {
+			this.pathStack.push({
+                key: key.constructor.name,
+                type: "record",
+                label: key.constructor.name,
+                value: key.data,
+                schema: key,
+                lastScrollPosition: lastScrollPosition,
+            });
+			return true;
+		}
+
+		const currentData = this.displayData;
         if (!currentData) return false;
 
         const field = currentData instanceof RecordSchema ? currentData.getFieldByKey(key) : null;
 
-        const lastPathItem: PathItem | undefined = this.pathStack[this.pathStack.length - 1];
+        const lastPathItem: PathItem | undefined = this.getLastPathItem();
         const label = field?.label;
 
         let target: Record<string, any> | Array<object>;
@@ -99,25 +129,14 @@ export class Navigator {
 
         if (!isNavigable(target)) return false;
 
-        let lastScrollPosition: ScrollPosition | undefined;
-        if (this.container) {
-            lastScrollPosition = {
-                scrollLeft: this.container.scrollLeft,
-                scrollTop: this.container.scrollTop,
-            };
-        }
-
-        console.log("lastPathItem && vnodes", lastPathItem, vnodes)
 		if (lastPathItem && vnodes) {
 	        const lastSavedData = new Map<string, any>();
 			for (const [fieldKey, vnode] of vnodes.entries()) {
-				console.log("getSavedData" in vnode, typeof vnode.getSavedData, vnode?.getSavedData)
-                if ("getSavedData" in vnode && typeof vnode.getSavedData === "function" && "loadSavedData" in vnode) {
+                if ("getSavedData" in vnode && typeof vnode.getSavedData === "function") {
                     lastSavedData.set(fieldKey, vnode.getSavedData());
                 }
             }
 			lastPathItem.lastSavedData = lastSavedData;
-            console.log("save")
         }
 
         if (Array.isArray(target)) {

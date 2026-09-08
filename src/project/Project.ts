@@ -6,6 +6,7 @@ import { Path, PathArray } from "@/utils/pathUtils";
 import { isElectron } from "@/utils/utils";
 import { useProfilesStore } from "@/stores/profileStore";
 import Items from "./Items";
+import { useLootSpawns } from "@/project/LootSpawns";
 
 export const currentProjectTag = "currentProject";
 export const modTag = "mod";
@@ -21,7 +22,9 @@ class Project {
     EFTFolder?: Path;
 	currentProjectFolder?: Path;
 
-    async loadLocale(projectArgs: ProjectArgs) {
+	async loadLocale(projectArgs: ProjectArgs) {
+
+		// загрузка локализации из квестов
         const customQuestsPath = new Path(projectArgs.folderPath, "db/CustomQuests");
         const storeIds: Set<string> = new Set();
         for (const traderQuestPath of await customQuestsPath.findFolders("*")) {
@@ -38,7 +41,9 @@ class Project {
                     });
                 }
             }
-        }
+		}
+
+		// загрузка кастомной общей локализации
         const localeFiles = await new Path(projectArgs.folderPath, "db/CustomLocales/*.json").findFiles();
         for (const localeFilePath of localeFiles) {
             const locale = localeFilePath.stem();
@@ -60,12 +65,14 @@ class Project {
         if (!projectArgs.notLoadImmediately) await this.dataStore?.load("traders");
     }
 
-    async loadSPTFolder(projectArgs: ProjectArgs) {
+	async loadSPTFolder(projectArgs: ProjectArgs) {
+		const lootSpawnStore = useLootSpawns();
         await Promise.all([
             Quests.loadQuests(projectArgs),
             Items.loadItems(projectArgs),
             this.loadTraders(projectArgs),
-            this.loadLocale(projectArgs),
+			this.loadLocale(projectArgs),
+            lootSpawnStore.loadLocations(projectArgs.folderPath)
         ]);
     }
 
@@ -87,7 +94,7 @@ class Project {
                 notLoadImmediately: true,
             });
 		}
-        console.log("load all")
+
 		await Promise.all([
 			profilesStore.load(this.EFTFolder),
             this.dataStore?.load("quests"),
@@ -101,6 +108,8 @@ class Project {
     }
 
     async init() {
+		const lootSpawnStore = useLootSpawns();
+		await lootSpawnStore.load();
         await Traders.load();
         if (!isElectron()) return;
         this.dataStore ??= useDataStore();
@@ -112,7 +121,11 @@ class Project {
 
 	async saveProject() {
         if (!this.currentProjectFolder) return;
-        await Quests.saveProject(this.currentProjectFolder);
+		await
+			Promise.all([
+				Quests.saveProject(this.currentProjectFolder),
+				Items.saveProject(this.currentProjectFolder)
+			])
     }
 
     isOpened() {

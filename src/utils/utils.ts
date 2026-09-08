@@ -14,7 +14,7 @@ export function toJsonObject(obj: any): any {
             result[key] = toJsonObject(value);
         }
         return result;
-    } else if ("toJSON" in obj) {
+    } else if (typeof obj === "object" && "toJSON" in obj) {
         return obj.toJSON();
     } else if (Array.isArray(obj)) {
         return obj.map((v) => toJsonObject(v));
@@ -23,8 +23,8 @@ export function toJsonObject(obj: any): any {
         for (const [key, value] of Object.entries(obj)) {
             if (value instanceof Map) {
                 result[key] = toJsonObject(value);
-            } else if (Array.isArray(value) && value.some((v) => "toJSON" in v)) {
-                result[key] = value.map((v) => ("toJSON" in v ? v.toJSON() : v));
+            } else if (Array.isArray(value) && value.some((v) => (typeof v === "object" && "toJSON" in v))) {
+                result[key] = value.map((v) => ((typeof v === "object" && "toJSON" in v) ? v.toJSON() : v));
             } else {
                 result[key] = value;
             }

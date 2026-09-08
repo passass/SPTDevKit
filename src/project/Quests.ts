@@ -6,22 +6,6 @@ import { currentProjectTag, type ProjectArgs } from "./Project";
 import { copyRecordSchema } from "@/utils/copyUtils";
 import { toJsonObject } from "@/utils/utils";
 
-
-function getAllLocalizations(data: RecordSchema): string[] {
-    let localizations: string[] = [];
-    for (const field of data.getFields()) {
-        if (field.type === "localization" && field.getDefaultValue) {
-            localizations.push(field.getDefaultValue(data.getData()));
-        } else if (field.nestedSchema) {
-            localizations = [...localizations, ...getAllLocalizations(data.getCastedData(field.key))];
-        } else if (field.arrayItemSchema) {
-            for (const schema of data.getArrayCastedData(field.key))
-                localizations = [...localizations, ...getAllLocalizations(schema)];
-        }
-    }
-    return localizations;
-}
-
 class Quests {
     async loadQuests(projectArgs: ProjectArgs) {
         const dataStore = useDataStore();
@@ -72,7 +56,12 @@ class Quests {
             }
             for (const locale of availableLocales) {
                 const localizationsMap: Map<string, string> = new Map();
-                for (const localeId of localizationFields) {
+				for (const localeId of localizationFields) {
+					console.log("localization save", localeId, gameLocalization.getText({
+                        localeId: localeId,
+                        locale: locale as locales,
+                        notCheckForDefaultLocalization: true,
+                    }))
                     localizationsMap.set(
                         localeId,
                         gameLocalization.getText({

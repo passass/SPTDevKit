@@ -137,7 +137,8 @@ export default defineComponent({
             const query = props.caseSensitive ? searchQuery.value.trim() : searchQuery.value.trim().toLowerCase();
             return props.tabs.filter((tab) => {
                 const label = props.caseSensitive ? tab.label.trim() : tab.label.trim().toLowerCase();
-                return label.includes(query);
+                const id = props.caseSensitive ? tab.id.trim() : tab.id.trim().toLowerCase();
+                return label.includes(query) || id.includes(query);
             });
         });
 

@@ -56,6 +56,7 @@ export default defineConfig(({ mode }) => {
 		build: {
 			outDir: isElectron ? "dist-electron" : "dist",
 			emptyOutDir: true,
+			sourcemap: true,
 		},
 	};
 });

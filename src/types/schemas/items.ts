@@ -1,10 +1,36 @@
 // src/types/schemas/ammoCloneSchema.ts
 
-import { Field, RecordSchema, LocalizationField, VirtualLocalizationField, type SchemaData, AdvSelectField, getIdFieldValue } from "@/types/fields/fields";
+import { Field, RecordSchema, type FieldType, LocalizationField, VirtualLocalizationField, type SchemaData, AdvSelectField, getIdFieldValue, castToRecordSchema } from "@/types/fields/fields";
 import { HiddenField, IdField } from "@/types/fields/fieldsClasses";
 import { createLazyRecordSchema } from "@/utils/lazySchemaLoader";
 import { availableLocales, gameLocalization, type locales } from "../localization";
 import { capitalize } from "vue";
+import { LootLocationSchema } from "./lootLocation";
+import { useLootSpawns } from "@/project/LootSpawns";
+import { type fieldRenderParams } from "@/types/fields/fieldsRender";
+
+class LootSpawnsField extends Field {
+	type: FieldType = "array"
+	virtual = true
+	arrayItemSchema = LootLocationSchema
+
+	onUpdateModelValue(recordSchema: RecordSchema, newVal: any) {
+		console.log("onUpdateModelValue")
+	}
+
+	getDefaultValue(data: any) {
+		const lootSpawns = useLootSpawns();
+		return lootSpawns.getSpawnPointsForItem(data["id"]);
+	}
+
+	onArrayNavigate(index: number, data: SchemaData, handleNavigate: fieldRenderParams["handleNavigate"]) {
+		const lootSpawns = useLootSpawns();
+		if (handleNavigate) {
+			const schema = castToRecordSchema(data, LootLocationSchema)
+			handleNavigate(schema)
+		}
+	}
+}
 
 export class LocaleEntrySchema extends RecordSchema {
     static fields: Field[] = [
@@ -50,7 +76,8 @@ export class StaticLootContainerSchema extends RecordSchema {
 export class itemsSchema extends RecordSchema {
     static fields: Field[] = [
         IdField.create({
-            key: "_id",
+			key: "id",
+            extraKeys: ["_id"],
             label: "ID предмета"
         }),
 
@@ -209,6 +236,11 @@ export class itemsSchema extends RecordSchema {
             defaultValue: [],
             arrayItemSchema: StaticLootContainerSchema
 		}),
+
+		LootSpawnsField.create({
+			key: "LootSpawns",
+			order: 20,
+        }),
 
         VirtualLocalizationField.create({
 			label: "name",

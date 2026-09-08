@@ -105,8 +105,6 @@ export function createLazySchemaChoicer(
                 throw new Error(`Schema "${className}" not loaded yet. Call ${className}.load() first.`);
 			}
 
-			console.log(filePath, cachedSchema)
-
 			if (!cachedSchema) {
                 return [];
             }
@@ -134,7 +132,6 @@ export function createLazySchemaChoicer(
                 const node = findSchemaByPath(tree, path);
                 if (node && node.schema) {
                     cachedSchema = node.schema;
-                    console.log("load", filePath, cachedSchema)
 
                     // Если это SchemaChoicer, копируем его schemas
                     if (cachedSchema.prototype instanceof SchemaChoicer) {
@@ -196,8 +193,6 @@ export function createLazyRecordSchema(filePath: string, className: string): Cla
             try {
                 const tree = await loadTree(filePath);
 				const node = tree.children[0];
-
-				console.log("tree", tree)
 
 				if (node && node.schema) {
                     cachedSchema = node.schema;

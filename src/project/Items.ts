@@ -2,6 +2,7 @@ import { type ProjectArgs, currentProjectTag } from "./Project";
 import { Path } from "../utils/pathUtils";
 import { useDataStore } from "@/stores/dataStore";
 import { itemsSchema } from "@/types/schemas/items";
+import Locales from "./Locales";
 
 class Items {
     async loadItems(projectArgs: ProjectArgs) {
@@ -16,6 +17,12 @@ class Items {
 	    if (!projectArgs.notLoadImmediately) await dataStore.load("items");
 	}
 
+	async saveLocales(currentProjectFolder: Path) {
+		for (const [locale, localeMap] of Locales.getAllLocalesFor("items").entries()) {
+			await new Path(currentProjectFolder, `db/CustomLocales/${locale}.json`).saveFile(localeMap);
+		}
+	}
+
 	async saveProject(currentProjectFolder: Path) {
 		const dataStore = useDataStore();
 		const res = new Map();
@@ -23,7 +30,10 @@ class Items {
             res.set(itemId, item.data);
         }
 
-		await new Path(currentProjectFolder, `db/CustomItems/items.json`).saveFile(res);
+		await Promise.all([
+			this.saveLocales(currentProjectFolder),
+			new Path(currentProjectFolder, `db/CustomItems/items.json`).saveFile(res),
+		]);
 	}
 
 	async load() {

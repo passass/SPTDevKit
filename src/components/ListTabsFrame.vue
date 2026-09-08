@@ -120,14 +120,14 @@ export default {
             handler(newTab: Tab) {
                 if (this.navigator && this.navigator.tab.id !== newTab.id) {
                     this.navigator.goRoot();
-                    this.navigator.tab = newTab;
+                    this.navigator.setTab(newTab);
                 }
             },
             deep: false,
         },
     },
 
-    mounted() {
+	mounted() {
         this.navigator.container = this.$refs.container as HTMLElement;
     },
 
