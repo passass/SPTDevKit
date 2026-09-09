@@ -58,14 +58,6 @@
                             default: field.label,
                         })
                     }}</label>
-                    <button
-                        v-if="isNavigable(getData[field.key]) && !isCompareInput(field)"
-                        class="navigate-btn"
-                        @click="handleNavigate(field.key)"
-                        title="Открыть вложенную структуру"
-                    >
-                        →
-                    </button>
                 </div>
 
                 <!-- <template v-for="vnode in getFieldVnodes(field)">
@@ -213,15 +205,10 @@ const VNodeRenderer = defineComponent({
     },
 });
 
-// const VNodeRenderer = defineComponent({
-//     props: ["vnode"],
-//     render() {
-//         return this.vnode;
-//     },
-// });
-
 const vnodes = computed(() => {
+	console.log("vnodes call")
 	const res: Map<string, Array<Component | undefined>> = new Map();
+	console.log("frameNavigator?.pathStack", frameNavigator?.pathStack)
 	for (const field of filteredDisplayFields.value) {
 		const extra = extraFieldRender({ recordSchema: dataRef.value, field });
 		const main = fieldRender({recordSchema: dataRef.value, field, handleNavigate,
@@ -390,15 +377,30 @@ watch(
 }
 
 .object-summary {
-    padding: 8px 12px;
-    background: #333333;
-    border: 1px solid #4a4a4a;
+    display: inline-block;
+    padding: 8px 16px;
+    background: #2d2d3d;
+    border: 1px solid #4a4a6a;
     border-radius: 6px;
     font-size: 13px;
-    color: #999;
+    color: #66d9a0;
     font-family: "Consolas", "Monaco", monospace;
-    cursor: default;
+    cursor: pointer;
+    transition: all 0.2s ease;
     user-select: none;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.object-summary:hover {
+    background: #3a3a4a;
+    border-color: #66d9a0;
+    box-shadow: 0 0 0 2px rgba(102, 217, 160, 0.2), 0 4px 8px rgba(0,0,0,0.3);
+    transform: translateY(-1px);
+}
+
+.object-summary:active {
+    transform: translateY(0px);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 
 .field-description {

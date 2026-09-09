@@ -1,4 +1,5 @@
 import { isElectron } from "./utils";
+import { parse } from "jsonc-parser";
 
 /**
  * Читает локальный JSON в любом окружении
@@ -25,14 +26,20 @@ export async function readLocalJson(filename: string) {
 
 export async function readJson(filepath: string) {
 	// Electron (production + dev)
-	if (window.electronAPI?.readJson) {
-		const result = await window.electronAPI.readJson(filepath);
+	if (window.electronAPI?.readFile) {
+		const result = await window.electronAPI.readFile(filepath);
 		if (!result.success) {
 			throw new Error(
 				`[${filepath}] ${result.error}\nPath: ${result.path}`,
 			);
 		}
-		return result.data;
+
+		//const jsonString: string = result.data.toString('utf-8');
+		const decoder = new TextDecoder('utf-8');
+		const jsonString = decoder.decode(result.data);
+		const data = JSON.parse(jsonString);
+
+		return data;
 	}
 
 	throw new Error(`readJson is not supported in non electron enviroment`);

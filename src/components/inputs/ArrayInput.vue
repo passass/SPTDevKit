@@ -12,7 +12,7 @@
                 ◀
             </button>
 
-            <span class="array-input__counter"> {{ displayIndex }} / {{ items.length }} </span>
+            <span class="array-input__counter"> {{ displayIndex }} / {{ items?.length ?? 0 }} </span>
 
             <button
                 type="button"
@@ -200,10 +200,11 @@ function deleteItem() {
 }
 
 function addItem() {
+	const arr = items.value ?? [];
     if (isArrayArrayAdvancedSelect.value) {
-        items.value.push([]);
-        selectedIndex.value = items.value.length - 1;
-        emit('update:modelValue', items.value)
+        arr.push([]);
+        selectedIndex.value = arr.length - 1;
+        emit('update:modelValue', arr)
     } else if (isOptionsArray.value) {
         if (props.field.options?.length === 0) return;
         const defaultOption =
@@ -212,22 +213,22 @@ function addItem() {
 					? props.field.options[0]
 					: Object.values(props.field.options)[0]
 			)) ?? "";
-        items.value.push(defaultOption);
-        selectedIndex.value = items.value.length - 1;
-        emit('update:modelValue', items.value)
+        arr.push(defaultOption);
+        selectedIndex.value = arr.length - 1;
+        emit('update:modelValue', arr)
     } else if (isNumberArray.value) {
-        items.value.push(0);
-        selectedIndex.value = items.value.length - 1;
-        emit('update:modelValue', items.value)
+        arr.push(0);
+        selectedIndex.value = arr.length - 1;
+        emit('update:modelValue', arr)
     } else if (isStringArray.value || isAdvancedSelectArray.value) {
-        items.value.push("");
-        selectedIndex.value = items.value.length - 1;
-        emit('update:modelValue', items.value)
+        arr.push("");
+        selectedIndex.value = arr.length - 1;
+        emit('update:modelValue', arr)
     } else {
         const arrayItemSchema = props.field.arrayItemSchema;
         let resultSchema: RecordSchema | undefined;
 
-        if (arrayItemSchema) {
+		if (arrayItemSchema) {
             if (SchemaChoicer.isPrototypeOf(arrayItemSchema)) {
                 const choosedSchema = getStaticField<SchemaChoice[]>(arrayItemSchema, "schemas")?.[0];
 
@@ -257,10 +258,11 @@ function addItem() {
             }
         }
 
+        console.log("xyll", resultSchema)
         if (resultSchema) {
-            items.value.push(resultSchema.getData());
-           	emit('update:modelValue', items.value)
-            frameNavigator?.navigate([props.field.key, items.value.length - 1]);
+            arr.push(resultSchema.getData());
+           	emit('update:modelValue', arr)
+            frameNavigator?.navigate([props.field.key, arr.length - 1]);
         }
     }
 }

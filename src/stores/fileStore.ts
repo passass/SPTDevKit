@@ -24,7 +24,7 @@ export const useFileDataStore = defineStore("fileStore", () => {
     const globalLoading = ref(false);
 
 	const pathUtils = window?.electronAPI?.pathUtils ?? {}
-    
+
     const pendingPromises = new Map<string, Promise<FileConfig<any>>>();
 
     const isAllLoaded = computed(() => files.value.size > 0 && Array.from(files.value.values()).every(f => f.initialized));
@@ -48,17 +48,17 @@ export const useFileDataStore = defineStore("fileStore", () => {
         const config = getOrCreate<T>(filename);
 
         if (isLoaded(config)) return config;
-        
+
         if (config.loading && pendingPromises.has(filename)) {
             return pendingPromises.get(filename) as Promise<FileConfig<T>>;
         }
 
-        updateConfig(filename, { loading: true, error: null });
-        
+		updateConfig(filename, { loading: true, error: null });
+
         const loadPromise = (async () => {
-            try {
+			try {
                 const data = await ((pathUtils?.isAbsolute?.(filename)) ? readJson : readLocalJson)(filename) as T;
-                updateConfig(filename, { data, initialized: true, loading: false });
+				updateConfig(filename, { data, initialized: true, loading: false });
                 return files.value.get(filename) as FileConfig<T>;
             } catch (err: any) {
                 updateConfig(filename, { error: err.message, loading: false });

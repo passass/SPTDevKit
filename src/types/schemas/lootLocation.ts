@@ -2,6 +2,8 @@
 
 import { Field, RecordSchema } from "@/types/fields/fields";
 
+const locations = ['bigmap', 'develop', 'factory4_day', 'factory4_night', 'hideout', 'interchange', 'laboratory', 'labyrinth', 'lighthouse', 'privatearea', 'rezervbase', 'sandbox', 'sandbox_high', 'shoreline', 'suburbs', 'tarkovstreets', 'terminal', 'town', 'woods']
+
 export class PositionSchema extends RecordSchema {
     static fields: Field[] = [
         Field.create({ key: "x", label: "X", type: "number", order: 1 }),
@@ -66,6 +68,7 @@ export class LootLocationSchema extends RecordSchema {
         Field.create({ key: "locationId", label: "ID локации", type: "text", order: 1 }),
         Field.create({ key: "probability", label: "Вероятность", type: "number", order: 2, defaultValue: 0 }),
         Field.create({ key: "template", label: "Шаблон", type: "object", nestedSchema: TemplateSchema, order: 3 }),
-        Field.create({ key: "itemDistribution", label: "Распределение предметов", type: "array", arrayItemSchema: ItemDistributionSchema, order: 4, defaultValue: [] }),
+		Field.create({ key: "itemDistribution", label: "Распределение предметов", type: "array", arrayItemSchema: ItemDistributionSchema, order: 4, defaultValue: [] }),
+        Field.create({ key: "__location", label: "Локация", type: "select", order: 5, defaultValue: "", options: locations }),
     ];
 }

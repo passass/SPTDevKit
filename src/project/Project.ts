@@ -86,6 +86,7 @@ class Project {
 
     async loadEFTMods(folderPath: Path) {
 		this.EFTFolder = folderPath;
+		const lootSpawnStore = useLootSpawns();
         const profilesStore = useProfilesStore();
         for (const folderPath of await new Path(this.EFTFolder, "SPT*/user/mods/*").findFolders()) {
             await this.loadSPTFolder({
@@ -96,6 +97,7 @@ class Project {
 		}
 
 		await Promise.all([
+			lootSpawnStore.loadFromEFT(this.EFTFolder),
 			profilesStore.load(this.EFTFolder),
             this.dataStore?.load("quests"),
             async () => {

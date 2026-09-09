@@ -15,6 +15,14 @@ export interface ElectronAPI {
 		error?: string;
 		path?: string;
 	}>;
+	readFile: (
+		filePath: string,
+	) => Promise<{
+		success: boolean;
+		data: Buffer;
+		error?: string;
+		path?: string;
+	}>;
 
 	getVersions: () => Promise<{
         node: string;

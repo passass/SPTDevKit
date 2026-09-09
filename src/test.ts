@@ -1,15 +1,9 @@
 import { getValuesByPath, getValueByPath, setValueByPath } from "./utils/utils";
 
-const data = {
-	a: {
-		b: 1
-	},
-	b: 5,
-	c: {
-		b: 3
-	},
-};
+import fs from 'fs/promises';
 
-setValueByPath(data, "a.b", 6)
-
-console.log(getValuesByPath(data, "*.b"));
+console.log("load file");
+const content = await fs.readFile(
+    "E:\\EscapeFromTarkov\\SPT\\SPT_Data\\database\\locations\\lighthouse\\looseLoot.json",
+    "utf-8"
+);

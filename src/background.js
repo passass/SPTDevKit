@@ -92,21 +92,52 @@ ipcMain.handle("get-app-path", () => {
 
 const jsonc = require('jsonc-parser')
 
+ipcMain.handle("read-file", async (event, filePath) => {
+	// for (const jsonModule of [JSON, jsonc]) {
+	try {
+		const buffer = await fs.readFile(filePath, 'utf-8');
+		return {
+			success: true,
+			data: Buffer.from(buffer),
+			path: filePath
+		};
+	} catch (error) {
+
+	}
+
+	return {
+		success: false,
+		error: `Failed to load file ${filePath}`,
+		path: filePath
+	};
+});
+
 ipcMain.handle('read-json', async (event, filePath) => {
-    try {
-        const fileContent = await fs.readFile(filePath, 'utf-8');
-        return {
-            success: true,
-            data: jsonc.parse(fileContent),
-            path: filePath
-        };
-    } catch (error) {
-        return {
-            success: false,
-            error: error.message,
-            path: filePath
-        };
-    }
+	let fileContent
+	console.log("read-json loadcontent", filePath)
+	try {
+		fileContent = await fs.readFile(filePath, 'utf-8');
+	} catch (error) { 	}
+	// for (const jsonModule of [JSON, jsonc]) {
+	try {
+		console.log("read-json convert")
+		const converted = await jsonc.parse(fileContent)
+		console.log("converted")
+		return {
+			success: true,
+			data: converted,
+			path: filePath
+		};
+	} catch (error) {
+
+	}
+	// }
+
+	return {
+		success: false,
+		error: `Failed to parse JSON ${filePath}`,
+		path: filePath
+	};
 });
 
 ipcMain.handle('read-local-json', async (event, filename) => {

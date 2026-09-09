@@ -2,7 +2,6 @@
 import { RecordSchema, castToRecordSchema, type arrayItemSchemaType } from "@/types/fields/fields";
 import type { Tab } from "@/tabs/tabs.ts";
 import { nextTick, type Component } from "vue";
-import { getId } from "./objectId";
 
 export interface NavigatorOptions {
     tab: Tab;
@@ -132,7 +131,7 @@ export class Navigator {
 		if (lastPathItem && vnodes) {
 	        const lastSavedData = new Map<string, any>();
 			for (const [fieldKey, vnode] of vnodes.entries()) {
-                if ("getSavedData" in vnode && typeof vnode.getSavedData === "function") {
+				if ("getSavedData" in vnode && typeof vnode.getSavedData === "function") {
                     lastSavedData.set(fieldKey, vnode.getSavedData());
                 }
             }

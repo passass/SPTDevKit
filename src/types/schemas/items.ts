@@ -15,11 +15,16 @@ class LootSpawnsField extends Field {
 	arrayItemSchema = LootLocationSchema
 
 	onUpdateModelValue(recordSchema: RecordSchema, newVal: any) {
-		console.log("onUpdateModelValue")
+		const lootSpawns = useLootSpawns();
+		const id = recordSchema.getId()
+		if (id) {
+			console.log("onUpdateModelValue", lootSpawns.getSpawnPointsForItem(id))
+		}
 	}
 
 	getDefaultValue(data: any) {
 		const lootSpawns = useLootSpawns();
+		console.log("getDefaultValue", lootSpawns.getSpawnPointsForItem(data["id"]))
 		return lootSpawns.getSpawnPointsForItem(data["id"]);
 	}
 
