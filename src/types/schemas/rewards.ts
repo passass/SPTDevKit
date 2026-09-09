@@ -1,5 +1,5 @@
 import RecordEditor from "@/components/RecordEditor.vue";
-import { Field, RecordSchema } from "../fields";
+import { Field, RecordSchema } from "../fields/fields";
 import { createLazySchemaChoicer } from "@/utils/lazySchemaLoader";
 export class RewardsSchemas extends RecordSchema {
 	static fields: Field[] = [

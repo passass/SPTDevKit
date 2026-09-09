@@ -147,13 +147,16 @@ export class Navigator {
                 arrayItemSchema: field?.arrayItemSchema,
 				lastScrollPosition: lastScrollPosition,
             });
+            console.log("currentData", currentData, target)
         } else if (typeof target === "object") {
             let schema: RecordSchema | null = null;
 
             const parent = lastPathItem?.schema ?? lastPathItem?.value;
             schema = castToRecordSchema(target, lastPathItem?.arrayItemSchema ?? field?.nestedSchema, {
                 parent: parent,
-            });
+			});
+
+            console.log("currentData", currentData)
 
             this.pathStack.push({
                 key: key,

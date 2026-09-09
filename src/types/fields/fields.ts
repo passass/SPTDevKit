@@ -406,19 +406,8 @@ export class RecordSchema {
         const fieldKey = key instanceof Field ? key.key : key;
         const field = key instanceof Field ? key : this.getField(fieldKey);
 
-        // Если поле array и есть arrayItemSchema, преобразуем элементы
-        if (field?.type === "array" && field.arrayItemSchema && Array.isArray(value)) {
-            this.data[fieldKey] = value.map((item) =>
-                item instanceof RecordSchema ? item : new field.arrayItemSchema!(item)
-            );
-        }
-        // Если поле object и есть nestedSchema, преобразуем
-        else if (field?.type === "object" && field.nestedSchema && value && typeof value === "object") {
-            this.data[fieldKey] = value instanceof RecordSchema ? value : new field.nestedSchema(value);
-		} else {
-			this.data[fieldKey] = field?.type === "number" ? Number(value)
-				: value;
-		}
+		this.data[fieldKey] = field?.type === "number" ? Number(value)
+			: value;
     }
 
     /** Получить все ключи данных */

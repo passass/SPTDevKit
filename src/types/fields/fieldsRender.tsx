@@ -9,7 +9,7 @@ import ArrayInput from "@/components/inputs/ArrayInput.vue";
 import CompactObjectInput from "@/components/inputs/CompactObjectInput.vue";
 import { Field, resolveDefaultValue, type SchemaData } from "@/types/fields/fields";
 import { type WeaponBuildItem } from "@/stores/profileStore";
-import { type Component, h, defineComponent } from "vue";
+import { type Component, h, defineComponent, ref, toRaw } from "vue";
 import { gameLocalization } from "@/types/localization";
 import { RecordSchema } from "@/types/fields/fields";
 import { useLootSpawns } from "@/project/LootSpawns";
@@ -78,10 +78,27 @@ function getRewardDisplay(items: WeaponBuildItem[]): string {
 const FieldTemplateWrapper = defineComponent({
     name: "FieldTemplateWrapper",
     props: ["recordSchema", "field", "componentTemplate", "componentTemplateProps", "eventHandlers", "extraProps"],
-    setup(props) {
-        return () => {
-            const initValue = props.recordSchema.get(props.field);
+    setup(props, { expose }) {
+        const innerRef = ref<any>(null);
+
+        expose({
+            getSavedData() {
+                if (innerRef.value && typeof innerRef.value.getSavedData === "function") {
+                    return innerRef.value.getSavedData();
+                }
+                return undefined;
+            },
+        });
+
+		return () => {
+			let initValue = props.recordSchema.get(props.field);
+
+			if (initValue === undefined) {
+                initValue = resolveDefaultValue(props.field, props.recordSchema.getData());
+            }
+
             return h(props.componentTemplate as any, {
+                ref: innerRef,
                 key: props.field.key,
                 field: props.field,
                 recordSchema: props.recordSchema,
@@ -183,7 +200,6 @@ const renderRules: RenderRule[] = [
 			const isAllPrimitives = (field.nestedSchema as typeof RecordSchema)
                 .fields
                 .every((f) => f.type !== "object" && !f.isArray() && !f.nestedSchema && !f.arrayItemSchema);
-            console.log(field.key, field.type, isAllPrimitives, recordSchema.getFields());
             return field.type === "object" && isAllPrimitives;
         },
         componentTemplate: CompactObjectInput,
@@ -226,13 +242,12 @@ export function extraFieldRender({ recordSchema, field }: fieldRenderParams) {
 }
 
 export function fieldRender({
-    recordSchema,
-    field,
-    exactRenderRules,
-    handleNavigate,
-    extraProps,
+recordSchema,
+field,
+exactRenderRules,
+handleNavigate,
+extraProps,
 }: fieldRenderParams): Component | undefined {
-    const data = recordSchema.getData();
     for (const renderRule of exactRenderRules ?? renderRules) {
         if (renderRule.condition(field, recordSchema)) {
             if (renderRule.componentTemplate) {
@@ -249,43 +264,33 @@ export function fieldRender({
                         recordSchema.set(field, target.value);
                     }
                 };
-                const OnModelValueInput = (val: any): void => {
+				const OnModelValueInput = (val: any): void => {
                     if (field.onUpdateModelValue) field.onUpdateModelValue(recordSchema, val);
                     if (!field.virtual) recordSchema.set(field, val);
                 };
+
                 const eventHandlers: Record<string, any> = {
                     "onUpdate:modelValue": OnModelValueInput,
                     onNavigate: handleNavigate,
                     navigateHandler: handleNavigate,
                 };
+
                 if (renderRule.hasOnInputEmit) eventHandlers.onInput = OnInput;
                 if (renderRule.hasOnChangeEmit) eventHandlers.onChange = OnChange;
-
-                let initValue = recordSchema.get(field);
-                if (initValue === undefined) {
-                    initValue = resolveDefaultValue(field, recordSchema.getData());
-                }
 
                 return h(FieldTemplateWrapper, {
                     recordSchema,
                     field,
-                    dat: recordSchema.getData(),
                     componentTemplate: renderRule.componentTemplate,
                     componentTemplateProps: renderRule.componentTemplateProps,
-
-                    modelValue: initValue,
-                    value: initValue,
-                    checked: initValue,
-                    "v-model": initValue,
-
                     eventHandlers,
                     extraProps,
                 });
             }
             if (renderRule.component) {
                 return h(FieldComponentWrapper, {
-                    recordSchema,
-					field,
+                    recordSchema, // Передаем оригинальный
+                    field,
                     handleNavigate,
                     componentFunc: renderRule.component,
                 });

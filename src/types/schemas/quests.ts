@@ -5,7 +5,7 @@ import { HiddenField, UnneccesaryField } from "../fields/fieldsClasses";
 
 import { IdField } from "../fields/fieldsClasses";
 import { QuestConditions } from "./questsConditions";
-import { RewardsSchemas } from "../fields/rewards/rewards";
+import { RewardsSchemas } from "./rewards";
 
 /**
  * Схема для квеста из EFT

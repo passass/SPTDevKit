@@ -258,10 +258,11 @@ function addItem() {
             }
         }
 
-        console.log("xyll", resultSchema)
+        console.log("xyll", resultSchema, resultSchema?.getData(), arr)
         if (resultSchema) {
             arr.push(resultSchema.getData());
            	emit('update:modelValue', arr)
+            console.log("xyll AFTER", resultSchema, resultSchema?.getData(), arr)
             frameNavigator?.navigate([props.field.key, arr.length - 1]);
         }
     }

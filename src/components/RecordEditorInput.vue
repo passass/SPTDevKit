@@ -173,15 +173,6 @@ function handleSchemaChoose(newInstance: RecordSchema) {
     triggerRef(dataRef);
 }
 
-function isCompareInput(field: Field): boolean {
-    return (
-        field.nestedSchema &&
-        (field.nestedSchema as any)?.fields?.length === 2 &&
-        (field.nestedSchema as any)?.getFieldByKeyStatic("compareMethod") &&
-        (field.nestedSchema as any)?.getFieldByKeyStatic("value")
-    );
-}
-
 const componentInstances = new Map<string, any>();
 function handleRef(el: any, fieldKey: string) {
     if (el) {
@@ -206,9 +197,7 @@ const VNodeRenderer = defineComponent({
 });
 
 const vnodes = computed(() => {
-	console.log("vnodes call")
 	const res: Map<string, Array<Component | undefined>> = new Map();
-	console.log("frameNavigator?.pathStack", frameNavigator?.pathStack)
 	for (const field of filteredDisplayFields.value) {
 		const extra = extraFieldRender({ recordSchema: dataRef.value, field });
 		const main = fieldRender({recordSchema: dataRef.value, field, handleNavigate,
