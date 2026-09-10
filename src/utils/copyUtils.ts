@@ -1,9 +1,15 @@
 // src/utils/copyUtils.ts
-import { RecordSchema, LocalizationField, VirtualLocalizationField } from "@/types/fields/fields";
+import { RecordSchema, LocalizationField, VirtualLocalizationField, Field } from "@/types/fields/fields";
+import { type FieldContext } from "@/types/fields/fieldsConsts";
 import { useDataStore } from "@/stores/dataStore";
 import { availableLocales, suffixes } from "@/types/localization";
 import { deepClone } from "./utils";
 import { generateUUID24chars } from "./uuidUtils";
+import { IdField } from "@/types/fields/fieldsClasses";
+import { Navigator } from "./navigation";
+import { FunctionQueue } from "./functionQueue";
+
+const noopNavigate: Navigator["navigate"] = (() => false) as Navigator["navigate"];
 
 export function getAllLocalizationKeys(instance: RecordSchema): string[] {
     let keys: string[] = [];
@@ -26,35 +32,121 @@ export function getAllLocalizationKeys(instance: RecordSchema): string[] {
     return keys;
 }
 
-export function copyRecordSchema<T extends RecordSchema>(
-    original: T,
-    dataStore: ReturnType<typeof useDataStore>,
-    projectTag: string
-): T {
-    const copiedData = deepClone(original.getData()) as Record<string, any>;
-    const sourceId = original.getId();
+export function copyRecordSchema(
+    original: RecordSchema,
+	projectTag: string
+): RecordSchema {
+	const sourceId = original.getId();
+	const dataStore = useDataStore();
     const newItemId = generateUUID24chars();
     const idsMap = new Map<string, string>();
 
-    function changeAllIds(obj: any, isRoot = false): void {
+    const copiedData = deepClone(original.getData()) as Record<string, any>;
+    const Constructor = original.constructor as typeof RecordSchema;
+    const copiedSchema = new Constructor(copiedData, {
+        choosedSchema: original.choosedSchema,
+        schemaChooser: original.schemaChooser,
+        name: original.name,
+	}) as RecordSchema;
+
+	const fnQueue = new FunctionQueue();
+
+    function callOnNestedSchemaCopy(
+        field: Field,
+        value: any,
+		recordSchema: RecordSchema,
+        original: RecordSchema
+    ): void {
+        if (!field.onNestedSchemaCopy) return;
+        const ctx: FieldContext = {
+            field,
+            value,
+            recordSchema,
+			data: recordSchema.getData(),
+            navigate: noopNavigate,
+        };
+        // field.onNestedSchemaCopy(ctx, original);
+        fnQueue.add("field.onNestedSchemaCopy", field.onNestedSchemaCopy, ctx, original)
+	}
+
+    // Fallback для «сырых» объектов/массивов без схемы (extraFields, неизвестные структуры)
+    function changeAllIdsRaw(obj: any, isRoot = false): void {
         if (!obj || typeof obj !== "object") return;
         if (Array.isArray(obj)) {
-            obj.forEach((item) => changeAllIds(item, false));
+            obj.forEach((item) => changeAllIdsRaw(item, false));
             return;
         }
         for (const [key, value] of Object.entries(obj)) {
             if (key === "_id" || key === "id") {
                 obj[key] = isRoot ? newItemId : generateUUID24chars();
-                idsMap.set(value as string, obj[key]);
+                if (typeof value === "string") idsMap.set(value, obj[key]);
             } else if (typeof value === "string" && sourceId && value.includes(sourceId)) {
                 obj[key] = value.replace(new RegExp(sourceId, "g"), newItemId);
             } else if (typeof value === "object" && value !== null) {
-                changeAllIds(value, false);
+                changeAllIdsRaw(value, false);
             }
         }
     }
 
-    changeAllIds(copiedData, true);
+    function changeAllIds(schema: RecordSchema, isRoot = false): void {
+		for (const field of schema.getFields()) {
+			if (field.virtual) {
+				callOnNestedSchemaCopy(field, undefined, schema, original);
+				continue;
+			}
+
+            const key = field.key;
+            if (!key || !schema.has(key)) continue;
+
+            const value = schema.get(key);
+
+            // ID-поля
+            if (key === "_id" || key === "id" || field instanceof IdField) {
+                const newId = isRoot ? newItemId : generateUUID24chars();
+                if (typeof value === "string") idsMap.set(value, newId);
+                schema.set(key, newId);
+                continue;
+            }
+
+            // Вложенный объект со схемой
+			if (field.nestedSchema && value && typeof value === "object" && !Array.isArray(value)) {
+                const nested = schema.getCastedData(key);
+                if (nested) {
+                    callOnNestedSchemaCopy(field, nested, schema, original);
+                    changeAllIds(nested, false);
+                }
+				continue;
+            }
+
+            // Массив с arrayItemSchema
+            if (field.arrayItemSchema && Array.isArray(value)) {
+                for (const item of schema.getArrayCastedData(key)) {
+                    callOnNestedSchemaCopy(field, item, schema, original);
+                    changeAllIds(item, false);
+                }
+                continue;
+            }
+
+            // Массив без схемы
+            if (Array.isArray(value)) {
+                changeAllIdsRaw(value, false);
+                continue;
+            }
+
+            // Объект без схемы (extraFields и т.п.)
+            if (value && typeof value === "object") {
+                changeAllIdsRaw(value, false);
+                continue;
+            }
+
+            // Строки, содержащие исходный ID
+            if (typeof value === "string" && sourceId && value.includes(sourceId)) {
+                schema.set(key, value.replace(new RegExp(sourceId, "g"), newItemId));
+            }
+        }
+    }
+
+    changeAllIds(copiedSchema, true);
 
     const oldLocaleKeys = getAllLocalizationKeys(original);
     const localeMapping = new Map<string, string>();
@@ -80,11 +172,9 @@ export function copyRecordSchema<T extends RecordSchema>(
                 dataStore.addTag(storeId, newKey, projectTag);
             }
         }
-    }
+	}
 
-    const Constructor = original.constructor as typeof RecordSchema;
-    return new Constructor(copiedData, {
-        choosedSchema: original.choosedSchema,
-        schemaChooser: original.schemaChooser,
-    }) as T;
+	fnQueue.executeAll()
+
+	return copiedSchema;
 }

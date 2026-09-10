@@ -72,7 +72,7 @@ class DogTagCondition extends RecordSchema {
 			options: Array.from(Object.keys(DogTagIdsOptions)),
 			initialValue: (data: SchemaData) => {
 				for (const [key, value] of Object.entries(DogTagIdsOptions)) {
-					if (allElementsInArray(value, data.target)) {
+					if (Array.isArray(value) && Array.isArray(data.target) && allElementsInArray(value, data.target)) {
 						return key;
 					}
 				}

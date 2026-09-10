@@ -51,13 +51,13 @@
 </template>
 
 <script setup lang="tsx">
-import { ref, type Ref, computed, watch, nextTick, onMounted, onUnmounted, inject } from "vue";
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from "vue";
 import { useDataStore } from "@/stores/dataStore";
-import { gameLocalization, type locales } from "@/types/localization";
+import { gameLocalization } from "@/types/localization";
 import { AdvSelectField, type Field } from "@/types/fields/fields";
 
 const props = defineProps<{
-	modelValue: string | null;
+	modelValue: any;
 	field?: Field;
 
 	itemsOverride?: Map<string, object>;

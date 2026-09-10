@@ -4,7 +4,7 @@ import { defineStore } from "pinia";
 import { ref, computed, watch } from "vue";
 import { useFileDataStore } from "./fileStore";
 import { QuestSchema } from "@/types/schemas/quests";
-import { castToRecordSchema, idsFields, type RecordSchema, type SchemaData } from "@/types/fields/fields";
+import { castToRecordSchema, idsFields, RecordSchema, type SchemaData } from "@/types/fields/fields";
 import { getValueByPath, type ClassType } from "@/utils/classUtils";
 import { gameLocalization, type locales } from "@/types/localization";
 import { allElementsInArray } from "@/utils/utils";
@@ -16,7 +16,8 @@ export interface DataStoreConfigFiles {
 }
 export interface DataStoreConfig {
     file: DataStoreConfigFiles | DataStoreConfigFiles[];
-    schemaType?: ClassType<RecordSchema> | ClassType<SchemaChoicer>;
+	schemaType?: typeof RecordSchema | typeof SchemaChoicer;
+	manualClear?: boolean;
 }
 export interface dataStoreExtraDataType {
     tags?: string[];
@@ -86,7 +87,9 @@ export const useDataStore = defineStore("dataStore", () => {
         try {
             const files = Array.isArray(config.file) ? config.file : [config.file];
             const store = dataMap.value.get(key)!;
-            store.clear();
+
+            if (!config.manualClear)
+				store.clear();
 
             const schemaType = config.schemaType;
 
@@ -264,9 +267,22 @@ export const useDataStore = defineStore("dataStore", () => {
 		} else {
 			map.set(id, { data });
 		}
-    }
+	}
 
-    // Удалить элемент
+	function addSchema(key: string, id: string, val: SchemaData | RecordSchema) {
+		const map = getMap(key);
+		const schemaType = getSchemaType(key);
+		let res;
+		if (schemaType && RecordSchema.isPrototypeOf(schemaType)) {
+			res = (schemaType as typeof RecordSchema).from(val);
+		} else {
+			res = val;
+		}
+
+		map.set(id, { data: res });
+	}
+
+	// Удалить элемент
     function remove(key: string, id: string): boolean {
         return getMap(key).delete(id);
     }
@@ -390,7 +406,8 @@ export const useDataStore = defineStore("dataStore", () => {
 
 	return {
         dataMap,
-        getSchemaType,
+		getSchemaType,
+        addSchema,
         addFileToStore,
         getByTagInStore,
         getAllElementsLocalizated,

@@ -2,7 +2,6 @@
 import { Data } from "dataclass";
 import { type SchemaChoice, SchemaChoicer } from "./fieldsSchemaChoicer";
 import { getStaticField, type ClassType } from "@/utils/classUtils";
-import type { fieldRenderParams } from "./fieldsRender";
 import { toJsonObject } from "@/utils/utils";
 import { type FieldContext } from "./fieldsConsts";
 
@@ -16,7 +15,21 @@ export function getIdFieldValue(instance: any): string | undefined {
 }
 
 export type arrayItemSchemaType = ClassType<RecordSchema> | ClassType<SchemaChoicer> | null;
-export type SchemaData = Record<string, any>;
+// export type SchemaData = Record<string, any>;
+export interface SchemaDataObject {
+    [key: string]: SchemaValue;
+}
+
+export type SchemaValue =
+    | string
+    | number
+    | boolean
+    | null
+    | undefined
+    | SchemaValue[]
+    | SchemaDataObject;
+
+export type SchemaData = SchemaDataObject;
 export type FieldType =
     | "text"
     | "number"
@@ -58,7 +71,8 @@ export class Field extends Data {
     hidden?: boolean;
     unneccesary?: boolean;
 
-    // onArrayItemAdd?: (arr: Array<any>, newVal: any) => void;
+    onNestedSchemaCopy?(fieldContext: FieldContext, oldSchema: RecordSchema): void;
+
     onArrayItemDelete?(fieldContext: FieldContext, index: number): void;
     onArrayItemAdd?(fieldContext: FieldContext, newVal: any): void;
     onArrayNavigate?(fieldContext: FieldContext, index: number): void;
@@ -143,7 +157,8 @@ export class LocalizationField extends Field {
 
     getDefaultValue(data: SchemaData): string {
         const key = this.key;
-        const id = data["id"] ?? data["_id"];
+		const id = data["id"] ?? data["_id"];
+        if (typeof id !== "string") return "";
         if (key) return `${id} ${key}`;
         return id;
     }
@@ -171,8 +186,8 @@ export class RecordSchema {
         return fields.find((el: Field) => el.key === key) ?? def;
     }
 
-    static from(value: any, schema?: arrayItemSchemaType, otherData?: recordSchemaOtherData) {
-        return castToRecordSchema(value, schema, otherData);
+    static from(value: any, otherData?: recordSchemaOtherData) {
+		return castToRecordSchema(value, this, otherData);
     }
 
     getFieldByKey(key: string, def?: any) {
@@ -210,7 +225,8 @@ export class RecordSchema {
             for (const field of fields) {
                 if (field instanceof LocalizationField && field.key) {
                     const value = instance.get(field.key);
-                    if (value) res.add(value);
+					if (typeof value === "string")
+						res.add(value);
                 } else if (field instanceof VirtualLocalizationField) {
                     res.add(field.getDefaultValue(instance.data));
                 } else if (field.nestedSchema) {
@@ -393,36 +409,16 @@ export class RecordSchema {
         return this.data;
     }
 
-    getId(): string | undefined {
-        return this.data["_id"] ?? this.data["id"];
+	getId(): string | undefined {
+		const id = this.data["_id"] ?? this.data["id"]
+		if (typeof id !== "string") return undefined;
+		return id;
     }
 
     /** Получить значение поля */
-    get(key: string | Field): any {
+    get(key: string | Field): SchemaValue {
         return this.data[key instanceof Field ? key.key : key];
     }
-
-    // set(key: string | Field, value: any): void {
-    //     const fieldKey = key instanceof Field ? key.key : key;
-    //     const field = this.getField(fieldKey);
-    //     const apply = (target: SchemaData) => {
-    //         if (field?.type === "array" && field.arrayItemSchema && Array.isArray(value)) {
-    //             target[fieldKey] = value.map((item) =>
-    //                 item instanceof RecordSchema ? item : new field.arrayItemSchema!(item)
-    //             );
-    //         }
-    //         else if (field?.type === "object" && field.nestedSchema && value && typeof value === "object") {
-    //             target[fieldKey] = value instanceof RecordSchema ? value : new field.nestedSchema(value);
-    //         } else {
-    //             target[fieldKey] = value;
-    //         }
-    //     };
-    //     try {
-    //         apply(this.data);
-    //     } catch {
-    //         apply(toRaw(this.data));
-    //     }
-    // }
 
     /** Установить значение поля */
     set(key: string | Field, value: any): void {

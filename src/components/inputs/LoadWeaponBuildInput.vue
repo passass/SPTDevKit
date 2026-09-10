@@ -25,13 +25,10 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useProfilesStore } from "@/stores/profileStore";
-import { type SchemaData } from "@/types/fields/fields";
+import { type SchemaValue, type SchemaData } from "@/types/fields/fields";
 import { type Field } from "@/types/fields/fields";
 
-
 const profilesStore = useProfilesStore();
-
-
 const props = defineProps<{
 	data: SchemaData;
 	field: Field;
@@ -46,7 +43,7 @@ function handleLoad(event: Event) {
     const value = target.value;
     if (!value) return;
 
-    props.data[props.field.key] = profilesStore.getWeaponBuildItems(value)
+    props.data[props.field.key] = profilesStore.getWeaponBuildItems(value) as unknown as SchemaValue
 }
 </script>
 

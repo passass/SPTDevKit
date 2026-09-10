@@ -1,9 +1,10 @@
 
 import { currentProjectTag, modTag, type ProjectArgs } from "./ProjectConsts";
 import { Path } from "../utils/pathUtils";
-import { useDataStore } from "@/stores/dataStore";
+import { useDataStore, type dataMapRecordType } from "@/stores/dataStore";
 import { itemsSchema } from "@/types/schemas/items";
 import Locales from "./Locales";
+import { useLootSpawns } from "./LootSpawns";
 
 class Items {
     async loadItems(projectArgs: ProjectArgs) {
@@ -26,12 +27,25 @@ class Items {
 
 	async saveProject(currentProjectFolder: Path) {
 		const dataStore = useDataStore();
-		const res = new Map();
+		const res = new Map<string, dataMapRecordType>();
         for (const [itemId, item] of dataStore.getByTagInStore("items", currentProjectTag).entries()) {
             res.set(itemId, item.data);
-        }
+		}
+
+		const lootSpawnStore = useLootSpawns();
+		const lootSpawns: Map<string, Array<dataMapRecordType>> = new Map();
+		for (const [itemId, item] of res.entries()) {
+			for (const lootSpawn of lootSpawnStore.getSpawnPointsForItem(itemId)) {
+				const location = lootSpawn.get("__location");
+				if (typeof location !== "string") continue;
+				const locationMap = lootSpawns.get(location) ?? [];
+				locationMap.push(lootSpawn);
+				lootSpawns.set(location, locationMap);
+			}
+		}
 
 		await Promise.all([
+			new Path(currentProjectFolder, `db/CustomLootspawns/CustomSpawnpointsForced/spawns.json`).saveFile(lootSpawns),
 			this.saveLocales(currentProjectFolder),
 			new Path(currentProjectFolder, `db/CustomItems/items.json`).saveFile(res),
 		]);

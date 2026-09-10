@@ -160,9 +160,9 @@ const hasCompareInput = computed<boolean>(() => {
     return toValue(dataRef as any)?.getFieldByKey("compareMethod") && toValue(dataRef as any)?.getFieldByKey("value");
 });
 
-function handleNavigate(key: any) {
+function handleNavigate(key: any, compIn: Map<string, any>) {
     fieldSearchQuery.value = "";
-    frameNavigator?.navigate?.(key, componentInstances);
+    return !!frameNavigator?.navigate?.(key, compIn ?? componentInstances);
 }
 
 function handleSchemaChoose(newInstance: RecordSchema) {
@@ -217,7 +217,7 @@ function getCurrentTab() {
 function copyCurrentTab() {
 	const currentTab: Tab | undefined = getCurrentTab();
 	if (currentTab && currentTab.schemaType && currentTab.data instanceof RecordSchema) {
-        const newInstance = copyRecordSchema(currentTab.data, dataStore, currentProjectTag);
+        const newInstance = copyRecordSchema(currentTab.data, currentProjectTag);
         const newInstanceId = newInstance.getId();
         if (newInstanceId && currentTab.dataStoreId) {
             dataStore.set(currentTab.dataStoreId, newInstanceId, newInstance);

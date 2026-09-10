@@ -5,11 +5,12 @@ import { generateUUID24chars } from "@/utils/uuidUtils";
 import { Path } from "@/utils/pathUtils";
 import { useFileDataStore } from "@/stores/fileStore";
 import { deepClone } from "@/utils/utils";
+import type { SchemaData } from "@/types/fields/fields";
 
 export interface WeaponBuildItem {
     _id: string;
     _tpl: string;
-    upd?: Record<string, any>;
+    upd?: SchemaData;
     slotId?: string;
     parentId?: string;
 }

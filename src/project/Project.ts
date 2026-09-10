@@ -104,8 +104,6 @@ class Project {
     }
 
     async init() {
-		const lootSpawnStore = useLootSpawns();
-		await lootSpawnStore.load();
         await Traders.load();
         if (!isElectron()) return;
         this.dataStore ??= useDataStore();

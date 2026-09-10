@@ -14,11 +14,11 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import type { Field, SchemaData } from "@/types/fields/fields";
+import type { Field } from "@/types/fields/fields";
 import { gameLocalization } from "@/types/localization";
 
 const props = defineProps<{
-    data: SchemaData;
+    data: any;
     field: Field;
     modelValue?: any;
 }>();

@@ -87,8 +87,7 @@ class Quests {
     }
 
     copyQuest(data: RecordSchema): RecordSchema {
-	    const dataStore = useDataStore();
-	    return copyRecordSchema(data, dataStore, currentProjectTag);
+	    return copyRecordSchema(data, currentProjectTag);
     }
 }
 

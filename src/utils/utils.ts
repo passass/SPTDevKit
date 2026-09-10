@@ -36,7 +36,7 @@ export function toJsonObject(obj: any): any {
     return obj;
 }
 
-export function allElementsInArray<T>(arr: T[], targetArr: T[]): boolean {
+export function allElementsInArray(arr: any[], targetArr: any[]): boolean {
     const targetSet = new Set(targetArr);
     return arr.every((element) => targetSet.has(element));
 }
@@ -225,51 +225,116 @@ export function getValueByPath(data: DataStructure, path: string): any | undefin
 }
 
 /**
- * Устанавливает значение по простому пути (без wildcard и фильтров)
+ * Устанавливает значение по пути с поддержкой wildcard (`*`) и фильтров вида `[key=value]`.
+ * Поддерживается как на промежуточных, так и на последнем сегменте пути.
+ *
+ * Примеры:
+ *   setValueByPath(data, "a.b.c", 1)
+ *   setValueByPath(data, "template.Items.*[_tpl=oldId]._tpl", newId)
+ *   setValueByPath(data, "items[*].active", true)
+ *
  * @param data - исходные данные (изменяются напрямую)
- * @param path - путь вида "a.b.c"
+ * @param path - путь вида "a.b.c" или "template.Items.*[_tpl=abc]._tpl"
  * @param value - новое значение
- * @returns true если путь существует и значение установлено, иначе false
+ * @returns true если хотя бы одно значение было установлено, иначе false
  */
 export function setValueByPath(data: DataStructure, path: string, value: any): boolean {
+    if (!path) return false;
+
     const parts = path.split('.');
-    let current: any = data;
+    let anySet = false;
 
-    // Проходим по всем частям, кроме последней
-    for (let i = 0; i < parts.length - 1; i++) {
-        const key = parts[i];
-        let found = false;
+    // Устанавливает значение в target по последнему сегменту пути.
+    function setLast(target: any): void {
+        const { name, filter } = parseFilter(parts[parts.length - 1]);
 
-        if (current && typeof current === 'object' && !Array.isArray(current) && key in current) {
-            current = current[key];
-            found = true;
-        } else if (Array.isArray(current) && /^\d+$/.test(key)) {
-            const index = parseInt(key, 10);
-            if (index >= 0 && index < current.length) {
-                current = current[index];
-                found = true;
+        const tryAssign = (container: any, key: string | number, existing: any): void => {
+            if (filter !== null && !matchesFilter(existing, filter[0], filter[1])) return;
+            container[key] = value;
+            anySet = true;
+        };
+
+        if (name === '*') {
+            if (Array.isArray(target)) {
+                for (let i = 0; i < target.length; i++) tryAssign(target, i, target[i]);
+            } else if (target && typeof target === 'object') {
+                for (const k of Object.keys(target)) tryAssign(target, k, target[k]);
+            }
+            return;
+        }
+
+        if (Array.isArray(target)) {
+            const idx = parseInt(name, 10);
+            if (!isNaN(idx) && idx >= 0 && idx < target.length) {
+                tryAssign(target, idx, target[idx]);
+            } else {
+                for (const item of target) {
+                    if (item && typeof item === 'object' && name in item) {
+                        tryAssign(item, name, item[name]);
+                    }
+                }
+            }
+        } else if (target && typeof target === 'object' && name in target) {
+            tryAssign(target, name, target[name]);
+        }
+    }
+
+    function traverse(current: any, index: number): void {
+        if (current === null || current === undefined) return;
+
+        // Дошли до родителя последнего сегмента — устанавливаем значение
+        if (index >= parts.length - 1) {
+            setLast(current);
+            return;
+        }
+
+        const { name, filter } = parseFilter(parts[index]);
+
+        if (name === '*') {
+            if (Array.isArray(current)) {
+                for (const item of current) processItem(item, filter, index + 1);
+            } else if (current && typeof current === 'object') {
+                for (const val of Object.values(current)) processItem(val, filter, index + 1);
+            }
+            return;
+        }
+
+        if (Array.isArray(current)) {
+            const idx = parseInt(name, 10);
+            if (!isNaN(idx) && idx >= 0 && idx < current.length) {
+                processItem(current[idx], filter, index + 1);
+            } else {
+                for (const item of current) {
+                    if (item && typeof item === 'object' && name in item) {
+                        processItem(item[name], filter, index + 1);
+                    }
+                }
+            }
+        } else if (current && typeof current === 'object' && name in current) {
+            processItem(current[name], filter, index + 1);
+        }
+    }
+
+    function processItem(item: any, filter: [string, string] | null, nextIndex: number): void {
+        if (filter === null) {
+            traverse(item, nextIndex);
+            return;
+        }
+        const [filterKey, filterValue] = filter;
+        if (matchesFilter(item, filterKey, filterValue)) {
+            traverse(item, nextIndex);
+        } else if (Array.isArray(item)) {
+            for (const subItem of item) {
+                if (matchesFilter(subItem, filterKey, filterValue)) {
+                    traverse(subItem, nextIndex);
+                    break;
+                }
             }
         }
-
-        if (!found) {
-            return false;
-        }
     }
 
-    const lastKey = parts[parts.length - 1];
-
-    if (current && typeof current === 'object' && !Array.isArray(current)) {
-        current[lastKey] = value;
-        return true;
-    } else if (Array.isArray(current) && /^\d+$/.test(lastKey)) {
-        const index = parseInt(lastKey, 10);
-        if (index >= 0 && index < current.length) {
-            current[index] = value;
-            return true;
-        }
-    }
-
-    return false;
+    traverse(data, 0);
+    return anySet;
 }
 
 /**

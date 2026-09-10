@@ -31,28 +31,28 @@
 
         <!-- Режим optionsArray: select -->
         <div v-if="isOptionsArray" class="array-input__editor">
-            <template v-if="selectedIndex !== null">
+            <template v-if="selectedIndex !== null && Array.isArray(items[selectedIndex])">
                 <OptionsInput v-model="items[selectedIndex]" :field="field" :data="items" />
             </template>
         </div>
 
         <!-- Режим arrayAdvancedSelect: выбор из справочника -->
         <div v-else-if="isAdvancedSelectArray" class="array-input__editor">
-            <template v-if="selectedIndex !== null">
-                <AdvancedSelectInput v-model="items[selectedIndex]" :field="field" />
+            <template v-if="selectedIndex !== null && typeof items[selectedIndex] === 'string'">
+                <AdvancedSelectInput v-model="items[selectedIndex] as string" :field="field" />
             </template>
         </div>
 
         <!-- Режим arrayArrayAdvancedSelect: массив массивов с AdvancedSelect -->
         <div v-else-if="isArrayArrayAdvancedSelect" class="array-input__editor">
-            <template v-if="selectedIndex !== null">
+            <template v-if="currentSubArray">
                 <div class="array-input__sub-array">
                     <div
-                        v-for="(subItem, subIndex) in items[selectedIndex]"
+                        v-for="(subItem, subIndex) in currentSubArray"
                         :key="subIndex"
                         class="array-input__sub-item"
                     >
-                        <AdvancedSelectInput v-model="items[selectedIndex][subIndex]" :field="field" />
+                        <AdvancedSelectInput v-model="currentSubArray[subIndex]" :field="field" />
                         <button class="array-input__sub-remove" @click="removeSubItem(subIndex)">✕</button>
                     </div>
                     <button class="array-input__sub-add" @click="addSubItem">+ Добавить</button>
@@ -102,24 +102,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, ref, type Ref, watch } from "vue";
-import { RecordSchema, Field, AdvSelectField } from "@/types/fields/fields";
+import { computed, inject, ref, watch } from "vue";
+import { RecordSchema, Field, type SchemaValue } from "@/types/fields/fields";
 import AdvancedSelectInput from "./AdvancedSelectInput.vue";
 import { SchemaChoicer, type SchemaChoice } from "@/types/fields/fieldsSchemaChoicer";
-import { getStaticField, type ClassType } from "@/utils/classUtils";
+import { getStaticField } from "@/utils/classUtils";
 import { Navigator } from "@/utils/navigation";
-import { gameLocalization, type locales } from "@/types/localization";
 import OptionsInput from "./OptionsInput.vue";
 import { type FieldContext } from "@/types/fields/fieldsConsts";
 
-type InputType = any[];
+type InputType = SchemaValue[];
 const frameNavigator = inject<Navigator>("frameNavigator");
 
 const props = defineProps<{
     modelValue: Array<any>;
-	field: Field;
-	recordSchema: RecordSchema;
-	selectedIndex?: number;
+    field: Field;
+    selectedIndex?: number;
     fieldContext: FieldContext;
     navigateHandler?: (key: any) => void;
 }>();
@@ -129,7 +127,9 @@ const emit = defineEmits<{
     (e: "onNavigate", key: any): void;
 }>();
 
-const selectedIndex = ref<number | null>(props.selectedIndex ?? (props.modelValue && props.modelValue.length > 0 ? 0 : null));
+const selectedIndex = ref<number | null>(
+    props.selectedIndex ?? (props.modelValue && props.modelValue.length > 0 ? 0 : null)
+);
 
 const items = computed({
     get: () => {
@@ -181,6 +181,12 @@ const displayIndex = computed(() => {
     return selectedIndex.value + 1;
 });
 
+const currentSubArray = computed<any[] | null>(() => {
+    if (selectedIndex.value === null) return null;
+    const arr = items.value[selectedIndex.value];
+    return Array.isArray(arr) ? arr : null;
+});
+
 function nextItem() {
     if (selectedIndex.value === null || selectedIndex.value >= items.value.length - 1) return;
     selectedIndex.value++;
@@ -193,10 +199,8 @@ function prevItem() {
 
 function deleteItem() {
     if (selectedIndex.value === null || selectedIndex.value < 0 || selectedIndex.value > items.value.length - 1) return;
-    if (props.field.onArrayItemDelete)
-        props.field.onArrayItemDelete(props.fieldContext, selectedIndex.value);
+    if (props.field.onArrayItemDelete) props.field.onArrayItemDelete(props.fieldContext, selectedIndex.value);
     items.value.splice(selectedIndex.value, 1);
-
 
     if (selectedIndex.value !== 0) {
         selectedIndex.value--;
@@ -206,36 +210,36 @@ function deleteItem() {
 }
 
 function addItem() {
-	const arr = items.value ?? [];
-	const lastLength = arr.length;
-	if (isArrayArrayAdvancedSelect.value) {
+    const arr = items.value ?? [];
+    const lastLength = arr.length;
+    if (isArrayArrayAdvancedSelect.value) {
         arr.push([]);
         selectedIndex.value = arr.length - 1;
-        emit('update:modelValue', arr)
+        emit("update:modelValue", arr);
     } else if (isOptionsArray.value) {
         if (props.field.options?.length === 0) return;
         const defaultOption =
-			(props.field.options && (
-				Array.isArray(props.field.options)
-					? props.field.options[0]
-					: Object.values(props.field.options)[0]
-			)) ?? "";
+            (props.field.options &&
+                (Array.isArray(props.field.options)
+                    ? props.field.options[0]
+                    : Object.values(props.field.options)[0])) ??
+            "";
         arr.push(defaultOption);
         selectedIndex.value = arr.length - 1;
-        emit('update:modelValue', arr)
+        emit("update:modelValue", arr);
     } else if (isNumberArray.value) {
         arr.push(0);
         selectedIndex.value = arr.length - 1;
-        emit('update:modelValue', arr)
+        emit("update:modelValue", arr);
     } else if (isStringArray.value || isAdvancedSelectArray.value) {
         arr.push("");
         selectedIndex.value = arr.length - 1;
-        emit('update:modelValue', arr)
+        emit("update:modelValue", arr);
     } else {
         const arrayItemSchema = props.field.arrayItemSchema;
         let resultSchema: RecordSchema | undefined;
 
-		if (arrayItemSchema) {
+        if (arrayItemSchema) {
             if (SchemaChoicer.isPrototypeOf(arrayItemSchema)) {
                 const choosedSchema = getStaticField<SchemaChoice[]>(arrayItemSchema, "schemas")?.[0];
 
@@ -250,30 +254,36 @@ function addItem() {
                     );
                 }
             } else if (RecordSchema.isPrototypeOf(arrayItemSchema)) {
-                resultSchema = new arrayItemSchema({}, {
-                    fillWithDefault: true,
-                }) as RecordSchema;
+                resultSchema = new arrayItemSchema(
+                    {},
+                    {
+                        fillWithDefault: true,
+                    }
+                ) as RecordSchema;
             }
         }
 
         if (!resultSchema) {
             const nestedSchema: Field["nestedSchema"] = props.field.nestedSchema;
             if (nestedSchema) {
-                resultSchema = new nestedSchema({}, {
-                    fillWithDefault: true,
-                });
+                resultSchema = new nestedSchema(
+                    {},
+                    {
+                        fillWithDefault: true,
+                    }
+                );
             }
         }
 
         if (resultSchema) {
             arr.push(resultSchema.toJSON());
-			emit('update:modelValue', arr)
+            emit("update:modelValue", arr);
             frameNavigator?.navigate([props.field.key, arr.length - 1]);
         }
-	}
+    }
 
     if (props.field.onArrayItemAdd && lastLength !== arr.length) {
-        props.field.onArrayItemAdd(props.fieldContext, arr[arr.length - 1])
+        props.field.onArrayItemAdd(props.fieldContext, arr[arr.length - 1]);
     }
 }
 
@@ -293,24 +303,22 @@ function removeSubItem(index: number | string) {
 }
 
 function handleNavigate() {
-	if (props.navigateHandler) {
-		if (props.field.onArrayNavigate && selectedIndex.value !== null)
-			props.field.onArrayNavigate(props.fieldContext, selectedIndex.value)
-		else
-			props.navigateHandler([props.field.key, selectedIndex.value])
-	}
-
+    if (props.navigateHandler) {
+        if (props.field.onArrayNavigate && selectedIndex.value !== null)
+            props.field.onArrayNavigate(props.fieldContext, selectedIndex.value);
+        else props.navigateHandler([props.field.key, selectedIndex.value]);
+    }
 }
 
 function getSavedData() {
     return {
-    	selectedIndex: selectedIndex.value,
+        selectedIndex: selectedIndex.value,
     };
 }
 
 defineExpose({
-	getSavedData
-})
+    getSavedData,
+});
 
 watch(
     () => props.modelValue,

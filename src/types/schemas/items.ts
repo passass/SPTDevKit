@@ -1,12 +1,22 @@
 // src/types/schemas/ammoCloneSchema.ts
 
-import { Field, RecordSchema, type FieldType, LocalizationField, VirtualLocalizationField, type SchemaData, AdvSelectField, getIdFieldValue, castToRecordSchema } from "@/types/fields/fields";
+import {
+    Field,
+    RecordSchema,
+    type FieldType,
+    LocalizationField,
+    VirtualLocalizationField,
+    type SchemaData,
+    AdvSelectField,
+    getIdFieldValue,
+    castToRecordSchema,
+	type SchemaValue,
+} from "@/types/fields/fields";
 import { HiddenField, IdField } from "@/types/fields/fieldsClasses";
 import { createLazyRecordSchema } from "@/utils/lazySchemaLoader";
 import { availableLocales, gameLocalization, type locales } from "../localization";
 import { capitalize } from "vue";
 import { LootSpawnsField } from "./lootLocation";
-
 
 export class LocaleEntrySchema extends RecordSchema {
     static fields: Field[] = [
@@ -14,20 +24,20 @@ export class LocaleEntrySchema extends RecordSchema {
             key: "name",
             label: "Название",
             type: "text",
-            order: 1
+            order: 1,
         }),
         Field.create({
             key: "shortName",
             label: "Краткое название",
             type: "text",
-            order: 2
+            order: 2,
         }),
         Field.create({
             key: "description",
             label: "Описание",
             type: "textarea",
-            order: 3
-        })
+            order: 3,
+        }),
     ];
 }
 
@@ -37,34 +47,34 @@ export class StaticLootContainerSchema extends RecordSchema {
             key: "containerName",
             label: "Имя контейнера",
             type: "text",
-            order: 1
+            order: 1,
         }),
         Field.create({
             key: "probability",
             label: "Вероятность",
             type: "number",
             order: 2,
-            defaultValue: 0
-        })
+            defaultValue: 0,
+        }),
     ];
 }
 
 export class itemsSchema extends RecordSchema {
     static fields: Field[] = [
         IdField.create({
-			key: "id",
+            key: "id",
             extraKeys: ["_id"],
-            label: "ID предмета"
+            label: "ID предмета",
         }),
 
         // ===== ОСНОВНЫЕ ПОЛЯ =====
         AdvSelectField.create({
-			key: "itemTplToClone",
+            key: "itemTplToClone",
             extraKeys: ["_proto"],
             label: "Шаблон для клонирования",
             type: "advancedSelect",
             storeId: "items",
-            order: 1
+            order: 1,
         }),
 
         AdvSelectField.create({
@@ -73,7 +83,7 @@ export class itemsSchema extends RecordSchema {
             label: "Родительский ID",
             type: "advancedSelect",
             storeId: "items",
-            order: 2
+            order: 2,
         }),
 
         Field.create({
@@ -91,42 +101,45 @@ export class itemsSchema extends RecordSchema {
                 "5b47574386f77428ca22b342", // Разгрузки
                 "5b47574386f77428ca22b343", // Ключи
                 "5b47574386f77428ca22b344", // Боеприпасы
-            ]
-		}),
+            ],
+        }),
 
         Field.create({
-			key: "overrideProperties",
+            key: "overrideProperties",
             extraKeys: ["_props"],
             label: "Дополнительные свойства",
             type: "object",
             order: 3,
-            nestedSchema: createLazyRecordSchema("itemsOverrideProperties.json", "overrideProperties")
+            nestedSchema: createLazyRecordSchema("itemsOverrideProperties.json", "overrideProperties"),
         }),
 
         // ===== ЛОКАЛИЗАЦИЯ =====
-		// const localesFields: Field[] = [];
-		// for (const locale of availableLocales) {
-		// 	localesFields.push(Field.create({
-		// 		key: "en",
-  //               label: "English",
-  //               type: "object",
-  //               nestedSchema: LocaleEntrySchema
-		// 	}));
-		// }
+        // const localesFields: Field[] = [];
+        // for (const locale of availableLocales) {
+        // 	localesFields.push(Field.create({
+        // 		key: "en",
+        //               label: "English",
+        //               type: "object",
+        //               nestedSchema: LocaleEntrySchema
+        // 	}));
+        // }
         HiddenField.create({
             key: "locales",
             label: "Локализация",
-			type: "object",
-			onIfInData: (data) => {
-				if (!data["locales"]) return;
-				for (const [locale, localeIds] of Object.entries(data["locales"])) {
-					if (!localeIds || !Object.keys(localeIds).length || !availableLocales.includes(locale)) continue;
-					for (const [localeId, text] of Object.entries(localeIds)) {
-
-						gameLocalization.updateLocaleText({ locale: locale as locales, localeId: `${getIdFieldValue(data)} ${capitalize(localeId)}` }, text)
-					}
-				}
-            }
+            type: "object",
+            onIfInData: (data: SchemaData) => {
+                if (!data["locales"]) return;
+                for (const [locale, localeIds] of Object.entries(data["locales"]) as Array<[string, SchemaValue]>) {
+                    if (!localeIds || !Object.keys(localeIds).length || !availableLocales.includes(locale)) continue;
+					for (const [localeId, text] of Object.entries(localeIds) as Array<[string, SchemaValue]>) {
+						if (typeof text !== "string") continue;
+                        gameLocalization.updateLocaleText(
+                            { locale: locale as locales, localeId: `${getIdFieldValue(data)} ${capitalize(localeId)}` },
+                            text
+                        );
+                    }
+                }
+            },
         }),
 
         // ===== ЦЕНЫ =====
@@ -135,7 +148,7 @@ export class itemsSchema extends RecordSchema {
             label: "Цена на барахолке (рубли)",
             type: "number",
             order: 5,
-            defaultValue: 0
+            defaultValue: 0,
         }),
 
         Field.create({
@@ -143,7 +156,7 @@ export class itemsSchema extends RecordSchema {
             label: "Цена в справочнике (рубли)",
             type: "number",
             order: 6,
-            defaultValue: 0
+            defaultValue: 0,
         }),
 
         // ===== НАСТРОЙКИ =====
@@ -186,7 +199,7 @@ export class itemsSchema extends RecordSchema {
             key: "staticAmmoProbability",
             label: "Вероятность статического боезапаса",
             type: "number",
-            order: 12
+            order: 12,
         }),
 
         Field.create({
@@ -210,28 +223,28 @@ export class itemsSchema extends RecordSchema {
             type: "array",
             order: 15,
             defaultValue: [],
-            arrayItemSchema: StaticLootContainerSchema
-		}),
+            arrayItemSchema: StaticLootContainerSchema,
+        }),
 
-		LootSpawnsField.create({
-			key: "LootSpawns",
-			order: 20,
+        LootSpawnsField.create({
+            key: "LootSpawns",
+            order: 20,
         }),
 
         VirtualLocalizationField.create({
-			label: "name",
-			order: 45,
-			key: "Name",
-		}),
-		VirtualLocalizationField.create({
-			label: "description",
-			order: 45,
-			key: "Description",
-		}),
-		VirtualLocalizationField.create({
-			label: "shortname",
-			order: 45,
-			key: "ShortName",
-		}),
+            label: "name",
+            order: 45,
+            key: "Name",
+        }),
+        VirtualLocalizationField.create({
+            label: "description",
+            order: 45,
+            key: "Description",
+        }),
+        VirtualLocalizationField.create({
+            label: "shortname",
+            order: 45,
+            key: "ShortName",
+        }),
     ];
 }

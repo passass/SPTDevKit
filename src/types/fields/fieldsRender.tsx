@@ -7,7 +7,7 @@ import ParentInput from "@/components/inputs/ParentInput.vue";
 import OptionsInput from "@/components/inputs/OptionsInput.vue";
 import ArrayInput from "@/components/inputs/ArrayInput.vue";
 import CompactObjectInput from "@/components/inputs/CompactObjectInput.vue";
-import { Field, resolveDefaultValue, type SchemaData } from "@/types/fields/fields";
+import { Field, resolveDefaultValue, type SchemaData, type SchemaValue } from "@/types/fields/fields";
 import { type WeaponBuildItem } from "@/stores/profileStore";
 import { type Component, h, defineComponent, ref, toRaw } from "vue";
 import { gameLocalization } from "@/types/localization";
@@ -24,7 +24,7 @@ interface RenderRule {
     hasOnChangeEmit?: boolean;
 }
 
-function getObjectSummary(value: Record<string, any>): string {
+function getObjectSummary(value: SchemaValue): string {
     if (!value) return "{}";
     const keys = value instanceof RecordSchema ? Object.keys(value.data) : Object.keys(value);
     if (keys.length === 0) return "{}";
@@ -62,7 +62,7 @@ function getRewardDisplay(items: WeaponBuildItem[]): string {
     for (const item of rootItems) {
         const tpl = item._tpl;
         if (!grouped[tpl]) grouped[tpl] = { tpl, count: 0 };
-        grouped[tpl].count += item?.upd?.StackObjectsCount ?? 1;
+        grouped[tpl].count += Number(item?.upd?.StackObjectsCount ?? 1);;
     }
     const parts: string[] = [];
     for (const [tpl, data] of Object.entries(grouped)) {
@@ -210,7 +210,9 @@ const renderRules: RenderRule[] = [
     {
         condition: (field: Field) => field.type === "object",
         component: (field: Field, recordSchema: RecordSchema, handleNavigate: (key: any) => void) => (
-            <div class="object-summary" onClick={() => handleNavigate(field.key)}>{getObjectSummary(recordSchema.data[field.key])}</div>
+			<div class="object-summary" onClick={() => handleNavigate(field.key)}>{
+				recordSchema.get(field) ? getObjectSummary(recordSchema.get(field)) : ""
+			}</div>
         ),
     },
 ];
@@ -221,10 +223,10 @@ const extraRenderRules: RenderRule[] = [
         component: (field: Field, recordSchema: RecordSchema) => (
             <>
                 <LoadWeaponBuildInput field={field} data={recordSchema.getData()} />
-                {recordSchema.get(field.key)?.filter((item: WeaponBuildItem) => !item.parentId).length > 0 && (
+                {(recordSchema.get(field.key) as unknown as WeaponBuildItem[])?.filter((item: WeaponBuildItem) => !item.parentId).length > 0 && (
                     <div class="weapon-build-reward">
                         <span class="weapon-build-reward__label">Предметы:</span>
-                        <span class="weapon-build-reward__value">{getRewardDisplay(recordSchema.get(field.key))}</span>
+                        <span class="weapon-build-reward__value">{getRewardDisplay(recordSchema.get(field.key) as unknown as WeaponBuildItem[])}</span>
                     </div>
                 )}
             </>

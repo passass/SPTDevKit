@@ -5,6 +5,8 @@ import { IdField } from "../fields/fieldsClasses";
 import type { FieldContext } from "../fields/fieldsConsts";
 import { getValueByPath, setValueByPath } from "@/utils/utils";
 import { useLootSpawns } from "@/project/LootSpawns";
+import { copyRecordSchema } from "@/utils/copyUtils";
+import { currentProjectTag } from "@/project/ProjectConsts";
 
 const locations = [
     "bigmap",
@@ -89,8 +91,8 @@ class GroupPositionField extends Field {
     arrayItemSchema = GroupCoordinatesSchema;
     order = 8;
     defaultValue = [];
-	onArrayItemAdd(fieldContent: FieldContext, newVal: any) {
-		const arr = fieldContent.value
+    onArrayItemAdd(fieldContent: FieldContext, newVal: any) {
+        const arr = fieldContent.value;
         newVal["Name"] = `groupPoint[${arr.length - 1}]`;
         if (arr.length > 1) newVal["Weight"] = arr[arr.length - 2]["Weight"];
     }
@@ -161,50 +163,58 @@ export class LootLocationSchema extends RecordSchema {
 }
 
 export class LootSpawnsField extends Field {
-	type: FieldType = "array"
-	virtual = true
-	arrayItemSchema = LootLocationSchema
+    type: FieldType = "array";
+    virtual = true;
+    arrayItemSchema = LootLocationSchema;
 
-	onUpdateModelValue(recordSchema: RecordSchema, newVal: any) {
-		const lootSpawns = useLootSpawns();
-		const id = recordSchema.getId()
-		if (id) {
-			console.log("onUpdateModelValue", lootSpawns.getSpawnPointsForItem(id))
-		}
-	}
+    getDefaultValue(data: any) {
+        const lootSpawns = useLootSpawns();
+        return lootSpawns.getSpawnPointsForItem(data["id"]);
+    }
 
-	getDefaultValue(data: any) {
-		const lootSpawns = useLootSpawns();
-		console.log("getDefaultValue", lootSpawns.getSpawnPointsForItem(data["id"]))
-		return lootSpawns.getSpawnPointsForItem(data["id"]);
-	}
+    onArrayItemDelete(fieldContext: FieldContext, index: number): void {
+        const value = fieldContext.value[index];
+        const lootSpawns = useLootSpawns();
+        lootSpawns.removeSpawnPoint(value instanceof RecordSchema ? value.getData() : value);
+    }
 
-	onArrayItemDelete(fieldContext: FieldContext, index: number): void {
-		const value = fieldContext.value[index];
-		const lootSpawns = useLootSpawns();
-		lootSpawns.removeSpawnPoint(value instanceof RecordSchema ? value.getData() : value);
-	}
+    onArrayItemAdd(fieldContext: FieldContext, newVal: any): void {
+        const lootSpawns = useLootSpawns();
+        const location = newVal["__location"];
+        setValueByPath(newVal, "template.Items", [
+            {
+                _id: getValueByPath(newVal, "template.Root"),
+                _tpl: fieldContext.recordSchema.getId(),
+                upd: {
+                    StackObjectsCount: 1,
+                },
+            },
+        ]);
+        if (location) {
+            lootSpawns.addSpawnPoint(newVal);
+        }
+    }
 
-	onArrayItemAdd(fieldContext: FieldContext, newVal: any): void {
-		const lootSpawns = useLootSpawns();
-		const location = newVal["__location"];
-		setValueByPath(newVal, "template.Items", [{
-			"_id": getValueByPath(newVal, "template.Root"),
-            "_tpl": fieldContext.recordSchema.getId(),
-            "upd": {
-                "StackObjectsCount": 1
-            }
-		}])
-		if (location) {
-			lootSpawns.addSpawnPoint(location, newVal);
-		}
-	}
+    onArrayNavigate(fieldContext: FieldContext, index: number) {
+        const schema = LootLocationSchema.from(fieldContext.value[index]);
+        fieldContext.navigate(schema);
+    }
 
-	onArrayNavigate(fieldContext: FieldContext, index: number) {
-		if (fieldContext.navigate) {
-			console.log("onArrayNavigate", index, fieldContext.value)
-			const schema = RecordSchema.from(fieldContext.value[index], LootLocationSchema)
-			fieldContext.navigate(schema)
-		}
-	}
+    onNestedSchemaCopy(fieldContext: FieldContext, oldSchema: RecordSchema) {
+        const oldId = oldSchema.getId();
+        const newId = fieldContext.recordSchema.getId();
+        const lootSpawns = useLootSpawns();
+        if (typeof oldId !== "string" || typeof newId !== "string") return;
+
+        for (const spawnPoint of lootSpawns.getSpawnPointsForItem(oldId)) {
+            const schema = copyRecordSchema(LootLocationSchema.from(spawnPoint), currentProjectTag);
+            setValueByPath(schema.getData(), `template.Items.*[_tpl=${oldId}]._tpl`, newId);
+            setValueByPath(
+                schema.getData(),
+                `template.Root`,
+                getValueByPath(schema.getData(), `template.Items.0._id`) ?? "empty"
+            );
+            lootSpawns.addSpawnPoint(schema.getData());
+        }
+    }
 }
