@@ -92,7 +92,7 @@ async function selectEftFolder() {
     eftPath.value = folderPath;
     localStorage.setItem('eftFolderPath', folderPath);
     console.log('Папка EFT сохранена:', folderPath);
-    await Project.loadEFTMods(new Path(folderPath));
+    await Project.loadEFT(new Path(folderPath));
   } catch (error) {
     console.error('Ошибка при выборе папки EFT:', error);
     alert('Ошибка при выборе папки EFT');

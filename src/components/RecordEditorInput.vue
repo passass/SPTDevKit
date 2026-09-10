@@ -96,11 +96,8 @@ import { Navigator, isNavigable } from "@/utils/navigation";
 import { Tab } from "@/tabs/tabs";
 import ListTabs from "./ListTabs.vue";
 import { useDataStore } from "@/stores/dataStore";
-import { currentProjectTag } from "@/project/Project";
-import Quests from "@/project/Quests";
+import { currentProjectTag } from "@/project/ProjectConsts";
 import { fieldRender, extraFieldRender } from "@/types/fields/fieldsRender";
-import { LootLocationSchema } from "@/types/schemas/lootLocation";
-import { useLootSpawns } from "@/project/LootSpawns";
 
 const props = defineProps<{
     data: any;

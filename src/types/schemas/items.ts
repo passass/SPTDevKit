@@ -5,37 +5,8 @@ import { HiddenField, IdField } from "@/types/fields/fieldsClasses";
 import { createLazyRecordSchema } from "@/utils/lazySchemaLoader";
 import { availableLocales, gameLocalization, type locales } from "../localization";
 import { capitalize } from "vue";
-import { LootLocationSchema } from "./lootLocation";
-import { useLootSpawns } from "@/project/LootSpawns";
-import { type fieldRenderParams } from "@/types/fields/fieldsRender";
+import { LootSpawnsField } from "./lootLocation";
 
-class LootSpawnsField extends Field {
-	type: FieldType = "array"
-	virtual = true
-	arrayItemSchema = LootLocationSchema
-
-	onUpdateModelValue(recordSchema: RecordSchema, newVal: any) {
-		const lootSpawns = useLootSpawns();
-		const id = recordSchema.getId()
-		if (id) {
-			console.log("onUpdateModelValue", lootSpawns.getSpawnPointsForItem(id))
-		}
-	}
-
-	getDefaultValue(data: any) {
-		const lootSpawns = useLootSpawns();
-		console.log("getDefaultValue", lootSpawns.getSpawnPointsForItem(data["id"]))
-		return lootSpawns.getSpawnPointsForItem(data["id"]);
-	}
-
-	onArrayNavigate(index: number, data: SchemaData, handleNavigate: fieldRenderParams["handleNavigate"]) {
-		const lootSpawns = useLootSpawns();
-		if (handleNavigate) {
-			const schema = castToRecordSchema(data, LootLocationSchema)
-			handleNavigate(schema)
-		}
-	}
-}
 
 export class LocaleEntrySchema extends RecordSchema {
     static fields: Field[] = [

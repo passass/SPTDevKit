@@ -1,21 +1,15 @@
 import { useDataStore } from "@/stores/dataStore";
 import Traders from "./Traders";
 import Quests from "./Quests";
+import { Path, PathArray } from "@/utils/pathUtils"
 import { availableLocales, suffixes } from "@/types/localization";
-import { Path, PathArray } from "@/utils/pathUtils";
 import { isElectron } from "@/utils/utils";
 import { useProfilesStore } from "@/stores/profileStore";
 import Items from "./Items";
 import { useLootSpawns } from "@/project/LootSpawns";
+import { currentProjectTag, modTag, type ProjectArgs } from "./ProjectConsts";
 
-export const currentProjectTag = "currentProject";
-export const modTag = "mod";
 
-export type ProjectArgs = {
-    folderPath: Path;
-    notLoadImmediately?: boolean;
-    tags: string[];
-};
 
 class Project {
     dataStore: ReturnType<typeof useDataStore> | null = null;
@@ -65,31 +59,31 @@ class Project {
         if (!projectArgs.notLoadImmediately) await this.dataStore?.load("traders");
     }
 
-	async loadSPTFolder(projectArgs: ProjectArgs) {
+	async loadSPTModFolder(projectArgs: ProjectArgs) {
 		const lootSpawnStore = useLootSpawns();
         await Promise.all([
             Quests.loadQuests(projectArgs),
             Items.loadItems(projectArgs),
             this.loadTraders(projectArgs),
 			this.loadLocale(projectArgs),
-            lootSpawnStore.loadLocations(projectArgs.folderPath)
+            lootSpawnStore.loadLocations(projectArgs)
         ]);
     }
 
     async loadProject(folderPath: Path) {
         this.currentProjectFolder = folderPath;
-        await this.loadSPTFolder({
+        await this.loadSPTModFolder({
             folderPath: folderPath,
             tags: [currentProjectTag],
         });
     }
 
-    async loadEFTMods(folderPath: Path) {
+    async loadEFT(folderPath: Path) {
 		this.EFTFolder = folderPath;
 		const lootSpawnStore = useLootSpawns();
         const profilesStore = useProfilesStore();
         for (const folderPath of await new Path(this.EFTFolder, "SPT*/user/mods/*").findFolders()) {
-            await this.loadSPTFolder({
+            await this.loadSPTModFolder({
                 folderPath: folderPath,
                 tags: ["mod"],
                 notLoadImmediately: true,
@@ -117,7 +111,7 @@ class Project {
         this.dataStore ??= useDataStore();
         const savedEftPath = localStorage.getItem("eftFolderPath");
         if (savedEftPath) {
-            await this.loadEFTMods(new Path(savedEftPath));
+            await this.loadEFT(new Path(savedEftPath));
         }
     }
 

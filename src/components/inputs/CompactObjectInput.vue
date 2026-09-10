@@ -39,7 +39,7 @@ export default defineComponent({
                         {inputVnode}
                     </div>
                 );
-            });
+			});
 
             return <div class="compact-object-input">{items}</div>;
         };

@@ -1,7 +1,7 @@
 import type { RecordSchema } from "@/types/fields/fields";
 import { getAllLocalizationKeys } from "@/utils/copyUtils";
 import { availableLocales, gameLocalization, type locales } from "@/types/localization";
-import { currentProjectTag } from "@/project/Project";
+import { currentProjectTag, modTag, type ProjectArgs } from "./ProjectConsts";
 import { useDataStore } from "@/stores/dataStore";
 
 export default new class Locales {

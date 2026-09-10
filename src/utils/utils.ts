@@ -25,6 +25,8 @@ export function toJsonObject(obj: any): any {
                 result[key] = toJsonObject(value);
             } else if (Array.isArray(value) && value.some((v) => (typeof v === "object" && "toJSON" in v))) {
                 result[key] = value.map((v) => ((typeof v === "object" && "toJSON" in v) ? v.toJSON() : v));
+            } else if (value && typeof value === "object" && "toJSON" in value && typeof value.toJSON === "function") {
+                result[key] = value.toJSON();
             } else {
                 result[key] = value;
             }

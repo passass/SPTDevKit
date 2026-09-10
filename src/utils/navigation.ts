@@ -99,7 +99,7 @@ export class Navigator {
 			this.pathStack.push({
                 key: key.constructor.name,
                 type: "record",
-                label: key.constructor.name,
+                label: key.name ?? key.constructor.name,
                 value: key.data,
                 schema: key,
                 lastScrollPosition: lastScrollPosition,

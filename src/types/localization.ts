@@ -2,7 +2,7 @@ import { useDataStore } from "@/stores/dataStore";
 import { FileConfig } from "@/stores/fileStore.ts";
 import { idsFields, RecordSchema } from "./fields/fields";
 import { ref, type Ref } from "vue";
-import Project, { currentProjectTag } from "@/project/Project";
+import { currentProjectTag } from "@/project/ProjectConsts";
 
 export const availableLocales: Array<string> = ["ru", "en"];
 export type locales = "ru" | "en";

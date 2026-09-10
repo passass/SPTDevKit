@@ -2,7 +2,7 @@ import { useDataStore } from "@/stores/dataStore";
 import { RecordSchema } from "@/types/fields/fields";
 import { availableLocales, gameLocalization, suffixes, type locales } from "@/types/localization";
 import { Path } from "@/utils/pathUtils";
-import { currentProjectTag, type ProjectArgs } from "./Project";
+import { currentProjectTag, modTag, type ProjectArgs } from "./ProjectConsts";
 import { copyRecordSchema } from "@/utils/copyUtils";
 import { toJsonObject } from "@/utils/utils";
 

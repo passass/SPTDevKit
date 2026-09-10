@@ -110,14 +110,17 @@ import { getStaticField, type ClassType } from "@/utils/classUtils";
 import { Navigator } from "@/utils/navigation";
 import { gameLocalization, type locales } from "@/types/localization";
 import OptionsInput from "./OptionsInput.vue";
+import { type FieldContext } from "@/types/fields/fieldsConsts";
 
 type InputType = any[];
 const frameNavigator = inject<Navigator>("frameNavigator");
 
 const props = defineProps<{
-    modelValue: InputType;
-    field: Field;
-    selectedIndex?: number;
+    modelValue: Array<any>;
+	field: Field;
+	recordSchema: RecordSchema;
+	selectedIndex?: number;
+    fieldContext: FieldContext;
     navigateHandler?: (key: any) => void;
 }>();
 
@@ -190,7 +193,10 @@ function prevItem() {
 
 function deleteItem() {
     if (selectedIndex.value === null || selectedIndex.value < 0 || selectedIndex.value > items.value.length - 1) return;
+    if (props.field.onArrayItemDelete)
+        props.field.onArrayItemDelete(props.fieldContext, selectedIndex.value);
     items.value.splice(selectedIndex.value, 1);
+
 
     if (selectedIndex.value !== 0) {
         selectedIndex.value--;
@@ -201,7 +207,8 @@ function deleteItem() {
 
 function addItem() {
 	const arr = items.value ?? [];
-    if (isArrayArrayAdvancedSelect.value) {
+	const lastLength = arr.length;
+	if (isArrayArrayAdvancedSelect.value) {
         arr.push([]);
         selectedIndex.value = arr.length - 1;
         emit('update:modelValue', arr)
@@ -258,13 +265,15 @@ function addItem() {
             }
         }
 
-        console.log("xyll", resultSchema, resultSchema?.getData(), arr)
         if (resultSchema) {
-            arr.push(resultSchema.getData());
-           	emit('update:modelValue', arr)
-            console.log("xyll AFTER", resultSchema, resultSchema?.getData(), arr)
+            arr.push(resultSchema.toJSON());
+			emit('update:modelValue', arr)
             frameNavigator?.navigate([props.field.key, arr.length - 1]);
         }
+	}
+
+    if (props.field.onArrayItemAdd && lastLength !== arr.length) {
+        props.field.onArrayItemAdd(props.fieldContext, arr[arr.length - 1])
     }
 }
 
@@ -286,7 +295,7 @@ function removeSubItem(index: number | string) {
 function handleNavigate() {
 	if (props.navigateHandler) {
 		if (props.field.onArrayNavigate && selectedIndex.value !== null)
-			props.field.onArrayNavigate(selectedIndex.value, items.value[selectedIndex.value], props.navigateHandler)
+			props.field.onArrayNavigate(props.fieldContext, selectedIndex.value)
 		else
 			props.navigateHandler([props.field.key, selectedIndex.value])
 	}

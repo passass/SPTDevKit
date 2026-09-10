@@ -12,8 +12,8 @@ import { type WeaponBuildItem } from "@/stores/profileStore";
 import { type Component, h, defineComponent, ref, toRaw } from "vue";
 import { gameLocalization } from "@/types/localization";
 import { RecordSchema } from "@/types/fields/fields";
-import { useLootSpawns } from "@/project/LootSpawns";
-import { RecycleScroller } from "vue-virtual-scroller";
+import { type FieldContext } from "./fieldsConsts";
+import type { Navigator } from "@/utils/navigation";
 
 interface RenderRule {
     condition: (field: Field, recordSchema: RecordSchema) => boolean;
@@ -77,7 +77,7 @@ function getRewardDisplay(items: WeaponBuildItem[]): string {
 // Обертки для изоляции реактивности значений полей от внешнего computed(vnodes)
 const FieldTemplateWrapper = defineComponent({
     name: "FieldTemplateWrapper",
-    props: ["recordSchema", "field", "componentTemplate", "componentTemplateProps", "eventHandlers", "extraProps"],
+    props: ["recordSchema", "field", "fieldContext", "componentTemplate", "componentTemplateProps", "eventHandlers", "extraProps"],
     setup(props, { expose }) {
         const innerRef = ref<any>(null);
 
@@ -95,9 +95,10 @@ const FieldTemplateWrapper = defineComponent({
 
 			if (initValue === undefined) {
                 initValue = resolveDefaultValue(props.field, props.recordSchema.getData());
-            }
+                props.fieldContext.value = initValue;
+			}
 
-            return h(props.componentTemplate as any, {
+			return h(props.componentTemplate as any, {
                 ref: innerRef,
                 key: props.field.key,
                 field: props.field,
@@ -108,8 +109,10 @@ const FieldTemplateWrapper = defineComponent({
                 modelValue: initValue,
                 value: initValue,
                 checked: initValue,
-                "v-model": initValue,
-                ...(props.extraProps ?? {}),
+				"v-model": initValue,
+
+				fieldContext: props.fieldContext,
+				...(props.extraProps ?? {}),
                 ...(props.eventHandlers ?? {}),
                 ...(props.componentTemplateProps ?? {}),
             });
@@ -234,7 +237,7 @@ export interface fieldRenderParams {
     field: Field;
     exactRenderRules?: RenderRule[];
     extraProps?: Record<string, any>;
-    handleNavigate?: (key: any) => void;
+    handleNavigate?: Navigator["navigate"];
 }
 
 export function extraFieldRender({ recordSchema, field }: fieldRenderParams) {
@@ -242,11 +245,11 @@ export function extraFieldRender({ recordSchema, field }: fieldRenderParams) {
 }
 
 export function fieldRender({
-recordSchema,
-field,
-exactRenderRules,
-handleNavigate,
-extraProps,
+	recordSchema,
+	field,
+	exactRenderRules,
+	handleNavigate,
+	extraProps,
 }: fieldRenderParams): Component | undefined {
     for (const renderRule of exactRenderRules ?? renderRules) {
         if (renderRule.condition(field, recordSchema)) {
@@ -276,11 +279,20 @@ extraProps,
                 };
 
                 if (renderRule.hasOnInputEmit) eventHandlers.onInput = OnInput;
-                if (renderRule.hasOnChangeEmit) eventHandlers.onChange = OnChange;
+				if (renderRule.hasOnChangeEmit) eventHandlers.onChange = OnChange;
 
-                return h(FieldTemplateWrapper, {
+				const fieldContext: FieldContext = {
+					field,
+					value: recordSchema.get(field),
+					recordSchema,
+					data: recordSchema.getData(),
+					navigate: handleNavigate ?? (() => false),
+				};
+
+				return h(FieldTemplateWrapper, {
                     recordSchema,
-                    field,
+					field,
+                    fieldContext,
                     componentTemplate: renderRule.componentTemplate,
                     componentTemplateProps: renderRule.componentTemplateProps,
                     eventHandlers,

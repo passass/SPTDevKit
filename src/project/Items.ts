@@ -1,4 +1,5 @@
-import { type ProjectArgs, currentProjectTag } from "./Project";
+
+import { currentProjectTag, modTag, type ProjectArgs } from "./ProjectConsts";
 import { Path } from "../utils/pathUtils";
 import { useDataStore } from "@/stores/dataStore";
 import { itemsSchema } from "@/types/schemas/items";

@@ -99,7 +99,7 @@ import { useDataStore } from "@/stores/dataStore";
 import { DynamicScroller, DynamicScrollerItem } from "vue-virtual-scroller";
 import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
 import { Navigator } from "@/utils/navigation";
-import { currentProjectTag } from "@/project/Project";
+import { currentProjectTag } from "@/project/ProjectConsts";
 import { castToRecordSchema } from "@/types/fields/fields";
 
 export default defineComponent({
