@@ -18,7 +18,7 @@ class itemValueFieldClass extends HiddenField {
     getSerializedValue(fieldContext: FieldContext) {
         return sum(
             fieldContext.recordSchema
-                .getValuesByPath("items.*.upd.StackObjectsCount")
+                .getValuesByPath("items.*[!parentId].upd.StackObjectsCount")
                 .map((el) => Number(el)) as number[]
         );
     }

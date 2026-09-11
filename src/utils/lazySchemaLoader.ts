@@ -1,6 +1,5 @@
 // src/utils/lazySchemaLoader.ts
 
-import type { ClassType } from "@/utils/classUtils";
 import { SchemaChoicer, type SchemaChoice } from "@/types/fields/fieldsSchemaChoicer";
 import { RecordSchema, type Field } from "@/types/fields/fields";
 import { useFileDataStore } from "@/stores/fileStore";
@@ -56,7 +55,7 @@ async function loadTree(filePath: string): Promise<SchemaNode> {
                         const isSchemaChoicer = SchemaChoicer.isPrototypeOf(schema);
                         const isRecordSchema = RecordSchema.isPrototypeOf(schema);
                         if (isRecordSchema && "fields" in schema) {
-                            schema.fields = [...(schema.fields as Field[]), additionalFields];
+                            schema.fields.push(field);
                         } else if (isSchemaChoicer && "schemas" in schema && Array.isArray(schema.schemas)) {
                             const schemas: SchemaChoice[] = schema.schemas;
                             for (const schemaChoice of schemas) {

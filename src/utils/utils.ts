@@ -9,6 +9,10 @@ export function isElectron() {
     return window && window.electronAPI !== undefined;
 }
 
+type PathFilter =
+    | { kind: "eq"; key: string; value: string }
+    | { kind: "notExists"; key: string };
+
 export function toJsonObject(obj: any): any {
     if (obj instanceof Map) {
         const result: Record<string, any> = {};
@@ -71,25 +75,40 @@ type DataStructure = Record<string, any> | any[] | any;
 /**
  * Разбирает часть пути на имя и фильтр вида [key=value]
  */
-function parseFilter(part: string): { name: string; filter: [string, string] | null } {
-    const filterMatch = part.match(/\[([^=]+)=([^\]]+)\]$/);
-    if (filterMatch) {
-        const name = part.slice(0, filterMatch.index);
-        const [, key, value] = filterMatch;
-        return { name, filter: [key, value] };
-    }
-    return { name: part, filter: null };
-}
+ function parseFilter(part: string): { name: string; filter: PathFilter | null } {
+     const notExistsMatch = part.match(/\[!([^\]]+)\]$/);
+     if (notExistsMatch) {
+         const name = part.slice(0, notExistsMatch.index);
+         const [, key] = notExistsMatch;
+         return { name, filter: { kind: "notExists", key } };
+     }
+
+     const filterMatch = part.match(/\[([^=]+)=([^\]]+)\]$/);
+     if (filterMatch) {
+         const name = part.slice(0, filterMatch.index);
+         const [, key, value] = filterMatch;
+         return { name, filter: { kind: "eq", key, value } };
+     }
+
+     return { name: part, filter: null };
+ }
 
 /**
  * Проверяет, соответствует ли элемент фильтру
  */
-function matchesFilter(item: any, filterKey: string, filterValue: string): boolean {
-    if (item && typeof item === 'object' && filterKey in item) {
-        return String(item[filterKey]) === filterValue;
-    }
-    return false;
-}
+ function matchesFilter(item: any, filter: PathFilter): boolean {
+     if (item === null || item === undefined || typeof item !== "object") return false;
+
+     if (filter.kind === "eq") {
+         if (!(filter.key in item)) return false;
+         return String(item[filter.key]) === filter.value;
+     }
+
+     // notExists
+     if (!(filter.key in item)) return true;
+     const v = item[filter.key];
+     return v === "" || v === null || v === undefined;
+ }
 
 /**
  * Рекурсивный обход с применением фильтра
@@ -150,32 +169,29 @@ function traverseWithFilter(
 /**
  * Обрабатывает элемент с учётом фильтра
  */
-function processItemWithFilter(
-    item: any,
-    filter: [string, string] | null,
-    parts: string[],
-    nextIndex: number,
-    results: any[]
-): void {
-    if (filter === null) {
-        traverseWithFilter(item, parts, nextIndex, results);
-        return;
-    }
+ function processItemWithFilter(
+     item: any,
+     filter: PathFilter | null,
+     parts: string[],
+     nextIndex: number,
+     results: any[]
+ ): void {
+     if (filter === null) {
+         traverseWithFilter(item, parts, nextIndex, results);
+         return;
+     }
 
-    const [filterKey, filterValue] = filter;
-    // Если элемент соответствует фильтру, продолжаем обход
-    if (matchesFilter(item, filterKey, filterValue)) {
-        traverseWithFilter(item, parts, nextIndex, results);
-    } else if (Array.isArray(item)) {
-        // Если элемент - массив, проверяем каждый его элемент
-        for (const subItem of item) {
-            if (matchesFilter(subItem, filterKey, filterValue)) {
-                traverseWithFilter(subItem, parts, nextIndex, results);
-                break; // Нашли подходящий, дальше не ищем
-            }
-        }
-    }
-}
+     if (matchesFilter(item, filter)) {
+         traverseWithFilter(item, parts, nextIndex, results);
+     } else if (Array.isArray(item)) {
+         for (const subItem of item) {
+             if (matchesFilter(subItem, filter)) {
+                 traverseWithFilter(subItem, parts, nextIndex, results);
+                 break;
+             }
+         }
+     }
+ }
 
 /**
  * Возвращает все значения по заданному пути с поддержкой wildcard и фильтров
@@ -251,7 +267,7 @@ export function setValueByPath(data: DataStructure, path: string, value: any): b
         const { name, filter } = parseFilter(parts[parts.length - 1]);
 
         const tryAssign = (container: any, key: string | number, existing: any): void => {
-            if (filter !== null && !matchesFilter(existing, filter[0], filter[1])) return;
+            if (filter !== null && !matchesFilter(existing, filter)) return;
             container[key] = value;
             anySet = true;
         };
@@ -317,17 +333,16 @@ export function setValueByPath(data: DataStructure, path: string, value: any): b
         }
     }
 
-    function processItem(item: any, filter: [string, string] | null, nextIndex: number): void {
+    function processItem(item: any, filter: PathFilter | null, nextIndex: number): void {
         if (filter === null) {
             traverse(item, nextIndex);
             return;
         }
-        const [filterKey, filterValue] = filter;
-        if (matchesFilter(item, filterKey, filterValue)) {
+        if (matchesFilter(item, filter)) {
             traverse(item, nextIndex);
         } else if (Array.isArray(item)) {
             for (const subItem of item) {
-                if (matchesFilter(subItem, filterKey, filterValue)) {
+                if (matchesFilter(subItem, filter)) {
                     traverse(subItem, nextIndex);
                     break;
                 }
