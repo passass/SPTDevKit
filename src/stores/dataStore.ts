@@ -3,7 +3,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { useFileDataStore } from "./fileStore";
-import { castToRecordSchema, idsFields, RecordSchema, type SchemaData } from "@/types/fields/fields";
+import { castToRecordSchema, idsFields, RecordSchema, type SchemaData, type SchemaDataObject } from "@/types/fields/fields";
 import { getValueByPath } from "@/utils/utils";
 import { gameLocalization, type locales } from "@/types/localization";
 import { allElementsInArray } from "@/utils/utils";
@@ -444,3 +444,46 @@ export const useDataStore = defineStore("dataStore", () => {
         addTag,
     };
 });
+
+export class dataStore {
+	storeId: string;
+	dataSt?: ReturnType<typeof useDataStore>;
+	constructor(storeId: string) {
+		this.storeId = storeId;
+	}
+
+	register(config: DataStoreConfig) {
+		if (!this.dataSt) this.dataSt = useDataStore();
+		this.dataSt.register(this.storeId, config);
+	}
+
+	addSchema(id: string, value: RecordSchema | SchemaDataObject) {
+		if (!this.dataSt) this.dataSt = useDataStore();
+		this.dataSt.addSchema(this.storeId, id, value);
+	}
+
+	addTag(id: string, tag: string) {
+		if (!this.dataSt) this.dataSt = useDataStore();
+		this.dataSt.addTag(this.storeId, id, tag);
+	}
+
+	getMap() {
+		if (!this.dataSt) this.dataSt = useDataStore();
+		return this.dataSt.getMap(this.storeId);
+	}
+
+	getKeys() {
+		if (!this.dataSt) this.dataSt = useDataStore();
+		return this.dataSt.getKeys();
+	}
+
+	isInited() {
+		if (!this.dataSt) this.dataSt = useDataStore();
+		return this.dataSt.getKeys().includes(this.storeId);
+	}
+
+	remove(id: string) {
+		if (!this.dataSt) this.dataSt = useDataStore();
+		this.dataSt.remove(this.storeId, id);
+	}
+}

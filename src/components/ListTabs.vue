@@ -23,6 +23,27 @@
                     <span class="search-count"> Найдено: {{ filteredTabs.length }} из {{ tabs.length }} </span>
                 </div>
             </div>
+
+            <div v-if="availableTags.length > 0" class="tag-filter-container">
+                <div class="tag-filter-label">Фильтр по тегам:</div>
+                <div class="tag-filter-list">
+                    <label
+                        v-for="tag in availableTags"
+                        :key="tag"
+                        class="tag-filter-item"
+                        :class="{ active: selectedTags.includes(tag) }"
+                    >
+                        <input
+                            type="checkbox"
+                            :value="tag"
+                            v-model="selectedTags"
+                            @change="handleTagFilter"
+                        />
+                        <span>{{ tag }}</span>
+                    </label>
+                </div>
+            </div>
+
             <button v-if="schemaType" class="create-btn" @click="createNewSchema">Создать</button>
 
             <!-- Виртуальный список вкладок -->
@@ -91,15 +112,13 @@
 import { defineComponent, ref, computed, onMounted, inject, nextTick, toValue } from "vue";
 import ListTabsFrame from "./ListTabsFrame.vue";
 import type { Tab } from "@/tabs/tabs";
-import { RecordSchema } from "@/types/fields/fields";
 import type { Component } from "vue";
 import { type dataMapRecordType } from "@/stores/dataStore";
 import { useDataStore } from "@/stores/dataStore";
 import { DynamicScroller, DynamicScrollerItem } from "vue-virtual-scroller";
 import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
 import { Navigator } from "@/utils/navigation";
-import { currentProjectTag } from "@/project/ProjectConsts";
-import { castToRecordSchema } from "@/types/fields/fields";
+import { currentProjectTag, modTag, vanillaTag } from "@/project/ProjectConsts";
 
 export default defineComponent({
     name: "ListTabs",
@@ -117,7 +136,7 @@ export default defineComponent({
         searchPlaceholder: { type: String },
         caseSensitive: { type: Boolean },
         searchFields: { type: Array as () => Array<keyof Tab> },
-    },
+	},
     emits: ["tab-selected", "refresh", "content-update", "search"],
     setup(props, { emit }) {
         const dataStore = useDataStore();
@@ -125,25 +144,74 @@ export default defineComponent({
         const activeTab = ref<string | null>(null);
         const searchQuery = ref("");
 
+        const selectedTags = ref<string[]>([]);
+        const filterableTags = [currentProjectTag, vanillaTag, modTag];
+
+        const availableTags = computed(() => {
+            const present = new Set<string>();
+            for (const tab of props.tabs) {
+                const record = props.fileData?.get(tab.id);
+                if (record?.tags) {
+                    for (const tag of record.tags) present.add(tag);
+                }
+            }
+            return filterableTags.filter((tag) => present.has(tag));
+        });
+
         const currentTab = computed(() => {
             return props.tabs.find((t) => t.id === activeTab.value);
         });
 
         const filteredTabs = computed(() => {
-            if (!props.isSearch || !searchQuery.value.trim()) {
-                return props.tabs;
+            let result = props.tabs;
+
+            // Фильтрация по тегам
+            if (selectedTags.value.length > 0 && props.fileData) {
+                const fileData = props.fileData;
+                result = result.filter((tab) => {
+                    const record = fileData.get(tab.id);
+                    if (!record?.tags) return false;
+                    return selectedTags.value.every((tag) => record.tags!.includes(tag));
+                });
             }
-            const query = props.caseSensitive ? searchQuery.value.trim() : searchQuery.value.trim().toLowerCase();
-            return props.tabs.filter((tab) => {
+
+            // Фильтрация по поиску
+            if (!props.isSearch || !searchQuery.value.trim()) {
+                return result;
+            }
+            const query = props.caseSensitive
+                ? searchQuery.value.trim()
+                : searchQuery.value.trim().toLowerCase();
+            return result.filter((tab) => {
                 const label = props.caseSensitive ? tab.label.trim() : tab.label.trim().toLowerCase();
                 const id = props.caseSensitive ? tab.id.trim() : tab.id.trim().toLowerCase();
                 return label.includes(query) || id.includes(query);
             });
-        });
+		});
+
+        function isTabVisible(tabId: string): boolean {
+            const hasSearch = props.isSearch && !!searchQuery.value.trim();
+            const hasTagFilter = selectedTags.value.length > 0;
+            if (!hasSearch && !hasTagFilter) {
+                return true;
+            }
+            return filteredTabs.value.some((t) => t.id === tabId);
+		}
+
+		function handleTagFilter() {
+		    if (activeTab.value && !isTabVisible(activeTab.value)) {
+		        if (filteredTabs.value.length > 0) {
+		            selectTab(filteredTabs.value[0]?.id ?? "");
+		        } else {
+		            activeTab.value = null;
+		        }
+		    }
+		}
 
         function createNewSchema() {
             if (!props.fileData || !props.schemaType) return;
-            const newInstance = castToRecordSchema({}, props.schemaType);
+			const newInstance = props.schemaType.from({});
+			if (!newInstance) return;
             const newInstanceId = newInstance.getId();
             if (newInstanceId && props.storeId) {
                 const store = dataStore.getMap(props.storeId);
@@ -176,13 +244,6 @@ export default defineComponent({
 
         function handleContentUpdate(data: any) {
             emit("content-update", data);
-        }
-
-        function isTabVisible(tabId: string): boolean {
-            if (!props.isSearch || !searchQuery.value.trim()) {
-                return true;
-            }
-            return filteredTabs.value.some((t) => t.id === tabId);
         }
 
         function handleSearch() {
@@ -246,7 +307,10 @@ export default defineComponent({
             refreshTab,
             closeTab,
             handleContentUpdate,
-            isTabVisible,
+			isTabVisible,
+			handleTagFilter,
+			selectedTags,
+            availableTags,
             handleSearch,
             clearSearch,
             highlightMatch,
@@ -583,5 +647,67 @@ export default defineComponent({
 
 .tab-scroller::-webkit-scrollbar-thumb:hover {
     background: #777;
+}
+
+/* ===== ФИЛЬТР ПО ТЕГАМ ===== */
+.tag-filter-container {
+    padding: 6px 12px 8px 12px;
+    border-bottom: 1px solid #3d3d3d;
+    margin-bottom: 4px;
+    flex-shrink: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.tab-list:hover .tag-filter-container {
+    opacity: 1;
+    visibility: visible;
+}
+
+.tag-filter-label {
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tag-filter-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    flex: 0 0 190px;
+}
+
+.tag-filter-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    background: #3d3d3d;
+    border: 1px solid #4a4a4a;
+    border-radius: 12px;
+    font-size: 11px;
+    color: #b0b0b0;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+
+.tag-filter-item:hover {
+    border-color: #42b883;
+    color: #e0e0e0;
+}
+
+.tag-filter-item.active {
+    background: #42b883;
+    border-color: #42b883;
+    color: #1a1a1a;
+}
+
+.tag-filter-item input[type="checkbox"] {
+    display: none;
 }
 </style>

@@ -1,8 +1,7 @@
-// src/types/fields.ts
 import { Data } from "dataclass";
 import { type SchemaChoice, SchemaChoicer } from "./fieldsSchemaChoicer";
 import { getStaticField } from "@/utils/classUtils";
-import { getValueByPath, toJsonObject } from "@/utils/utils";
+import { getValueByPath } from "@/utils/utils";
 import { type FieldContext } from "./fieldsConsts";
 
 export const idsFields: string[] = ["_id", "id"];

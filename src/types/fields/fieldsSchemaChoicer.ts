@@ -13,6 +13,15 @@ export interface SchemaChoice {
 export class SchemaChoicer {
 	static schemas: SchemaChoice[] = []
 
+	static from(data: SchemaData): RecordSchema | null {
+		for (const schemaChoice of this.schemas) {
+			if (schemaChoice.condition(data)) {
+				return schemaChoice.schema.from(data)
+			}
+		}
+		return null
+	}
+
 	static getSchema(data: SchemaData): SchemaChoice | null {
 		for (const schemaChoice of this.schemas) {
 			if (schemaChoice.condition(data)) {
