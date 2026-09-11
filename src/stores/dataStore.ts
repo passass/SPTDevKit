@@ -291,43 +291,6 @@ export const useDataStore = defineStore("dataStore", () => {
         getMap(key).clear();
     }
 
-    // Сохранить в файл(ы)
-    async function save(key: string) {
-        const config = configs.value.get(key);
-        if (!config) {
-            throw new Error(`Store "${key}" not registered`);
-        }
-
-        const store = getMap(key);
-        const filenames = Array.isArray(config.file) ? config.file : [config.file];
-
-        // Если несколько файлов, сохраняем в первый
-        const filename = getValueByPath(filenames[0], "filename", filenames[0]);
-
-        const result: Record<string, any> = {};
-        for (const [id, data] of store) {
-            if (data && typeof data === "object" && "toJSON" in data && typeof data.toJSON === "function") {
-                result[id] = data.toJSON();
-            } else {
-                result[id] = data;
-            }
-        }
-
-        await fileStore.write(filename, result);
-    }
-
-    // Сохранить несколько
-    async function saveMultiple(keys: string[]) {
-        const promises = keys.map((key) => save(key));
-        await Promise.all(promises);
-    }
-
-    // Сохранить все
-    async function saveAll() {
-        const keys = Array.from(configs.value.keys());
-        await saveMultiple(keys);
-    }
-
     // Проверить, загружены ли данные
     function isLoaded(key: string): boolean {
         const status = loadingStatus.value.get(key);
@@ -431,9 +394,6 @@ export const useDataStore = defineStore("dataStore", () => {
         set,
         remove,
         clear,
-        save,
-        saveMultiple,
-        saveAll,
         isLoaded,
         isAllLoaded,
         getError,
@@ -485,5 +445,25 @@ export class dataStore {
 	remove(id: string) {
 		if (!this.dataSt) this.dataSt = useDataStore();
 		this.dataSt.remove(this.storeId, id);
+	}
+
+	async load() {
+		if (!this.dataSt) this.dataSt = useDataStore();
+		await this.dataSt.load(this.storeId);
+	}
+
+	addFileToStore(file: { filename: string; tags: string[] }) {
+		if (!this.dataSt) this.dataSt = useDataStore();
+		this.dataSt.addFileToStore(this.storeId, file);
+	}
+
+	getByTagInStore(tag: string | string[]) {
+		if (!this.dataSt) this.dataSt = useDataStore();
+		return this.dataSt.getByTagInStore(this.storeId, tag);
+	}
+
+	get config() {
+		if (!this.dataSt) this.dataSt = useDataStore();
+		return this.dataSt.configs.get(this.storeId);
 	}
 }

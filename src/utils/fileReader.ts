@@ -37,9 +37,16 @@ export async function readJson(filepath: string) {
 		//const jsonString: string = result.data.toString('utf-8');
 		const decoder = new TextDecoder('utf-8');
 		const jsonString = decoder.decode(result.data);
-		const data = JSON.parse(jsonString);
+		for (const jsonParser of [JSON.parse, parse]) {
+			try {
+				const data = jsonParser(jsonString);
+				return data;
+			} catch {
+				continue;
+			}
+		}
 
-		return data;
+		return undefined;
 	}
 
 	throw new Error(`readJson is not supported in non electron enviroment`);

@@ -9,7 +9,7 @@ import type { SchemaData } from "@/types/fields/fields";
 import { generateUUID24chars } from "@/utils/uuidUtils";
 
 const SPAWN_POINTS_STORE = "spawnPoints";
-const lootSpawndataStore = new dataStore(SPAWN_POINTS_STORE);
+export const lootSpawndataStore = new dataStore(SPAWN_POINTS_STORE);
 
 export const useLootSpawns = defineStore("lootSpawns", {
     actions: {

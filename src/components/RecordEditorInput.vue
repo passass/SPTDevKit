@@ -93,7 +93,7 @@ import SchemaChooserInput from "@/components/inputs/SchemaChooserInput.vue";
 import { RecordSchema, Field } from "@/types/fields/fields";
 import { gameLocalization } from "@/types/localization";
 import { Navigator, isNavigable } from "@/utils/navigation";
-import { Tab } from "@/tabs/tabs";
+import { Tab } from "@/types/tabs";
 import ListTabs from "./ListTabs.vue";
 import { useDataStore } from "@/stores/dataStore";
 import { currentProjectTag } from "@/project/ProjectConsts";

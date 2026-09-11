@@ -1,7 +1,7 @@
 <script setup lang="tsx">
 import ListTabs from "@/components/ListTabs.vue";
 import RecordEditor from "@/components/RecordEditor.vue";
-import type { Tab } from "@/tabs/tabs.ts";
+import type { Tab } from "@/types/tabs";
 import { ref, type Component, onMounted } from "vue";
 import { gameLocalization } from "@/types/localization";
 import ListTabsFrame from "./ListTabsFrame.vue";

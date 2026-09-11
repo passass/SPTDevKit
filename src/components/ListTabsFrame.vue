@@ -56,7 +56,7 @@
 
 <script lang="ts">
 import { capitalize, type PropType } from "vue";
-import type { Tab } from "@/tabs/tabs.ts";
+import type { Tab } from "@/types/tabs";
 import { Navigator, type PathItem } from "@/utils/navigation";
 import { gameLocalization } from "@/types/localization";
 

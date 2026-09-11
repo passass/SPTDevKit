@@ -1,22 +1,48 @@
 
-import { currentProjectTag, modTag, type ProjectArgs } from "./ProjectConsts";
+import { currentProjectTag, modTag, vanillaTag, type ProjectArgs } from "./ProjectConsts";
 import { Path } from "../utils/pathUtils";
-import { useDataStore, type dataMapRecordType } from "@/stores/dataStore";
+import { dataStore, useDataStore, type dataMapRecordType } from "@/stores/dataStore";
 import { itemsSchema } from "@/types/schemas/items";
 import Locales from "./Locales";
-import { useLootSpawns } from "./LootSpawns";
+import { useLootSpawns, lootSpawndataStore } from "./LootSpawns";
+
+export const itemsDataStore = new dataStore("items");
 
 class Items {
     async loadItems(projectArgs: ProjectArgs) {
-	   	const dataStore = useDataStore();
 	    const filesFound = await new Path(projectArgs.folderPath, "db/CustomItems/*.json").findFiles();
 	    for (const filepath of filesFound) {
-	        dataStore.addFileToStore("items", {
+	        itemsDataStore.addFileToStore({
 	            filename: filepath.filePath,
 	            tags: projectArgs.tags,
 	        });
 	    }
-	    if (!projectArgs.notLoadImmediately) await dataStore.load("items");
+	    if (!projectArgs.notLoadImmediately) await itemsDataStore.load();
+	}
+
+	clearProject() {
+		const lootSpawnStore = useLootSpawns();
+		const itemsMap = itemsDataStore.getMap()
+		const lootSpawnMap = lootSpawndataStore.getMap()
+		for (const itemId of itemsDataStore.getByTagInStore(currentProjectTag).keys()) {
+			itemsMap.delete(itemId);
+
+			for (const spawnPoint of lootSpawnStore.getSpawnPointsForItem(itemId)) {
+				const id = spawnPoint.get("locationId");
+				if (typeof id === "string") lootSpawnMap.delete(id);
+			}
+		}
+
+		const config = itemsDataStore.config;
+		if (config) {
+			if (!Array.isArray(config.file)) {
+	            config.file = [config.file];
+	        }
+
+	        config.file = config.file.filter(
+	            (file) => !file.tags?.includes(currentProjectTag)
+	        );
+		}
 	}
 
 	async saveLocales(currentProjectFolder: Path) {
@@ -26,9 +52,8 @@ class Items {
 	}
 
 	async saveProject(currentProjectFolder: Path) {
-		const dataStore = useDataStore();
 		const res = new Map<string, dataMapRecordType>();
-        for (const [itemId, item] of dataStore.getByTagInStore("items", currentProjectTag).entries()) {
+        for (const [itemId, item] of itemsDataStore.getByTagInStore(currentProjectTag).entries()) {
             res.set(itemId, item.data);
 		}
 
@@ -57,7 +82,7 @@ class Items {
 			file: [
 				{
 					filename: 'items.json'
-					, tags: ["vanilla"]
+					, tags: [vanillaTag]
 				}
 			],
 			schemaType: itemsSchema

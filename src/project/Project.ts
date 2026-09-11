@@ -1,14 +1,15 @@
 import { useDataStore } from "@/stores/dataStore";
 import Traders from "./Traders";
-import Quests from "./Quests";
+import Quests, { questDataStore } from "./Quests";
 import { Path, PathArray } from "@/utils/pathUtils"
 import { availableLocales, suffixes } from "@/types/localization";
-import { isElectron } from "@/utils/utils";
+import { deepClone, isElectron } from "@/utils/utils";
 import { useProfilesStore } from "@/stores/profileStore";
 import Items from "./Items";
 import { useLootSpawns } from "@/project/LootSpawns";
 import { currentProjectTag, modTag, type ProjectArgs } from "./ProjectConsts";
-
+import Locales from "./Locales";
+import RecentProjects from "./RecentProjects";
 
 
 class Project {
@@ -16,66 +17,32 @@ class Project {
     EFTFolder?: Path;
 	currentProjectFolder?: Path;
 
-	async loadLocale(projectArgs: ProjectArgs) {
-
-		// загрузка локализации из квестов
-        const customQuestsPath = new Path(projectArgs.folderPath, "db/CustomQuests");
-        const storeIds: Set<string> = new Set();
-        for (const traderQuestPath of await customQuestsPath.findFolders("*")) {
-            const traderId = customQuestsPath.relative(traderQuestPath);
-            const localesFolderPath = new Path(traderQuestPath, "Locales");
-            for (const locale of availableLocales) {
-                const localeFilePath = localesFolderPath.join(`${locale}.json`);
-                if (await localeFilePath.exists()) {
-                    const storeId = `${locale}${suffixes.localizationSuffix}`;
-                    storeIds.add(storeId);
-                    this.dataStore?.addFileToStore(storeId, {
-                        filename: localeFilePath.toString(),
-                        tags: [...projectArgs.tags, "locales", traderId.basename()],
-                    });
-                }
-            }
-		}
-
-		// загрузка кастомной общей локализации
-        const localeFiles = await new Path(projectArgs.folderPath, "db/CustomLocales/*.json").findFiles();
-        for (const localeFilePath of localeFiles) {
-            const locale = localeFilePath.stem();
-            if (!availableLocales.includes(locale)) continue;
-            const storeId = `${locale}${suffixes.localizationSuffix}`;
-            storeIds.add(storeId);
-            this.dataStore?.addFileToStore(storeId, {
-                filename: localeFilePath.toString(),
-                tags: [currentProjectTag, "locales", locale],
-            });
-        }
-        if (!projectArgs.notLoadImmediately) await this.dataStore?.loadMultiple(Array.from(storeIds.values()));
-    }
-
-    async loadTraders(projectArgs: ProjectArgs) {
-        await new PathArray(["data/base.json", "db/base.json"], projectArgs.folderPath).forEach((filePath) => {
-            Traders.loadAdditionalTrader(filePath.toString(), projectArgs.tags);
-        });
-        if (!projectArgs.notLoadImmediately) await this.dataStore?.load("traders");
-    }
-
 	async loadSPTModFolder(projectArgs: ProjectArgs) {
 		const lootSpawnStore = useLootSpawns();
         await Promise.all([
             Quests.loadQuests(projectArgs),
             Items.loadItems(projectArgs),
-            this.loadTraders(projectArgs),
-			this.loadLocale(projectArgs),
+            Traders.loadTraders(projectArgs),
+			Locales.loadLocale(projectArgs),
             lootSpawnStore.loadLocations(projectArgs)
         ]);
-    }
+	}
 
-    async loadProject(folderPath: Path) {
-        this.currentProjectFolder = folderPath;
-        await this.loadSPTModFolder({
+	clearProjectObjects() {
+		Items.clearProject();
+		Quests.clearProject();
+	}
+
+	async loadProject(folderPath: Path) {
+		this.currentProjectFolder = folderPath;
+		RecentProjects.addRecentProject(folderPath.toString());
+		this.clearProjectObjects();
+		console.log("quests before ", (questDataStore.config?.file as Array<any>).length, deepClone(questDataStore.config?.file))
+		await this.loadSPTModFolder({
             folderPath: folderPath,
             tags: [currentProjectTag],
         });
+		console.log("quests after ", (questDataStore.config?.file as Array<any>).length, deepClone(questDataStore.config?.file))
     }
 
     async loadEFT(folderPath: Path) {
@@ -85,7 +52,7 @@ class Project {
         for (const folderPath of await new Path(this.EFTFolder, "SPT*/user/mods/*").findFolders()) {
             await this.loadSPTModFolder({
                 folderPath: folderPath,
-                tags: ["mod"],
+                tags: [modTag],
                 notLoadImmediately: true,
             });
 		}
@@ -124,9 +91,9 @@ class Project {
 
     isOpened() {
         return !!this.currentProjectFolder;
-    }
+	}
 
-    constructor() {}
+	constructor() { }
 }
 
 export default new Project();

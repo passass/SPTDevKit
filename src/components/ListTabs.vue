@@ -111,7 +111,7 @@
 <script lang="tsx">
 import { defineComponent, ref, computed, onMounted, inject, nextTick, toValue } from "vue";
 import ListTabsFrame from "./ListTabsFrame.vue";
-import type { Tab } from "@/tabs/tabs";
+import type { Tab } from "@/types/tabs";
 import type { Component } from "vue";
 import { type dataMapRecordType } from "@/stores/dataStore";
 import { useDataStore } from "@/stores/dataStore";

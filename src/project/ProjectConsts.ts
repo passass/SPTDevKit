@@ -7,4 +7,6 @@ export type ProjectArgs = {
 export const currentProjectTag = "currentProject";
 export const modTag = "mod";
 export const vanillaTag = "vanilla";
+
 export const maxRecentProjects = 3;
+export const recentProjectsStorageKey = "recentProjects";

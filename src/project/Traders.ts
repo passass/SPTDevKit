@@ -2,7 +2,8 @@ import { useDataStore, type DataStoreConfigFiles } from "@/stores/dataStore";
 import type { RecordSchema } from "@/types/fields/fields";
 import { generateSchemaInFile } from "@/utils/schemaGenerator";
 import { isElectron } from "@/utils/utils";
-import { Path } from "@/utils/pathUtils";
+import { Path, PathArray } from "@/utils/pathUtils";
+import { type ProjectArgs } from "./ProjectConsts";
 
 class Traders {
 	dataStore: ReturnType<typeof useDataStore> | null = null
@@ -13,6 +14,13 @@ class Traders {
 			tags: ["oneObject", ...tags]
 		})
 	}
+
+	async loadTraders(projectArgs: ProjectArgs) {
+        await new PathArray(["data/base.json", "db/base.json"], projectArgs.folderPath).forEach((filePath) => {
+            this.loadAdditionalTrader(filePath.toString(), projectArgs.tags);
+        });
+        if (!projectArgs.notLoadImmediately) await this.dataStore?.load("traders");
+    }
 
 	async load() {
 		this.dataStore = useDataStore();

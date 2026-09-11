@@ -1,28 +1,30 @@
-import { useDataStore } from "@/stores/dataStore";
+import { dataStore, useDataStore } from "@/stores/dataStore";
 import { RecordSchema } from "@/types/fields/fields";
 import { availableLocales, gameLocalization, suffixes, type locales } from "@/types/localization";
 import { Path } from "@/utils/pathUtils";
 import { currentProjectTag, modTag, type ProjectArgs } from "./ProjectConsts";
 import { copyRecordSchema } from "@/utils/copyUtils";
 import { toJsonObject } from "@/utils/utils";
+import { customRef } from "vue";
+
+export const questDataStore = new dataStore("quests");
+
 
 class Quests {
     async loadQuests(projectArgs: ProjectArgs) {
-        const dataStore = useDataStore();
         const filesFound = await new Path(projectArgs.folderPath, "db/*/*/?uests/*.json").findFiles();
         for (const filepath of filesFound) {
-            dataStore.addFileToStore("quests", {
+            questDataStore.addFileToStore({
                 filename: filepath.filePath,
                 tags: projectArgs.tags,
             });
         }
-        if (!projectArgs.notLoadImmediately) await dataStore.load("quests");
+        if (!projectArgs.notLoadImmediately) await questDataStore.load();
     }
 
     getProjectQuests(): Map<string, RecordSchema> {
-        const dataStore = useDataStore();
         const res = new Map();
-        for (const [questId, quest] of dataStore.getByTagInStore("quests", currentProjectTag).entries()) {
+        for (const [questId, quest] of questDataStore.getByTagInStore(currentProjectTag).entries()) {
             res.set(questId, quest.data);
         }
         return res;
@@ -79,7 +81,25 @@ class Quests {
 
     copyQuest(data: RecordSchema): RecordSchema {
 	    return copyRecordSchema(data, currentProjectTag);
-    }
+	}
+
+	clearProject() {
+		const questsMap = questDataStore.getMap()
+		for (const questId of questDataStore.getByTagInStore(currentProjectTag).keys()) {
+			questsMap.delete(questId);
+		}
+
+		const config = questDataStore.config;
+		if (config) {
+			if (!Array.isArray(config.file)) {
+	            config.file = [config.file];
+	        }
+
+	        config.file = config.file.filter(
+	            (file) => !file.tags?.includes(currentProjectTag)
+	        );
+		}
+	}
 }
 
 export default new Quests();

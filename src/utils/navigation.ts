@@ -1,6 +1,6 @@
 // src/utils/navigation.ts
 import { RecordSchema, castToRecordSchema, type arrayItemSchemaType } from "@/types/fields/fields";
-import type { Tab } from "@/tabs/tabs.ts";
+import type { Tab } from "@/types/tabs";
 import { nextTick, type Component } from "vue";
 
 export interface NavigatorOptions {
