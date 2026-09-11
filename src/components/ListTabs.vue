@@ -118,7 +118,8 @@ import { useDataStore } from "@/stores/dataStore";
 import { DynamicScroller, DynamicScrollerItem } from "vue-virtual-scroller";
 import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
 import { Navigator } from "@/utils/navigation";
-import { currentProjectTag, modTag, vanillaTag } from "@/project/ProjectConsts";
+import { currentProjectTag, modTag, vanillaTag } from "@/consts/ProjectConsts";
+import { generateUUID24chars } from "@/utils/uuidUtils";
 
 export default defineComponent({
     name: "ListTabs",
@@ -208,17 +209,18 @@ export default defineComponent({
 		    }
 		}
 
-        function createNewSchema() {
+		function createNewSchema() {
             if (!props.fileData || !props.schemaType) return;
 			const newInstance = props.schemaType.from({});
 			if (!newInstance) return;
-            const newInstanceId = newInstance.getId();
-            if (newInstanceId && props.storeId) {
-                const store = dataStore.getMap(props.storeId);
+            const newInstanceId = newInstance.getId() ?? generateUUID24chars();
+			if (newInstanceId && props.storeId) {
+            	console.log("newInstance", newInstance)
                 props.fileData.set(newInstanceId, { data: newInstance });
-                store.set(newInstanceId, newInstance);
+                dataStore.addSchema(props.storeId, newInstanceId, newInstance);
                 dataStore.addTag(props.storeId, newInstanceId, currentProjectTag);
-                selectTab(newInstanceId);
+
+				selectTab(newInstanceId);
             }
         }
 

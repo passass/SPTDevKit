@@ -1,13 +1,13 @@
 import type { RecordSchema } from "@/types/fields/fields";
 import { getAllLocalizationKeys } from "@/utils/copyUtils";
 import { availableLocales, gameLocalization, type locales } from "@/types/localization";
-import { currentProjectTag, modTag, type ProjectArgs } from "./ProjectConsts";
+import { currentProjectTag, modTag, type ProjectArgs } from "../consts/ProjectConsts";
 import { useDataStore } from "@/stores/dataStore";
 import { Path } from "@/utils/pathUtils";
 import { suffixes } from "@/types/localization";
 
 export default new class Locales {
-	async loadLocale(projectArgs: ProjectArgs) {
+	async loadFromMod(projectArgs: ProjectArgs) {
 		const dataStore = useDataStore();
 
 		// загрузка локализации из квестов

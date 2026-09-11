@@ -1,15 +1,15 @@
 
-import { currentProjectTag, modTag, vanillaTag, type ProjectArgs } from "./ProjectConsts";
+import { currentProjectTag, modTag, vanillaTag, type ProjectArgs } from "../consts/ProjectConsts";
 import { Path } from "../utils/pathUtils";
 import { dataStore, useDataStore, type dataMapRecordType } from "@/stores/dataStore";
 import { itemsSchema } from "@/types/schemas/items";
 import Locales from "./Locales";
-import { useLootSpawns, lootSpawndataStore } from "./LootSpawns";
+import { lootSpawns, lootSpawndataStore } from "./LootSpawns";
 
 export const itemsDataStore = new dataStore("items");
 
 class Items {
-    async loadItems(projectArgs: ProjectArgs) {
+    async loadFromMod(projectArgs: ProjectArgs) {
 	    const filesFound = await new Path(projectArgs.folderPath, "db/CustomItems/*.json").findFiles();
 	    for (const filepath of filesFound) {
 	        itemsDataStore.addFileToStore({
@@ -21,7 +21,7 @@ class Items {
 	}
 
 	clearProject() {
-		const lootSpawnStore = useLootSpawns();
+		const lootSpawnStore = lootSpawns;
 		const itemsMap = itemsDataStore.getMap()
 		const lootSpawnMap = lootSpawndataStore.getMap()
 		for (const itemId of itemsDataStore.getByTagInStore(currentProjectTag).keys()) {
@@ -57,20 +57,19 @@ class Items {
             res.set(itemId, item.data);
 		}
 
-		const lootSpawnStore = useLootSpawns();
-		const lootSpawns: Map<string, Array<dataMapRecordType>> = new Map();
+		const lootSpawnsResult: Map<string, Array<dataMapRecordType>> = new Map();
 		for (const [itemId, item] of res.entries()) {
-			for (const lootSpawn of lootSpawnStore.getSpawnPointsForItem(itemId)) {
+			for (const lootSpawn of lootSpawns.getSpawnPointsForItem(itemId)) {
 				const location = lootSpawn.get("__location");
 				if (typeof location !== "string") continue;
-				const locationMap = lootSpawns.get(location) ?? [];
+				const locationMap = lootSpawnsResult.get(location) ?? [];
 				locationMap.push(lootSpawn);
-				lootSpawns.set(location, locationMap);
+				lootSpawnsResult.set(location, locationMap);
 			}
 		}
 
 		await Promise.all([
-			new Path(currentProjectFolder, `db/CustomLootspawns/CustomSpawnpointsForced/spawns.json`).saveFile(lootSpawns),
+			new Path(currentProjectFolder, `db/CustomLootspawns/CustomSpawnpointsForced/spawns.json`).saveFile(lootSpawnsResult),
 			this.saveLocales(currentProjectFolder),
 			new Path(currentProjectFolder, `db/CustomItems/items.json`).saveFile(res),
 		]);

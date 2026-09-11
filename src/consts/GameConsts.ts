@@ -1,0 +1,36 @@
+export const zoneLocations = [
+    "Sandbox_high",
+    "Bigmap",
+    "Factory4_day",
+    "Factory4_night",
+    "Interchange",
+    "Laboratory",
+    "Lighthouse",
+    "RezervBase",
+    "Shoreline",
+    "TarkovStreets",
+    "Woods",
+];
+
+
+export const allLocationsLowerCase = [
+    "bigmap",
+    "develop",
+    "factory4_day",
+    "factory4_night",
+    "hideout",
+    "interchange",
+    "laboratory",
+    "labyrinth",
+    "lighthouse",
+    "privatearea",
+    "rezervbase",
+    "sandbox",
+    "sandbox_high",
+    "shoreline",
+    "suburbs",
+    "tarkovstreets",
+    "terminal",
+    "town",
+    "woods",
+];

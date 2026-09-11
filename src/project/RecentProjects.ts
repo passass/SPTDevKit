@@ -1,4 +1,4 @@
-import { recentProjectsStorageKey, maxRecentProjects } from "./ProjectConsts";
+import { recentProjectsStorageKey, maxRecentProjects } from "../consts/ProjectConsts";
 
 
 export class RecentProjects {

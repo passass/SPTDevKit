@@ -190,7 +190,8 @@ export class QuestSchema extends RecordSchema {
 			description: 'Условия для начала и выполнения',
 			type: 'object',
 			order: 21,
-			nestedSchema: QuestConditions
+			nestedSchema: QuestConditions,
+			alwaysFillWithDefault: true,
 		}),
 
 		// ===== НАГРАДЫ =====
@@ -200,7 +201,9 @@ export class QuestSchema extends RecordSchema {
 			description: 'Награды за выполнение квеста',
 			type: 'object',
 			nestedSchema: RewardsSchemas,
-			order: 22
+			order: 22,
+
+			alwaysFillWithDefault: true,
 		}),
 
 		// ===== ТОРГОВЕЦ =====

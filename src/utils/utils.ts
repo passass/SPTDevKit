@@ -3,6 +3,8 @@ export function capitalize(str: string) {
     return str[0].toUpperCase() + str.slice(1);
 }
 
+export const sum = (arr: number[]) => arr.reduce((acc, n) => acc + n, 0);
+
 export function isElectron() {
     return window && window.electronAPI !== undefined;
 }

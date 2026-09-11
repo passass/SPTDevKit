@@ -96,7 +96,7 @@ import { Navigator, isNavigable } from "@/utils/navigation";
 import { Tab } from "@/types/tabs";
 import ListTabs from "./ListTabs.vue";
 import { useDataStore } from "@/stores/dataStore";
-import { currentProjectTag } from "@/project/ProjectConsts";
+import { currentProjectTag } from "@/consts/ProjectConsts";
 import { fieldRender, extraFieldRender } from "@/types/fields/fieldsRender";
 
 const props = defineProps<{

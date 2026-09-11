@@ -1,7 +1,7 @@
 import { Data } from "dataclass";
 import { type SchemaChoice, SchemaChoicer } from "./fieldsSchemaChoicer";
 import { getStaticField } from "@/utils/classUtils";
-import { getValueByPath } from "@/utils/utils";
+import { getValueByPath, getValuesByPath } from "@/utils/utils";
 import { type FieldContext } from "./fieldsConsts";
 
 export const idsFields: string[] = ["_id", "id"];
@@ -207,9 +207,8 @@ export class RecordSchema {
         return fields.find((el: Field) => el.key === key) ?? def;
 	}
 
-	getValueByPath(path: string): any {
-		return getValueByPath(this.getData(), path)
-	}
+	getValueByPath = (path: string) => getValueByPath(this.getData(), path)
+	getValuesByPath = (path: string) => getValuesByPath(this.getData(), path)
 
 	getArrayCastedData(key: string): RecordSchema[] {
         const field = this.getFieldByKey(key);

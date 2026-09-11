@@ -6,11 +6,20 @@ import { availableLocales, suffixes } from "@/types/localization";
 import { deepClone, isElectron } from "@/utils/utils";
 import { useProfilesStore } from "@/stores/profileStore";
 import Items from "./Items";
-import { useLootSpawns } from "@/project/LootSpawns";
-import { currentProjectTag, modTag, type ProjectArgs } from "./ProjectConsts";
+import { lootSpawns } from "@/project/LootSpawns";
+import { currentProjectTag, modTag, type ProjectArgs } from "../consts/ProjectConsts";
 import Locales from "./Locales";
 import RecentProjects from "./RecentProjects";
+import QuestZones from "./QuestZones";
 
+const ProjectObjects = [
+	Quests,
+	Items,
+	Traders,
+	Locales,
+	lootSpawns,
+	QuestZones
+]
 
 class Project {
     dataStore: ReturnType<typeof useDataStore> | null = null;
@@ -18,36 +27,31 @@ class Project {
 	currentProjectFolder?: Path;
 
 	async loadSPTModFolder(projectArgs: ProjectArgs) {
-		const lootSpawnStore = useLootSpawns();
-        await Promise.all([
-            Quests.loadQuests(projectArgs),
-            Items.loadItems(projectArgs),
-            Traders.loadTraders(projectArgs),
-			Locales.loadLocale(projectArgs),
-            lootSpawnStore.loadLocations(projectArgs)
-        ]);
+		const promises = [];
+		for (const projectObject of ProjectObjects) {
+			if ("loadFromMod" in projectObject) promises.push(projectObject.loadFromMod(projectArgs))
+		}
+        await Promise.all(promises);
 	}
 
 	clearProjectObjects() {
-		Items.clearProject();
-		Quests.clearProject();
+		for (const projectObject of ProjectObjects) {
+			if ("clearProject" in projectObject) projectObject.clearProject()
+		}
 	}
 
 	async loadProject(folderPath: Path) {
 		this.currentProjectFolder = folderPath;
 		RecentProjects.addRecentProject(folderPath.toString());
 		this.clearProjectObjects();
-		console.log("quests before ", (questDataStore.config?.file as Array<any>).length, deepClone(questDataStore.config?.file))
 		await this.loadSPTModFolder({
             folderPath: folderPath,
             tags: [currentProjectTag],
         });
-		console.log("quests after ", (questDataStore.config?.file as Array<any>).length, deepClone(questDataStore.config?.file))
     }
 
     async loadEFT(folderPath: Path) {
 		this.EFTFolder = folderPath;
-		const lootSpawnStore = useLootSpawns();
         const profilesStore = useProfilesStore();
         for (const folderPath of await new Path(this.EFTFolder, "SPT*/user/mods/*").findFolders()) {
             await this.loadSPTModFolder({
@@ -58,7 +62,7 @@ class Project {
 		}
 
 		await Promise.all([
-			lootSpawnStore.loadFromEFT(this.EFTFolder),
+			lootSpawns.loadFromEFT(this.EFTFolder),
 			profilesStore.load(this.EFTFolder),
             this.dataStore?.load("quests"),
             async () => {
@@ -71,7 +75,10 @@ class Project {
     }
 
     async init() {
-        await Traders.load();
+		await Traders.load();
+        for (const projectObject of ProjectObjects) {
+            if ("init" in projectObject && typeof projectObject.init === "function") projectObject.init()
+        }
         if (!isElectron()) return;
         this.dataStore ??= useDataStore();
         const savedEftPath = localStorage.getItem("eftFolderPath");

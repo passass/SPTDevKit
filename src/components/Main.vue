@@ -84,6 +84,14 @@ const tabsContent = ref<Tab[]>([
         },
         "traders"
     ),
+    createTab(
+        {
+			label: "Зоны Квестов",
+            icon: "🗺️",
+            title: "Зоны Квестов",
+        },
+        "questsZones"
+    ),
     {
         id: "settings",
         label: "Настройки",

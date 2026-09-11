@@ -2,7 +2,7 @@ import { dataStore, useDataStore } from "@/stores/dataStore";
 import { RecordSchema } from "@/types/fields/fields";
 import { availableLocales, gameLocalization, suffixes, type locales } from "@/types/localization";
 import { Path } from "@/utils/pathUtils";
-import { currentProjectTag, modTag, type ProjectArgs } from "./ProjectConsts";
+import { currentProjectTag, modTag, type ProjectArgs } from "../consts/ProjectConsts";
 import { copyRecordSchema } from "@/utils/copyUtils";
 import { toJsonObject } from "@/utils/utils";
 import { customRef } from "vue";
@@ -11,7 +11,7 @@ export const questDataStore = new dataStore("quests");
 
 
 class Quests {
-    async loadQuests(projectArgs: ProjectArgs) {
+    async loadFromMod(projectArgs: ProjectArgs) {
         const filesFound = await new Path(projectArgs.folderPath, "db/*/*/?uests/*.json").findFiles();
         for (const filepath of filesFound) {
             questDataStore.addFileToStore({
@@ -79,7 +79,7 @@ class Quests {
         await Promise.all([this.saveProjectQuests(currentProjectFolder), this.saveLocales(currentProjectFolder)]);
     }
 
-    copyQuest(data: RecordSchema): RecordSchema {
+    copy(data: RecordSchema): RecordSchema {
 	    return copyRecordSchema(data, currentProjectTag);
 	}
 

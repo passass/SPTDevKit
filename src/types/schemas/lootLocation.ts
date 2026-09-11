@@ -4,31 +4,10 @@ import { Field, RecordSchema, type FieldType } from "@/types/fields/fields";
 import { IdField } from "../fields/fieldsClasses";
 import type { FieldContext } from "../fields/fieldsConsts";
 import { getValueByPath, setValueByPath } from "@/utils/utils";
-import { useLootSpawns } from "@/project/LootSpawns";
+import { lootSpawns } from "@/project/LootSpawns";
 import { copyRecordSchema } from "@/utils/copyUtils";
-import { currentProjectTag } from "@/project/ProjectConsts";
-
-const locations = [
-    "bigmap",
-    "develop",
-    "factory4_day",
-    "factory4_night",
-    "hideout",
-    "interchange",
-    "laboratory",
-    "labyrinth",
-    "lighthouse",
-    "privatearea",
-    "rezervbase",
-    "sandbox",
-    "sandbox_high",
-    "shoreline",
-    "suburbs",
-    "tarkovstreets",
-    "terminal",
-    "town",
-    "woods",
-];
+import { currentProjectTag } from "@/consts/ProjectConsts";
+import { allLocationsLowerCase } from "@/consts/GameConsts";
 
 export class CoordinatesSchema extends RecordSchema {
     static fields: Field[] = [
@@ -157,7 +136,7 @@ export class LootLocationSchema extends RecordSchema {
             label: "Локация",
             type: "select",
             order: 5,
-			options: locations,
+			options: allLocationsLowerCase,
             excludeFromToJSON: true,
         }),
     ];
@@ -169,18 +148,15 @@ export class LootSpawnsField extends Field {
     arrayItemSchema = LootLocationSchema;
 
     getDefaultValue(data: any) {
-        const lootSpawns = useLootSpawns();
         return lootSpawns.getSpawnPointsForItem(data["id"]);
     }
 
     onArrayItemDelete(fieldContext: FieldContext, index: number): void {
         const value = fieldContext.value[index];
-        const lootSpawns = useLootSpawns();
         lootSpawns.removeSpawnPoint(value instanceof RecordSchema ? value.getData() : value);
     }
 
     onArrayItemAdd(fieldContext: FieldContext, newVal: any): void {
-        const lootSpawns = useLootSpawns();
         const location = newVal["__location"];
         setValueByPath(newVal, "template.Items", [
             {
@@ -204,7 +180,6 @@ export class LootSpawnsField extends Field {
     onNestedSchemaCopy(fieldContext: FieldContext, oldSchema: RecordSchema) {
         const oldId = oldSchema.getId();
         const newId = fieldContext.recordSchema.getId();
-        const lootSpawns = useLootSpawns();
         if (typeof oldId !== "string" || typeof newId !== "string") return;
 
         for (const spawnPoint of lootSpawns.getSpawnPointsForItem(oldId)) {

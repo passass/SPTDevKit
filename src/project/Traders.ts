@@ -3,7 +3,7 @@ import type { RecordSchema } from "@/types/fields/fields";
 import { generateSchemaInFile } from "@/utils/schemaGenerator";
 import { isElectron } from "@/utils/utils";
 import { Path, PathArray } from "@/utils/pathUtils";
-import { type ProjectArgs } from "./ProjectConsts";
+import { type ProjectArgs } from "../consts/ProjectConsts";
 
 class Traders {
 	dataStore: ReturnType<typeof useDataStore> | null = null
@@ -15,7 +15,7 @@ class Traders {
 		})
 	}
 
-	async loadTraders(projectArgs: ProjectArgs) {
+	async loadFromMod(projectArgs: ProjectArgs) {
         await new PathArray(["data/base.json", "db/base.json"], projectArgs.folderPath).forEach((filePath) => {
             this.loadAdditionalTrader(filePath.toString(), projectArgs.tags);
         });
