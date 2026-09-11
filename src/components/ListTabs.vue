@@ -93,7 +93,6 @@ import ListTabsFrame from "./ListTabsFrame.vue";
 import type { Tab } from "@/tabs/tabs";
 import { RecordSchema } from "@/types/fields/fields";
 import type { Component } from "vue";
-import { type ClassType } from "@/utils/classUtils";
 import { type dataMapRecordType } from "@/stores/dataStore";
 import { useDataStore } from "@/stores/dataStore";
 import { DynamicScroller, DynamicScrollerItem } from "vue-virtual-scroller";

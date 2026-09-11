@@ -2,7 +2,6 @@
 
 import { RecordSchema, Field, idsFields, type FieldType, AdvSelectField } from "@/types/fields/fields";
 import { IdField } from "@/types/fields/fieldsClasses";
-import { type ClassType } from "@/utils/classUtils";
 import { SchemaChoicer, type SchemaChoice, createSchemaChoiceForCondition } from "@/types/fields/fieldsSchemaChoicer";
 import { useFileDataStore } from "@/stores/fileStore";
 
@@ -27,7 +26,7 @@ interface FieldInfo {
     [key: string]: any;
 }
 
-export type GeneratedSchema = ClassType<RecordSchema> | ClassType<SchemaChoicer>;
+export type GeneratedSchema = typeof RecordSchema | typeof SchemaChoicer;
 
 export interface SchemaNode {
     name: string;
@@ -164,7 +163,7 @@ function generateFieldClass(fieldName: string, fieldInfo: FieldInfo, lastSplitSc
     });
 }
 
-function generateNestedSchema(className: string, fields: Record<string, FieldInfo>, lastSplitSchema: any): ClassType<RecordSchema> {
+function generateNestedSchema(className: string, fields: Record<string, FieldInfo>, lastSplitSchema: any): typeof RecordSchema {
     const generatedFields: Field[] = [];
 
     for (const [fieldKey, fieldInfo] of Object.entries(fields)) {
@@ -183,7 +182,7 @@ function generateNestedSchema(className: string, fields: Record<string, FieldInf
     return GeneratedSchema;
 }
 
-export function generateSchemaChoicer(className: string, schemas: Map<string, ClassType<RecordSchema>>, split_key: string): ClassType<SchemaChoicer> {
+export function generateSchemaChoicer(className: string, schemas: Map<string, typeof RecordSchema>, split_key: string): typeof SchemaChoicer {
     const schemaChoices: SchemaChoice[] = [];
 
     for (const [name, schemaClass] of schemas) {
@@ -220,12 +219,12 @@ function processSplitPath(
     };
 
     if (schema.fields) {
-        const schemaChoices: Map<string, ClassType<RecordSchema>> = new Map();
+        const schemaChoices: Map<string, typeof RecordSchema> = new Map();
 
         for (const [fieldName, fieldData] of Object.entries(schema.fields)) {
             if (typeof fieldData === 'object' && fieldData !== null) {
                 const fieldInfos = fieldData as Record<string, FieldInfo>;
-				const className = `${fieldName}`;
+				const className = fieldName;
 
 				for (const field of Object.values(fieldInfos)) {
 					if (field.key === schema.split_key) {

@@ -6,5 +6,5 @@ export interface FieldContext {
 	value: any;
 	recordSchema: RecordSchema;
 	data: SchemaData;
-	navigate: Navigator["navigate"];
+	navigate?: Navigator["navigate"];
 }

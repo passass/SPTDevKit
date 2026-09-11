@@ -1,7 +1,6 @@
 // src/tabs/tabs.ts
 import type { RecordSchema } from "@/types/fields/fields";
 import type { SchemaChoicer } from "@/types/fields/fieldsSchemaChoicer";
-import type { ClassType } from "@/utils/classUtils";
 import type { Component, ComputedRef } from "vue";
 
 export type TabData = object;
@@ -20,7 +19,7 @@ export interface Tab {
 	props?: Record<string, any>;
 	footer?: string;
 
-	schemaType?: ClassType<RecordSchema> | ClassType<SchemaChoicer>;
+	schemaType?: typeof RecordSchema | typeof SchemaChoicer;
 	dataStoreId?: string;
 
 	dataTitle?: string;

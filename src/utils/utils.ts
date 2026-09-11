@@ -198,7 +198,7 @@ export function getValuesByPath(data: DataStructure, path: string): any[] {
  * @param path - путь вида "a.b.c"
  * @returns найденное значение или undefined
  */
-export function getValueByPath(data: DataStructure, path: string): any | undefined {
+export function getValueByPath(data: DataStructure, path: string, defaultValue?: any): any | undefined {
     const parts = path.split('.');
     let current: any = data;
 
@@ -217,7 +217,7 @@ export function getValueByPath(data: DataStructure, path: string): any | undefin
         }
 
         if (!found) {
-            return undefined;
+            return defaultValue;
         }
     }
 

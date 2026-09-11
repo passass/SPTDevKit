@@ -1,6 +1,5 @@
 import { useDataStore, type DataStoreConfigFiles } from "@/stores/dataStore";
 import type { RecordSchema } from "@/types/fields/fields";
-import type { ClassType } from "@/utils/classUtils";
 import { generateSchemaInFile } from "@/utils/schemaGenerator";
 import { isElectron } from "@/utils/utils";
 import { Path } from "@/utils/pathUtils";
@@ -40,7 +39,7 @@ class Traders {
 
 		this.dataStore.register("traders", {
 			file: files,
-			schemaType: basetraderschema as ClassType<RecordSchema>
+			schemaType: basetraderschema as typeof RecordSchema
 		})
 	}
 

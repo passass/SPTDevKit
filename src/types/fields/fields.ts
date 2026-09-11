@@ -1,8 +1,8 @@
 // src/types/fields.ts
 import { Data } from "dataclass";
 import { type SchemaChoice, SchemaChoicer } from "./fieldsSchemaChoicer";
-import { getStaticField, type ClassType } from "@/utils/classUtils";
-import { toJsonObject } from "@/utils/utils";
+import { getStaticField } from "@/utils/classUtils";
+import { getValueByPath, toJsonObject } from "@/utils/utils";
 import { type FieldContext } from "./fieldsConsts";
 
 export const idsFields: string[] = ["_id", "id"];
@@ -14,7 +14,7 @@ export function getIdFieldValue(instance: any): string | undefined {
     }
 }
 
-export type arrayItemSchemaType = ClassType<RecordSchema> | ClassType<SchemaChoicer> | null;
+export type arrayItemSchemaType = typeof RecordSchema | typeof SchemaChoicer | null;
 // export type SchemaData = Record<string, any>;
 export interface SchemaDataObject {
     [key: string]: SchemaValue;
@@ -59,7 +59,7 @@ export class Field extends Data {
     options?: string[] | Record<any, string>;
     defaultValue?: any;
     validate?: (value: any, record: SchemaData) => true | string;
-    nestedSchema?: ClassType<RecordSchema>;
+    nestedSchema?: typeof RecordSchema;
     arrayItemSchema?: arrayItemSchemaType;
     virtual?: boolean;
     extraKeys?: string[];
@@ -69,16 +69,21 @@ export class Field extends Data {
     onIfInData?: (data: SchemaData) => void;
 
     hidden?: boolean;
-    unneccesary?: boolean;
+	unneccesary?: boolean;
 
-    onNestedSchemaCopy?(fieldContext: FieldContext, oldSchema: RecordSchema): void;
+	excludeFromToJSON?: boolean;
+	alwaysFillWithDefault?: boolean;
+
+	onNestedSchemaCopy?(fieldContext: FieldContext, oldSchema: RecordSchema): void;
 
     onArrayItemDelete?(fieldContext: FieldContext, index: number): void;
     onArrayItemAdd?(fieldContext: FieldContext, newVal: any): void;
     onArrayNavigate?(fieldContext: FieldContext, index: number): void;
 
     onUpdateModelValue?(recordSchema: RecordSchema, newVal: any): void;
-    getDefaultValue?(data: SchemaData): any;
+
+    getSerializedValue?(fieldContext: FieldContext): any;
+	getDefaultValue?(data: SchemaData): any;
 
     isArray(): boolean {
         return this.type && this.type.toLocaleLowerCase().includes("array");
@@ -118,12 +123,12 @@ export const castToRecordSchema = (
 
                 return new choosedSchema.schema(value, {
                     ...otherData,
-                    schemaChooser: schema,
+                    schemaChooser: schema as typeof SchemaChoicer,
                     choosedSchema: choosedSchema,
                 });
             }
 
-            return new (schema as ClassType<RecordSchema>)(value, otherData) as RecordSchema;
+            return new (schema as typeof RecordSchema)(value, otherData) as RecordSchema;
         }
 
         return new RecordSchema(value, otherData);
@@ -171,7 +176,7 @@ export class VirtualLocalizationField extends LocalizationField {
 }
 
 export type recordSchemaOtherData = {
-    schemaChooser?: ClassType<SchemaChoicer> | null;
+    schemaChooser?: typeof SchemaChoicer | null;
     choosedSchema?: SchemaChoice | null;
     parent?: Record<string, any> | Array<object> | RecordSchema | null;
     name?: string | null;
@@ -184,18 +189,30 @@ export class RecordSchema {
     static getFieldByKeyStatic(key: string, def?: any) {
         const fields = this.fields || [];
         return fields.find((el: Field) => el.key === key) ?? def;
-    }
+	}
 
-    static from(value: any, otherData?: recordSchemaOtherData) {
+	static replaceFieldWith(field: Field) {
+		const fields = this.fields || [];
+		const index = fields.findIndex((el: Field) => el.key === field.key);
+		if (index !== -1) {
+			fields[index] = field;
+		}
+	}
+
+	static from(value: any, otherData?: recordSchemaOtherData) {
 		return castToRecordSchema(value, this, otherData);
     }
 
     getFieldByKey(key: string, def?: any) {
         const fields = (this.constructor as typeof RecordSchema).fields || [];
         return fields.find((el: Field) => el.key === key) ?? def;
-    }
+	}
 
-    getArrayCastedData(key: string): RecordSchema[] {
+	getValueByPath(path: string): any {
+		return getValueByPath(this.getData(), path)
+	}
+
+	getArrayCastedData(key: string): RecordSchema[] {
         const field = this.getFieldByKey(key);
         if (!field) return [];
         if (!field.arrayItemSchema) return [];
@@ -249,7 +266,7 @@ export class RecordSchema {
                                 } else {
                                     const nestedInstance = castToRecordSchema(
                                         item,
-                                        field.arrayItemSchema as ClassType<RecordSchema>
+                                        field.arrayItemSchema as typeof RecordSchema
                                     );
                                     processSchema(nestedInstance);
                                 }
@@ -316,7 +333,7 @@ export class RecordSchema {
                 if (field.key in this.data) continue;
             }
 
-            if (otherData?.fillWithDefault) {
+            if (otherData?.fillWithDefault || field.alwaysFillWithDefault) {
                 let defVal;
                 if (field.type === "object" && field.nestedSchema) {
                     defVal = new field.nestedSchema(
@@ -356,7 +373,7 @@ export class RecordSchema {
         }
     }
 
-    castToNewSchema(newSchema: ClassType<RecordSchema>, otherData?: recordSchemaOtherData): RecordSchema {
+    castToNewSchema(newSchema: typeof RecordSchema, otherData?: recordSchemaOtherData): RecordSchema {
         if (otherData?.choosedSchema?.onSchemaChange) otherData.choosedSchema.onSchemaChange(this);
         const newInstance = new newSchema(this.data, otherData);
         if (otherData?.choosedSchema?.onSchemaPostChange) otherData.choosedSchema.onSchemaPostChange(newInstance);
@@ -535,8 +552,101 @@ export class RecordSchema {
     }
 
     /** Сериализация */
+    /** Сериализация */
     toJSON(): SchemaData {
-        return toJsonObject(this.getData());
+        const serialize = (obj: any): any => {
+            if (obj === null || obj === undefined) return obj;
+
+            if (obj instanceof RecordSchema) {
+                return obj.toJSON();
+            }
+
+            if (obj instanceof Map) {
+                const result: Record<string, any> = {};
+                for (const [key, value] of obj.entries()) {
+                    result[key] = serialize(value);
+                }
+                return result;
+            }
+
+            if (Array.isArray(obj)) {
+                return obj.map((v) => serialize(v));
+            }
+
+            if (typeof obj === "object") {
+                const result: Record<string, any> = {};
+                for (const [key, value] of Object.entries(obj)) {
+                    result[key] = serialize(value);
+                }
+                return result;
+            }
+
+            return obj;
+        };
+
+        const data = this.getData();
+
+        // Карта полей текущей схемы
+        const fieldsMap = new Map<string, Field>();
+        for (const field of this.getFields()) {
+            if (field.key) fieldsMap.set(field.key, field);
+        }
+
+        // Сериализует значение с учётом схемы поля
+        const serializeFieldValue = (field: Field | undefined, value: any): any => {
+            if (value === null || value === undefined) return value;
+
+            // nestedSchema — кастим объект под схему и вызываем toJSON()
+            if (field?.nestedSchema) {
+                if (value instanceof RecordSchema) {
+                    return value.toJSON();
+                }
+                if (typeof value === "object" && !Array.isArray(value)) {
+                    const casted = field.nestedSchema.from(value);
+                    if (casted instanceof RecordSchema) {
+                        return casted.toJSON();
+                    }
+                    return casted;
+                }
+            }
+
+            // arrayItemSchema — кастим каждый элемент массива под схему и вызываем toJSON()
+            if (field?.arrayItemSchema && Array.isArray(value)) {
+                return value.map((item: any) => {
+                    if (item === null || item === undefined) return item;
+                    if (item instanceof RecordSchema) return item.toJSON();
+                    if (typeof item === "object") {
+                        const casted = castToRecordSchema(item, field.arrayItemSchema!);
+                        if (casted instanceof RecordSchema) {
+                            return casted.toJSON();
+                        }
+                        return casted;
+                    }
+                    return item;
+                });
+            }
+
+            return serialize(value);
+        };
+
+        const result: Record<string, any> = {};
+        for (const [key, value] of Object.entries(data)) {
+            const field = fieldsMap.get(key);
+            if (field?.excludeFromToJSON) continue;
+
+            if (field?.getSerializedValue) {
+                result[key] = field.getSerializedValue({
+                    field,
+                    value,
+                    recordSchema: this,
+                    data,
+                });
+            } else {
+                result[key] = serializeFieldValue(field, value);
+            }
+        }
+
+        return result;
     }
 
     formatKey(key: string): string {

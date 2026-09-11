@@ -8,7 +8,11 @@ import { generateAllSchemas, type SchemaNode } from "@/utils/schemaGenerator";
 
 // filepath -> schemanode
 const cachedTrees: Map<string, SchemaNode> = new Map();
-export type lazyParams = { schemas?: SchemaChoice[]; fields?: Field[] };
+export type lazyParams = {
+    schemas?: SchemaChoice[];
+    fields?: Field[];
+    onSchemaLoad?: (generatedSchema: SchemaNode) => void;
+};
 // filepath -> path -> field[]
 const additionalFields: Map<string, Map<string, lazyParams>> = new Map();
 let loadPromises: Map<string, Promise<SchemaNode>> = new Map();
@@ -22,16 +26,16 @@ export async function loadAllLazySchemas(): Promise<void> {
 async function loadTree(filePath: string): Promise<SchemaNode> {
     if (cachedTrees.get(filePath)) {
         return cachedTrees.get(filePath) as SchemaNode;
-	}
+    }
 
-	if (loadPromises.get(filePath)) {
-		return loadPromises.get(filePath) as Promise<SchemaNode>;
-	}
+    if (loadPromises.get(filePath)) {
+        return loadPromises.get(filePath) as Promise<SchemaNode>;
+    }
 
     const loadPromise = (async () => {
         const fileStore = useFileDataStore();
         const outputJson = await fileStore.read(filePath);
-		const tree = generateAllSchemas(outputJson.data);
+        const tree = generateAllSchemas(outputJson.data);
         cachedTrees.set(filePath, tree);
 
         const newAdditionalFields = additionalFields?.get(filePath);
@@ -46,7 +50,7 @@ async function loadTree(filePath: string): Promise<SchemaNode> {
                     if (SchemaChoicer.isPrototypeOf(schema) && "schemas" in schema && Array.isArray(schema.schemas)) {
                         schema.schemas = [...params.schemas, ...schema.schemas];
                     }
-				}
+                }
                 if (params.fields) {
                     for (const field of params.fields) {
                         const isSchemaChoicer = SchemaChoicer.isPrototypeOf(schema);
@@ -62,6 +66,9 @@ async function loadTree(filePath: string): Promise<SchemaNode> {
                             }
                         }
                     }
+                }
+                if (params.onSchemaLoad) {
+                    params.onSchemaLoad(schemaNode);
                 }
             }
         }
@@ -92,7 +99,7 @@ export function createLazySchemaChoicer(
     path: string,
     className: string,
     newAdditionalFields: lazyParams = {}
-): ClassType<SchemaChoicer> {
+): typeof SchemaChoicer {
     additionalFields.set(filePath, additionalFields.get(filePath) ?? new Map());
     additionalFields.get(filePath)?.set(path, newAdditionalFields);
     let cachedSchema: any = null;
@@ -103,9 +110,9 @@ export function createLazySchemaChoicer(
         static get schemas(): SchemaChoice[] {
             if (!isLoaded) {
                 throw new Error(`Schema "${className}" not loaded yet. Call ${className}.load() first.`);
-			}
+            }
 
-			if (!cachedSchema) {
+            if (!cachedSchema) {
                 return [];
             }
 
@@ -165,10 +172,10 @@ export function createLazySchemaChoicer(
     return LazySchemaChoicer;
 }
 
-export function createLazyRecordSchema(filePath: string, className: string): ClassType<RecordSchema> {
-	// , newAdditionalFields: lazyParams = {}
-	// additionalFields.set(filePath, additionalFields.get(filePath) ?? new Map());
- //    additionalFields.get(filePath)?.set(path, newAdditionalFields);
+export function createLazyRecordSchema(filePath: string, className: string): typeof RecordSchema {
+    // , newAdditionalFields: lazyParams = {}
+    // additionalFields.set(filePath, additionalFields.get(filePath) ?? new Map());
+    //    additionalFields.get(filePath)?.set(path, newAdditionalFields);
     let cachedSchema: any = null;
     let isLoaded = false;
 
@@ -192,9 +199,9 @@ export function createLazyRecordSchema(filePath: string, className: string): Cla
 
             try {
                 const tree = await loadTree(filePath);
-				const node = tree.children[0];
+                const node = tree.children[0];
 
-				if (node && node.schema) {
+                if (node && node.schema) {
                     cachedSchema = node.schema;
 
                     // Копируем поля

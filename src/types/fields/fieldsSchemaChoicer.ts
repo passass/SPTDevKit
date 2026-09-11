@@ -1,11 +1,10 @@
-import type { ClassType } from "@/utils/classUtils";
 import { type SchemaData, RecordSchema } from "./fields"
 
 export type SchemaChoicerConstructor<T extends SchemaChoicer = SchemaChoicer> = new (data?: any) => T;
 export interface SchemaChoice {
 	name: string,
 	condition: (data: SchemaData) => boolean,
-	schema: ClassType<RecordSchema>,
+	schema: typeof RecordSchema,
 
 	onSchemaChange?: (data: RecordSchema) => void,
 	onSchemaPostChange?: (data: RecordSchema) => void,
@@ -27,7 +26,7 @@ export class SchemaChoicer {
 export function createSchemaChoiceForCondition(
 	config: {
 		name: string;
-		schema: ClassType<RecordSchema>;
+		schema: typeof RecordSchema;
 		conditionType?: string;
 		onSchemaChange?: (data: RecordSchema) => void;
 		onSchemaPostChange?: (data: RecordSchema) => void;

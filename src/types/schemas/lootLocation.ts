@@ -157,7 +157,8 @@ export class LootLocationSchema extends RecordSchema {
             label: "Локация",
             type: "select",
             order: 5,
-            options: locations,
+			options: locations,
+            excludeFromToJSON: true,
         }),
     ];
 }
@@ -197,7 +198,7 @@ export class LootSpawnsField extends Field {
 
     onArrayNavigate(fieldContext: FieldContext, index: number) {
         const schema = LootLocationSchema.from(fieldContext.value[index]);
-        fieldContext.navigate(schema);
+        if (fieldContext.navigate) fieldContext.navigate(schema);
     }
 
     onNestedSchemaCopy(fieldContext: FieldContext, oldSchema: RecordSchema) {

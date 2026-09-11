@@ -39,13 +39,9 @@ class Quests {
     }
 
     async saveProjectQuests(currentProjectFolder: Path) {
-        const quests = toJsonObject(this.getProjectQuests());
         for (const [traderId, quests] of this.getProjectQuestsFilteredByTraders().entries()) {
-            window.electronAPI.writeJson(
-                new Path(currentProjectFolder, `db/CustomQuests/${traderId}/Quests/quest.json`).filePath,
-                JSON.stringify(toJsonObject(quests), null, 2)
-            );
-        }
+			await new Path(currentProjectFolder, `db/CustomQuests/${traderId}/Quests/quest.json`).saveFile(quests);
+		}
     }
 
     async saveLocales(currentProjectFolder: Path) {
@@ -57,11 +53,6 @@ class Quests {
             for (const locale of availableLocales) {
                 const localizationsMap: Map<string, string> = new Map();
 				for (const localeId of localizationFields) {
-					console.log("localization save", localeId, gameLocalization.getText({
-                        localeId: localeId,
-                        locale: locale as locales,
-                        notCheckForDefaultLocalization: true,
-                    }))
                     localizationsMap.set(
                         localeId,
                         gameLocalization.getText({

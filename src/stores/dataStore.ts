@@ -1,11 +1,10 @@
 // src/stores/dataStore.ts
 
 import { defineStore } from "pinia";
-import { ref, computed, watch } from "vue";
+import { ref } from "vue";
 import { useFileDataStore } from "./fileStore";
-import { QuestSchema } from "@/types/schemas/quests";
 import { castToRecordSchema, idsFields, RecordSchema, type SchemaData } from "@/types/fields/fields";
-import { getValueByPath, type ClassType } from "@/utils/classUtils";
+import { getValueByPath } from "@/utils/utils";
 import { gameLocalization, type locales } from "@/types/localization";
 import { allElementsInArray } from "@/utils/utils";
 import type { SchemaChoicer } from "@/types/fields/fieldsSchemaChoicer";

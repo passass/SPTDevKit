@@ -74,8 +74,11 @@ export class itemsSchema extends RecordSchema {
             label: "Шаблон для клонирования",
             type: "advancedSelect",
             storeId: "items",
-            order: 1,
-        }),
+			order: 1,
+
+			alwaysFillWithDefault: true,
+			defaultValue: "",
+		}),
 
         AdvSelectField.create({
             key: "parentId",
@@ -113,20 +116,12 @@ export class itemsSchema extends RecordSchema {
             nestedSchema: createLazyRecordSchema("itemsOverrideProperties.json", "overrideProperties"),
         }),
 
-        // ===== ЛОКАЛИЗАЦИЯ =====
-        // const localesFields: Field[] = [];
-        // for (const locale of availableLocales) {
-        // 	localesFields.push(Field.create({
-        // 		key: "en",
-        //               label: "English",
-        //               type: "object",
-        //               nestedSchema: LocaleEntrySchema
-        // 	}));
-        // }
         HiddenField.create({
             key: "locales",
             label: "Локализация",
-            type: "object",
+			type: "object",
+			alwaysFillWithDefault: true,
+			defaultValue: {},
             onIfInData: (data: SchemaData) => {
                 if (!data["locales"]) return;
                 for (const [locale, localeIds] of Object.entries(data["locales"]) as Array<[string, SchemaValue]>) {

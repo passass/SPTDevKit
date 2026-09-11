@@ -49,16 +49,16 @@ export const useLootSpawns = defineStore("lootSpawns", {
             for (const file of files) {
                 const content = await fileStore.read(file.toString());
                 for (const [location, spawnPoints] of Object.entries(content.data)) {
-                    if (!Array.isArray(spawnPoints)) continue;
+					if (!Array.isArray(spawnPoints)) continue;
                     for (const spawnPoint of spawnPoints) {
                         spawnPoint["__location"] = location;
                         const id = (spawnPoint["locationId"] as string) ?? generateUUID24chars();
                         spawnPoint["locationId"] = id;
-                        dataStore.set(SPAWN_POINTS_STORE, id, spawnPoint);
+                        dataStore.addSchema(SPAWN_POINTS_STORE, id, spawnPoint);
                         for (const tag of projectArgs.tags) {
                             dataStore.addTag(SPAWN_POINTS_STORE, id, tag);
-                        }
-                    }
+						}
+					}
                 }
             }
         },
@@ -85,11 +85,11 @@ export const useLootSpawns = defineStore("lootSpawns", {
         },
 
         getSpawnPointsForItem(itemId: string): LootLocationSchema[] {
-            this.ensureStore();
+        	this.ensureStore();
             const dataStore = useDataStore();
             const res: LootLocationSchema[] = [];
             for (const [, record] of dataStore.getMap(SPAWN_POINTS_STORE).entries()) {
-                if (
+				if (
                     record.data instanceof LootLocationSchema &&
                     getValuesByPath(record.data.getData(), "template.Items.*._tpl").includes(itemId)
                 ) {
