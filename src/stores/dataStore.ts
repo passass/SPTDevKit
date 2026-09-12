@@ -36,6 +36,8 @@ export const useDataStore = defineStore("dataStore", () => {
 		Map<string, dataMapRecordType[] | Map<string | number, dataMapRecordType>>
 	>(new Map());
 
+	const allIds = ref(new Set<string>());
+
     const configs = ref<Map<string, DataStoreConfig>>(new Map());
 
     const loadingStatus = ref<Map<string, boolean>>(new Map());
@@ -145,6 +147,7 @@ export const useDataStore = defineStore("dataStore", () => {
 						if (Array.isArray(store)) {
 							store.push(storeResult);
 						} else {
+							allIds.value.add(id);
 							store.set(id, storeResult);
 						}
                     }
@@ -439,6 +442,24 @@ export const useDataStore = defineStore("dataStore", () => {
 		return configs.value.get(storeId)?.isArray ?? false;
 	}
 
+	function clearStoreFromObjectWithTags(storeId: string, tag: string) {
+		const questsMap = getMap(storeId);
+		for (const questId of getByTagInStore(storeId, tag).keys()) {
+			questsMap.delete(questId);
+		}
+
+		const config = configs.value.get(storeId);
+		if (config) {
+			if (!Array.isArray(config.file)) {
+	            config.file = [config.file];
+	        }
+
+	        config.file = config.file.filter(
+	            (file) => !file.tags?.includes(tag)
+	        );
+		}
+	}
+
 	return {
         dataMap,
 		getSchemaType,
@@ -475,7 +496,9 @@ export const useDataStore = defineStore("dataStore", () => {
         getFilenames,
         getArray,
 		addTag,
-        isArray,
+		isArray,
+		clearStoreFromObjectWithTags,
+        allIds,
     };
 });
 
@@ -544,5 +567,10 @@ export class dataStore {
 	getArray() {
 		if (!this.dataSt) this.dataSt = useDataStore();
 		return this.dataSt.getArray(this.storeId);
+	}
+
+	clearStoreFromObjectWithTags(tag: string) {
+		if (!this.dataSt) this.dataSt = useDataStore();
+		this.dataSt.clearStoreFromObjectWithTags(this.storeId, tag);
 	}
 }

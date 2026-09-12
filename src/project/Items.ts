@@ -5,6 +5,7 @@ import { dataStore, useDataStore, type dataMapRecordType } from "@/stores/dataSt
 import { itemsSchema } from "@/types/schemas/items";
 import Locales from "./Locales";
 import { lootSpawns, lootSpawndataStore } from "./LootSpawns";
+import { customRef } from "vue";
 
 export const itemsDataStore = new dataStore("items");
 
@@ -22,27 +23,15 @@ class Items {
 
 	clearProject() {
 		const lootSpawnStore = lootSpawns;
-		const itemsMap = itemsDataStore.getMap()
 		const lootSpawnMap = lootSpawndataStore.getMap()
 		for (const itemId of itemsDataStore.getByTagInStore(currentProjectTag).keys()) {
-			itemsMap.delete(itemId);
-
 			for (const spawnPoint of lootSpawnStore.getSpawnPointsForItem(itemId)) {
 				const id = spawnPoint.get("locationId");
 				if (typeof id === "string") lootSpawnMap.delete(id);
 			}
 		}
 
-		const config = itemsDataStore.config;
-		if (config) {
-			if (!Array.isArray(config.file)) {
-	            config.file = [config.file];
-	        }
-
-	        config.file = config.file.filter(
-	            (file) => !file.tags?.includes(currentProjectTag)
-	        );
-		}
+		itemsDataStore.clearStoreFromObjectWithTags(currentProjectTag);
 	}
 
 	async saveLocales(currentProjectFolder: Path) {
@@ -52,12 +41,12 @@ class Items {
 	}
 
 	async saveProject(currentProjectFolder: Path) {
-		const res = new Map<string, dataMapRecordType>();
+		const res = new Map<string | number, dataMapRecordType>();
         for (const [itemId, item] of itemsDataStore.getByTagInStore(currentProjectTag).entries()) {
             res.set(itemId, item.data);
 		}
 
-		const lootSpawnsResult: Map<string, Array<dataMapRecordType>> = new Map();
+		const lootSpawnsResult: Map<string | number, Array<dataMapRecordType>> = new Map();
 		for (const [itemId, item] of res.entries()) {
 			for (const lootSpawn of lootSpawns.getSpawnPointsForItem(itemId)) {
 				const location = lootSpawn.get("__location");

@@ -9,7 +9,7 @@ class itemTargetFieldClass extends HiddenField {
     key = "target";
     getSerializedValue(fieldContext: FieldContext) {
         const recordSchema = fieldContext.recordSchema;
-        return recordSchema.getValueByPath("items.0._id");
+        return recordSchema.getValuesByPath("items.*[!parentId]._id")[0];
     }
 }
 

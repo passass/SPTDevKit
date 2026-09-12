@@ -3,8 +3,6 @@ import { currentProjectTag, type ProjectArgs } from "../consts/ProjectConsts";
 import { useFileDataStore } from "@/stores/fileStore";
 import { dataStore } from "@/stores/dataStore";
 import { ZoneSchema } from "@/types/schemas/questsZones";
-import { generateUUID24chars } from "@/utils/uuidUtils";
-import { toJsonObject } from "@/utils/utils";
 
 const questZonesStore = new dataStore("questsZones");
 
@@ -25,17 +23,19 @@ class QuestZones {
         new Path(currentProjectFolder, "db/CustomQuestZones/zones.json").saveFile(res);
     }
 
-    clearProject() {}
+	clearProject() {
+		questZonesStore.clearStoreFromObjectWithTags(currentProjectTag);
+    }
 
     init() {
         this.ensureStore();
     }
 
     async loadFromMod(projectArgs: ProjectArgs) {
-        const fileStore = useFileDataStore();
         for (const filePath of await new Path(projectArgs.folderPath, "db/CustomQuestZones/*.json").findFiles()) {
             questZonesStore.addFileToStore({ filename: filePath.toString(), tags: projectArgs.tags });
         }
+        if (!projectArgs.notLoadImmediately) await questZonesStore.load();
     }
 }
 
