@@ -17,6 +17,7 @@ export interface DataStoreConfig {
     file: DataStoreConfigFiles | DataStoreConfigFiles[];
 	schemaType?: typeof RecordSchema | typeof SchemaChoicer;
 	manualClear?: boolean;
+	isArray?: boolean;
 }
 export interface dataStoreExtraDataType {
     tags?: string[];
@@ -31,7 +32,9 @@ export const useDataStore = defineStore("dataStore", () => {
     const fileStore = useFileDataStore();
 
     // Хранилище для всех данных: ключ -> Map<string, данные>
-    const dataMap = ref<Map<string, Map<string, dataMapRecordType>>>(new Map());
+	const dataMap = ref<
+		Map<string, dataMapRecordType[] | Map<string | number, dataMapRecordType>>
+	>(new Map());
 
     const configs = ref<Map<string, DataStoreConfig>>(new Map());
 
@@ -40,7 +43,7 @@ export const useDataStore = defineStore("dataStore", () => {
 
     function register(key: string, config: DataStoreConfig) {
         if (!dataMap.value.has(key)) {
-            dataMap.value.set(key, new Map());
+            dataMap.value.set(key, config.isArray ? [] : new Map());
             configs.value.set(key, config);
             loadingStatus.value.set(key, false);
             errorStatus.value.set(key, null);
@@ -87,8 +90,12 @@ export const useDataStore = defineStore("dataStore", () => {
             const files = Array.isArray(config.file) ? config.file : [config.file];
             const store = dataMap.value.get(key)!;
 
-            if (!config.manualClear)
-				store.clear();
+            if (Array.isArray(store)) {
+                store.splice(0, store.length);
+            } else {
+                if (!config.manualClear)
+                    store.clear();
+            }
 
             const schemaType = config.schemaType;
 
@@ -100,7 +107,7 @@ export const useDataStore = defineStore("dataStore", () => {
                 const fileContent = fileData.data ?? fileData;
 
                 if (fileContent && typeof fileContent === "object") {
-                    let entries: Record<string, any> = {};
+                    let entries: any = {};
                     if (tags.includes("oneObject")) {
                         const idField = idsFields.find((el) => el in fileContent);
                         if (idField) {
@@ -111,12 +118,18 @@ export const useDataStore = defineStore("dataStore", () => {
                         entries = fileContent;
                     }
 
-                    for (const [id, itemData] of Object.entries(entries)) {
-                        // if (!store.has(id)) {
+                    const isArray = Array.isArray(entries);
+					if (isArray) {
+						entries = entries.entries();
+					} else {
+						entries = Object.entries(entries);
+                    }
+
+                    for (const [id, itemData] of entries) {
                         let value: any;
                         if (schemaType && itemData && typeof itemData === "object") {
-							value = castToRecordSchema(itemData, schemaType);
-							if (!value.getId()) {
+							value = schemaType.from(itemData);
+							if (!isArray && !value.getId()) {
                                 value.set("id", id)
                             }
                             value.storeId = key;
@@ -128,10 +141,12 @@ export const useDataStore = defineStore("dataStore", () => {
 							data: value,
 							tags: file.tags,
 						}
-						store.set(id, storeResult);
-                        // } else {
-                        //     console.warn(`Duplicate ID "${id}" found in file "${filename}", skipping...`);
-                        // }
+
+						if (Array.isArray(store)) {
+							store.push(storeResult);
+						} else {
+							store.set(id, storeResult);
+						}
                     }
                 }
             }
@@ -153,11 +168,11 @@ export const useDataStore = defineStore("dataStore", () => {
         return res;
     }
 
-    function getByTagInStore(storeId: string, tag: string | string[]): Map<string, dataMapRecordType> {
-        const store = getMap(storeId);
-        const result: Map<string, dataMapRecordType> = new Map();
+    function getByTagInStore(storeId: string, tag: string | string[]): Map<string | number, dataMapRecordType> {
+        const store = isArray(storeId) ? getArray(storeId) : getMap(storeId);
+        const result: Map<string | number, dataMapRecordType> = new Map();
 
-        for (const [id, value] of store) {
+        for (const [id, value] of store.entries()) {
             if (
                 value &&
                 (typeof tag === "string"
@@ -204,28 +219,48 @@ export const useDataStore = defineStore("dataStore", () => {
     }
 
     // Получить весь Map
-    function getMap<T = any>(key: string): Map<string, dataMapRecordType> {
-        const store = dataMap.value.get(key);
+    function getMap<T = any>(storeId: string): Map<string | number, dataMapRecordType> {
+        const store = dataMap.value.get(storeId);
         if (!store) {
-            throw new Error(`Store "${key}" not found`);
+            throw new Error(`Store "${storeId}" not found`);
+		}
+		if (Array.isArray(store)) {
+			return new Map(store.map((v, i) => [i, v]));
         }
-        return store as Map<string, dataMapRecordType>;
-    }
+        return store;
+	}
 
-	function addTag(storeId: string, key: string, tag: string) {
-		let data = getMap(storeId).get(key)
+	function getArray(storeId: string): dataMapRecordType[] {
+		const store = dataMap.value.get(storeId);
+		if (!Array.isArray(store))
+			throw new Error(`Store "${storeId}" not found`);
+		if (!Array.isArray(store)) {
+			return Array.from((store as Map<string | number, dataMapRecordType>).values())
+		}
+		return store;
+	}
+
+	function addTag(storeId: string, id: string | number, tag: string | string[]) {
+		let data = getDataRecord(storeId, id)
 
 		if (!data) {
 			throw new Error("no data")
 		}
 
 		data.tags ??= []
-		if (!data.tags.includes(tag))
-			data.tags.push(tag);
+		if (Array.isArray(tag)) {
+			tag.forEach((t) => {
+				if (!(data.tags!).includes(t))
+					(data.tags!).push(t);
+			});
+		} else {
+			if (!data.tags.includes(tag))
+				data.tags.push(tag);
+		}
 	}
 
     // Получить список ID
-    function getIds(key: string): string[] {
+    function getIds(key: string): (string | number)[] {
         return Array.from(getMap(key).keys());
     }
 
@@ -235,13 +270,29 @@ export const useDataStore = defineStore("dataStore", () => {
     }
 
     // Получить один элемент
-    function get(key: string, id: string): dataMapRecordType["data"] | undefined {
-        return getMap(key).get(id)?.data;
+	function get(storeId: string, id: string | number): dataMapRecordType["data"] | undefined {
+		const store = dataMap.value?.get?.(storeId);
+		if (Array.isArray(store)) {
+			if (typeof id !== "number")
+				return undefined;
+			return store[id]?.data;
+		}
+		return getMap(storeId).get(id)?.data;
+	}
+
+	function getDataRecord(storeId: string, id: string | number): dataMapRecordType | undefined {
+		const store = dataMap.value?.get?.(storeId);
+		if (Array.isArray(store)) {
+			if (typeof id !== "number")
+				return undefined;
+			return store[id];
+		}
+		return getMap(storeId).get(id);
     }
 
-    function safeGet<T = any>(key: string | string[], id: string): T | undefined;
-    function safeGet<T = any>(key: string | string[], id: string, def: T): T;
-    function safeGet<T = any>(key: string | string[], id: string, def?: T): T | undefined {
+	function safeGet<T = any>(key: string | string[], id: string | number): T | undefined;
+    function safeGet<T = any>(key: string | string[], id: string | number, def: T): T;
+    function safeGet<T = any>(key: string | string[], id: string | number, def?: T): T | undefined {
         if (Array.isArray(key)) {
             for (const _key of key) {
                 const res = safeGet<T>(_key, id);
@@ -252,9 +303,16 @@ export const useDataStore = defineStore("dataStore", () => {
             return def;
         }
 
-        const store = dataMap.value?.get?.(key);
-        const value = store?.get(id);
-        return (value?.data) as T | undefined ?? def;
+		const store = dataMap.value?.get?.(key);
+		if (Array.isArray(store)) {
+			if (typeof id !== "number")
+				return undefined;
+			return store[id]?.data;
+		}
+		if (typeof id !== "string")
+			return undefined;
+		const value = store?.get(id);
+		return (value?.data) as T | undefined ?? def;
     }
 
 
@@ -268,9 +326,9 @@ export const useDataStore = defineStore("dataStore", () => {
 		}
 	}
 
-	function addSchema(key: string, id: string, val: SchemaData | RecordSchema) {
-		const map = getMap(key);
-		const schemaType = getSchemaType(key);
+	function addSchema(storeId: string, val: SchemaData | RecordSchema, id?: string, tags?: string | string[]) {
+		const map = isArray(storeId) ? getArray(storeId) : getMap(storeId);
+		const schemaType = getSchemaType(storeId);
 		let res;
 		if (schemaType && RecordSchema.isPrototypeOf(schemaType)) {
 			res = (schemaType as typeof RecordSchema).from(val);
@@ -278,17 +336,32 @@ export const useDataStore = defineStore("dataStore", () => {
 			res = val;
 		}
 
-		map.set(id, { data: res });
+		if (Array.isArray(map)) {
+			map.push({ data: res });
+			if (tags) addTag(storeId, map.length - 1, tags);
+		} else if (id) {
+			map.set(id, { data: res });
+			if (tags) addTag(storeId, id, tags);
+		}
 	}
 
 	// Удалить элемент
-    function remove(key: string, id: string): boolean {
-        return getMap(key).delete(id);
+	function remove(storeId: string, id: string): boolean {
+		if (isArray(storeId)) {
+			if (typeof id !== "number") return false;
+			getArray(storeId).splice(id, 1);
+			return true;
+		}
+        return getMap(storeId).delete(id);
     }
 
     // Очистить все данные по ключу
-    function clear(key: string) {
-        getMap(key).clear();
+    function clear(storeId: string) {
+        if (isArray(storeId)) {
+            getArray(storeId).length = 0;
+            return;
+        }
+        getMap(storeId).clear();
     }
 
     // Проверить, загружены ли данные
@@ -348,22 +421,22 @@ export const useDataStore = defineStore("dataStore", () => {
         return configs.value.get(key)?.schemaType;
 	}
 
-	function isDirty(storeId: string, id: string): boolean {
-		const store = getMap(storeId);
-		return !!(store.has(id) && store.get(id)!.dirty);
+	function isDirty(storeId: string, id: string | number): boolean {
+		return !!(getDataRecord(storeId, id)?.dirty);
 	}
 
-	function markDirty(storeId: string, id: string) {
-		const store = getMap(storeId);
-		if (store.has(id)) {
-			store.get(id)!.dirty = true;
-		}
+	function markDirty(storeId: string, id: string | number) {
+		getDataRecord(storeId, id)!.dirty = true;
 	}
 
 	function getAllDirties(storeId: string): dataMapRecordType[] {
 		const store = getMap(storeId);
 		return Array.from(store.values())
 			.filter((data) => data.dirty);
+	}
+
+	function isArray(storeId: string): boolean {
+		return configs.value.get(storeId)?.isArray ?? false;
 	}
 
 	return {
@@ -400,8 +473,9 @@ export const useDataStore = defineStore("dataStore", () => {
         create,
         getKeys,
         getFilenames,
-
-        addTag,
+        getArray,
+		addTag,
+        isArray,
     };
 });
 
@@ -417,9 +491,9 @@ export class dataStore {
 		this.dataSt.register(this.storeId, config);
 	}
 
-	addSchema(id: string, value: RecordSchema | SchemaDataObject) {
+	addSchema(value: RecordSchema | SchemaDataObject, id?: string, tags?: string | string[]) {
 		if (!this.dataSt) this.dataSt = useDataStore();
-		this.dataSt.addSchema(this.storeId, id, value);
+		this.dataSt.addSchema(this.storeId, value, id, tags);
 	}
 
 	addTag(id: string, tag: string) {
@@ -465,5 +539,10 @@ export class dataStore {
 	get config() {
 		if (!this.dataSt) this.dataSt = useDataStore();
 		return this.dataSt.configs.get(this.storeId);
+	}
+
+	getArray() {
+		if (!this.dataSt) this.dataSt = useDataStore();
+		return this.dataSt.getArray(this.storeId);
 	}
 }

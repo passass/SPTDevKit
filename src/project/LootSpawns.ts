@@ -27,7 +27,7 @@ class LootSpawns {
             return;
         const id = (newVal["locationId"] as string) ?? generateUUID24chars();
         newVal["locationId"] = id;
-        lootSpawndataStore.addSchema(id, newVal);
+        lootSpawndataStore.addSchema(newVal, id);
         lootSpawndataStore.addTag(id, currentProjectTag);
     }
 
@@ -51,7 +51,7 @@ class LootSpawns {
                     spawnPoint["__location"] = location;
                     const id = (spawnPoint["locationId"] as string) ?? generateUUID24chars();
                     spawnPoint["locationId"] = id;
-                    lootSpawndataStore.addSchema(id, spawnPoint);
+                    lootSpawndataStore.addSchema(spawnPoint, id);
                     for (const tag of projectArgs.tags) {
                         lootSpawndataStore.addTag(id, tag);
 					}
@@ -73,13 +73,13 @@ class LootSpawns {
                 spawnPoint["__location"] = location;
                 const id = (spawnPoint["locationId"] as string) ?? generateUUID24chars();
                 spawnPoint["locationId"] = id;
-                lootSpawndataStore.addSchema(id, spawnPoint);
+                lootSpawndataStore.addSchema(spawnPoint, id);
                 lootSpawndataStore.addTag(id, "vanilla");
             }
         }
     }
 
-    getSpawnPointsForItem(itemId: string): LootLocationSchema[] {
+    getSpawnPointsForItem(itemId: string | number): LootLocationSchema[] {
         const res: LootLocationSchema[] = [];
         for (const [, record] of lootSpawndataStore.getMap().entries()) {
 			if (

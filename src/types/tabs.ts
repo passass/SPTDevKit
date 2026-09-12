@@ -9,7 +9,7 @@ export type ComputedValue<T> = ComputedRef<T> | T
 
 // ===== Вкладка =====
 export interface Tab {
-	id: string;
+	id: string | number;
 	label: string;
 	icon?: string;
     badge?: number; //| number;

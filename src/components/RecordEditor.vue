@@ -7,7 +7,7 @@
 	const props = defineProps<{
 		itemsData: Tab[]
 		schemaType?: Tab["schemaType"]
-		fileData?: Map<string, dataMapRecordType>
+		fileData?: Map<string | number, dataMapRecordType>
 		storeId?: string
 	}>()
 </script>

@@ -71,6 +71,7 @@ class Project {
             },
             this.dataStore?.load("traders"),
             this.dataStore?.load("items"),
+            this.dataStore?.load("questsZones"),
         ]);
     }
 
@@ -88,12 +89,12 @@ class Project {
     }
 
 	async saveProject() {
-        if (!this.currentProjectFolder) return;
-		await
-			Promise.all([
-				Quests.saveProject(this.currentProjectFolder),
-				Items.saveProject(this.currentProjectFolder)
-			])
+		if (!this.currentProjectFolder) return;
+		const promises = [];
+		for (const projectObject of ProjectObjects) {
+			if ("saveProject" in projectObject && typeof projectObject.saveProject === "function") promises.push(projectObject.saveProject(this.currentProjectFolder));
+		}
+		await Promise.all(promises);
     }
 
     isOpened() {

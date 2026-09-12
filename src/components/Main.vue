@@ -8,19 +8,23 @@ import ListTabsFrame from "./ListTabsFrame.vue";
 import { useDataStore, type dataMapRecordType } from "@/stores/dataStore";
 import SettingsComponent from "./SettingsComponent.vue";
 import { isElectron } from "@/utils/utils";
+import { RecordSchema } from "@/types/fields/fields";
 
 const dataStore = useDataStore();
 
 function getRecordEditorComponent(content: object, dataStoreId: string): Component {
     return () => {
         const itemsData: Tab[] = [];
-        const fileData: Map<string, dataMapRecordType> = dataStore.getMap(dataStoreId) ?? {};
+        const fileData: Map<string | number, dataMapRecordType> = dataStore.getMap(dataStoreId) ?? {};
         const schemaType = dataStore.getSchemaType(dataStoreId);
 
         for (const [itemId, itemData] of fileData.entries()) {
-            const localizedName: string = gameLocalization.getObjectLocalization({
-                instance: itemData.data,
-            });
+			const localizedName: string =
+				itemData.data instanceof RecordSchema && itemData.data.getSchemaLabel
+				? itemData.data.getSchemaLabel()
+				: gameLocalization.getObjectLocalization({
+                    instance: itemData.data,
+            	});
 
             itemsData.push({
                 id: itemId,

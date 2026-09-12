@@ -1,4 +1,5 @@
 export const zoneLocations = [
+	"Sandbox",
     "Sandbox_high",
     "Bigmap",
     "Factory4_day",

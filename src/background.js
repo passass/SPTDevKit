@@ -114,15 +114,12 @@ ipcMain.handle("read-file", async (event, filePath) => {
 
 ipcMain.handle('read-json', async (event, filePath) => {
 	let fileContent
-	console.log("read-json loadcontent", filePath)
 	try {
 		fileContent = await fs.readFile(filePath, 'utf-8');
 	} catch (error) { 	}
 	// for (const jsonModule of [JSON, jsonc]) {
 	try {
-		console.log("read-json convert")
 		const converted = await jsonc.parse(fileContent)
-		console.log("converted")
 		return {
 			success: true,
 			data: converted,

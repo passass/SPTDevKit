@@ -1,6 +1,6 @@
 // src/types/schemas/zones.ts
 
-import { Field, RecordSchema } from "@/types/fields/fields";
+import { Field, RecordSchema, type FieldType } from "@/types/fields/fields";
 import { HiddenField, IdField } from "@/types/fields/fieldsClasses";
 import { zoneLocations } from "@/consts/GameConsts";
 import { type FieldContext } from "../fields/fieldsConsts";
@@ -16,18 +16,27 @@ export class ZoneVector4Schema extends RecordSchema {
 
 class ZoneName extends HiddenField {
 	key = "ZoneName"
+	alwaysFillWithDefault = true
+	type: FieldType = "text"
+
 	getSerializedValue(fieldContent: FieldContext) {
 		return fieldContent.recordSchema.get("ZoneId");
 	}
 }
 
 export class ZoneSchema extends RecordSchema {
+	getSchemaLabel(): string {
+		const name = this.get("ZoneId");
+		return (typeof name === "string" && name !== "") ? name : "Zone";
+	}
+
     static fields: Field[] = [
         Field.create({
             key: "ZoneId",
             label: "ID зоны",
             type: "text",
 			order: 1,
+			fillWithDefaultOnCreate: true,
         }),
         ZoneName.create({}),
         Field.create({
@@ -35,7 +44,8 @@ export class ZoneSchema extends RecordSchema {
             label: "Локация",
             type: "select",
             options: zoneLocations,
-            order: 3,
+			order: 3,
+            fillWithDefaultOnCreate: true,
         }),
         Field.create({
             key: "ZoneType",
@@ -43,6 +53,7 @@ export class ZoneSchema extends RecordSchema {
             type: "select",
             options: ["placeitem", "visit", "botkillzone", "flarezone"],
             order: 4,
+            fillWithDefaultOnCreate: true,
         }),
         Field.create({
             key: "FlareType",
@@ -50,6 +61,7 @@ export class ZoneSchema extends RecordSchema {
             type: "text",
             order: 5,
             defaultValue: "",
+            fillWithDefaultOnCreate: true,
         }),
         Field.create({
             key: "Position",

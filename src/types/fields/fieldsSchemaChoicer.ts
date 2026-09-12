@@ -1,4 +1,4 @@
-import { type SchemaData, RecordSchema } from "./fields"
+import { type recordSchemaOtherData, type SchemaData, RecordSchema } from "./fields"
 
 export type SchemaChoicerConstructor<T extends SchemaChoicer = SchemaChoicer> = new (data?: any) => T;
 export interface SchemaChoice {
@@ -13,10 +13,10 @@ export interface SchemaChoice {
 export class SchemaChoicer {
 	static schemas: SchemaChoice[] = []
 
-	static from(data: SchemaData): RecordSchema | null {
+	static from(data: SchemaData, otherData?: recordSchemaOtherData): RecordSchema | null {
 		for (const schemaChoice of this.schemas) {
 			if (schemaChoice.condition(data)) {
-				return schemaChoice.schema.from(data)
+				return schemaChoice.schema.from(data, otherData)
 			}
 		}
 		return null

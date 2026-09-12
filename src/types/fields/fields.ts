@@ -19,14 +19,7 @@ export interface SchemaDataObject {
     [key: string]: SchemaValue;
 }
 
-export type SchemaValue =
-    | string
-    | number
-    | boolean
-    | null
-    | undefined
-    | SchemaValue[]
-    | SchemaDataObject;
+export type SchemaValue = string | number | boolean | null | undefined | SchemaValue[] | SchemaDataObject;
 
 export type SchemaData = SchemaDataObject;
 export type FieldType =
@@ -68,12 +61,13 @@ export class Field extends Data {
     onIfInData?: (data: SchemaData) => void;
 
     hidden?: boolean;
-	unneccesary?: boolean;
+    unneccesary?: boolean;
 
-	excludeFromToJSON?: boolean;
-	alwaysFillWithDefault?: boolean;
+    excludeFromToJSON?: boolean;
+    alwaysFillWithDefault?: boolean;
+    fillWithDefaultOnCreate?: boolean;
 
-	onNestedSchemaCopy?(fieldContext: FieldContext, oldSchema: RecordSchema): void;
+    onNestedSchemaCopy?(fieldContext: FieldContext, oldSchema: RecordSchema): void;
 
     onArrayItemDelete?(fieldContext: FieldContext, index: number): void;
     onArrayItemAdd?(fieldContext: FieldContext, newVal: any): void;
@@ -82,7 +76,7 @@ export class Field extends Data {
     onUpdateModelValue?(recordSchema: RecordSchema, newVal: any): void;
 
     getSerializedValue?(fieldContext: FieldContext): any;
-	getDefaultValue?(data: SchemaData): any;
+    getDefaultValue?(data: SchemaData): any;
 
     isArray(): boolean {
         return this.type && this.type.toLocaleLowerCase().includes("array");
@@ -161,7 +155,7 @@ export class LocalizationField extends Field {
 
     getDefaultValue(data: SchemaData): string {
         const key = this.key;
-		const id = data["id"] ?? data["_id"];
+        const id = data["id"] ?? data["_id"];
         if (typeof id !== "string") return "";
         if (key) return `${id} ${key}`;
         return id;
@@ -180,6 +174,7 @@ export type recordSchemaOtherData = {
     parent?: Record<string, any> | Array<object> | RecordSchema | null;
     name?: string | null;
     fillWithDefault?: boolean;
+    isCreating?: boolean;
 };
 
 export class RecordSchema {
@@ -188,29 +183,29 @@ export class RecordSchema {
     static getFieldByKeyStatic(key: string, def?: any) {
         const fields = this.fields || [];
         return fields.find((el: Field) => el.key === key) ?? def;
-	}
+    }
 
-	static replaceFieldWith(field: Field) {
-		const fields = this.fields || [];
-		const index = fields.findIndex((el: Field) => el.key === field.key);
-		if (index !== -1) {
-			fields[index] = field;
-		}
-	}
+    static replaceFieldWith(field: Field) {
+        const fields = this.fields || [];
+        const index = fields.findIndex((el: Field) => el.key === field.key);
+        if (index !== -1) {
+            fields[index] = field;
+        }
+    }
 
-	static from(value: any, otherData?: recordSchemaOtherData) {
-		return castToRecordSchema(value, this, otherData);
+    static from(value: any, otherData?: recordSchemaOtherData) {
+        return castToRecordSchema(value, this, otherData);
     }
 
     getFieldByKey(key: string, def?: any) {
         const fields = (this.constructor as typeof RecordSchema).fields || [];
         return fields.find((el: Field) => el.key === key) ?? def;
-	}
+    }
 
-	getValueByPath = (path: string) => getValueByPath(this.getData(), path)
-	getValuesByPath = (path: string) => getValuesByPath(this.getData(), path)
+    getValueByPath = (path: string) => getValueByPath(this.getData(), path);
+    getValuesByPath = (path: string) => getValuesByPath(this.getData(), path);
 
-	getArrayCastedData(key: string): RecordSchema[] {
+    getArrayCastedData(key: string): RecordSchema[] {
         const field = this.getFieldByKey(key);
         if (!field) return [];
         if (!field.arrayItemSchema) return [];
@@ -240,8 +235,7 @@ export class RecordSchema {
             for (const field of fields) {
                 if (field instanceof LocalizationField && field.key) {
                     const value = instance.get(field.key);
-					if (typeof value === "string")
-						res.add(value);
+                    if (typeof value === "string") res.add(value);
                 } else if (field instanceof VirtualLocalizationField) {
                     res.add(field.getDefaultValue(instance.data));
                 } else if (field.nestedSchema) {
@@ -331,13 +325,18 @@ export class RecordSchema {
                 if (field.key in this.data) continue;
             }
 
-            if (otherData?.fillWithDefault || field.alwaysFillWithDefault) {
+            if (
+                otherData?.fillWithDefault ||
+                field.alwaysFillWithDefault ||
+                (otherData?.isCreating && field.fillWithDefaultOnCreate)
+            ) {
                 let defVal;
                 if (field.type === "object" && field.nestedSchema) {
                     defVal = new field.nestedSchema(
                         {},
                         {
                             fillWithDefault: true,
+                            isCreating: otherData?.isCreating,
                         }
                     ).toJSON();
                 } else {
@@ -424,10 +423,10 @@ export class RecordSchema {
         return this.data;
     }
 
-	getId(): string | undefined {
-		const id = this.data["_id"] ?? this.data["id"]
-		if (typeof id !== "string") return undefined;
-		return id;
+    getId(): string | undefined {
+        const id = this.data["_id"] ?? this.data["id"];
+        if (typeof id !== "string") return undefined;
+        return id;
     }
 
     /** Получить значение поля */
@@ -487,9 +486,11 @@ export class RecordSchema {
             return field.type === "object" || field.type === "array" || !!field.nestedSchema || !!field.arrayItemSchema;
         }
         return rawValue !== null && typeof rawValue === "object";
-    }
+	}
 
-    /** Получить label */
+	getSchemaLabel?(): string;
+
+	/** Получить label */
     getLabel(key: string): string {
         return this.getField(key)?.label ?? this.formatKey(key);
     }
@@ -551,7 +552,7 @@ export class RecordSchema {
 
     /** Сериализация */
     /** Сериализация */
-    toJSON(): SchemaData {
+	toJSON(): SchemaData {
         const serialize = (obj: any): any => {
             if (obj === null || obj === undefined) return obj;
 
@@ -628,9 +629,9 @@ export class RecordSchema {
         };
 
         const result: Record<string, any> = {};
-        for (const [key, value] of Object.entries(data)) {
-            const field = fieldsMap.get(key);
-            if (field?.excludeFromToJSON) continue;
+		for (const [key, value] of Object.entries(data)) {
+			const field = fieldsMap.get(key);
+			if (field?.excludeFromToJSON) continue;
 
             if (field?.getSerializedValue) {
                 result[key] = field.getSerializedValue({
@@ -652,5 +653,5 @@ export class RecordSchema {
             .replace(/([A-Z])/g, " $1")
             .replace(/_/g, " ")
             .replace(/^./, (str) => str.toUpperCase());
-    }
+	}
 }

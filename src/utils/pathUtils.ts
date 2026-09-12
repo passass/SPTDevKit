@@ -48,7 +48,8 @@ export class Path {
 	}
 
 	async saveFile(content: any) {
-		await window.electronAPI.writeJson(this.filePath, JSON.stringify(toJsonObject(content), null, 2));
+		const res = typeof content === "string" ? content : JSON.stringify(toJsonObject(content), null, 2)
+		await window.electronAPI.writeJson(this.filePath, res);
 	}
 
 	async findFiles(...parts: Array<string | Path>): Promise<Path[]> {

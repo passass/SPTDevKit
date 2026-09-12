@@ -132,7 +132,7 @@ export default defineComponent({
         tabs: { type: Array as () => Tab[], required: true },
         schemaType: { type: Object as () => Tab["schemaType"] },
         storeId: { type: String },
-        fileData: { type: Object as () => Map<string, dataMapRecordType> },
+        fileData: { type: Object as () => Map<string | number, dataMapRecordType> },
         isSearch: { type: Boolean },
         searchPlaceholder: { type: String },
         caseSensitive: { type: Boolean },
@@ -142,7 +142,7 @@ export default defineComponent({
     setup(props, { emit }) {
         const dataStore = useDataStore();
         const frameNavigator = inject<Navigator | null>("frameNavigator", null);
-        const activeTab = ref<string | null>(null);
+        const activeTab = ref<string | number | null>(null);
         const searchQuery = ref("");
 
         const selectedTags = ref<string[]>([]);
@@ -169,7 +169,7 @@ export default defineComponent({
             // Фильтрация по тегам
             if (selectedTags.value.length > 0 && props.fileData) {
                 const fileData = props.fileData;
-                result = result.filter((tab) => {
+				result = result.filter((tab) => {
                     const record = fileData.get(tab.id);
                     if (!record?.tags) return false;
                     return selectedTags.value.every((tag) => record.tags!.includes(tag));
@@ -185,12 +185,12 @@ export default defineComponent({
                 : searchQuery.value.trim().toLowerCase();
             return result.filter((tab) => {
                 const label = props.caseSensitive ? tab.label.trim() : tab.label.trim().toLowerCase();
-                const id = props.caseSensitive ? tab.id.trim() : tab.id.trim().toLowerCase();
+                const id = typeof tab.id === "string" ? (props.caseSensitive ? tab.id.trim() : tab.id.trim().toLowerCase()) : tab.id.toString();
                 return label.includes(query) || id.includes(query);
             });
 		});
 
-        function isTabVisible(tabId: string): boolean {
+        function isTabVisible(tabId: string | number): boolean {
             const hasSearch = props.isSearch && !!searchQuery.value.trim();
             const hasTagFilter = selectedTags.value.length > 0;
             if (!hasSearch && !hasTagFilter) {
@@ -211,26 +211,30 @@ export default defineComponent({
 
 		function createNewSchema() {
             if (!props.fileData || !props.schemaType) return;
-			const newInstance = props.schemaType.from({});
+			const newInstance = props.schemaType.from({}, {
+				isCreating: true
+			});
 			if (!newInstance) return;
-            const newInstanceId = newInstance.getId() ?? generateUUID24chars();
-			if (newInstanceId && props.storeId) {
-            	console.log("newInstance", newInstance)
-                props.fileData.set(newInstanceId, { data: newInstance });
-                dataStore.addSchema(props.storeId, newInstanceId, newInstance);
-                dataStore.addTag(props.storeId, newInstanceId, currentProjectTag);
+			if (props.storeId) {
+				if (dataStore.isArray(props.storeId)) {
+					dataStore.addSchema(props.storeId, newInstance, undefined, currentProjectTag);
+					selectTab(dataStore.getArray(props.storeId).length - 1);
+				} else {
+					const newInstanceId = newInstance.getId() ?? generateUUID24chars();
+					dataStore.addSchema(props.storeId, newInstance, newInstanceId, currentProjectTag);
+					selectTab(newInstanceId);
+				}
 
-				selectTab(newInstanceId);
             }
         }
 
-        function selectTab(tabId: string) {
+        function selectTab(tabId: string | number) {
             if (isTabVisible(tabId)) {
                 if (activeTab.value !== tabId) {
                     frameNavigator?.goRoot?.();
                 }
                 activeTab.value = tabId;
-                localStorage.setItem("activeTab", tabId);
+                localStorage.setItem("activeTab", tabId.toString());
                 emit("tab-selected", tabId);
             }
         }

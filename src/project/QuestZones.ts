@@ -1,34 +1,40 @@
 import { Path } from "@/utils/pathUtils";
-import { type ProjectArgs } from "../consts/ProjectConsts";
+import { currentProjectTag, type ProjectArgs } from "../consts/ProjectConsts";
 import { useFileDataStore } from "@/stores/fileStore";
 import { dataStore } from "@/stores/dataStore";
 import { ZoneSchema } from "@/types/schemas/questsZones";
 import { generateUUID24chars } from "@/utils/uuidUtils";
+import { toJsonObject } from "@/utils/utils";
 
 const questZonesStore = new dataStore("questsZones");
 
 class QuestZones {
     ensureStore() {
         if (!questZonesStore.isInited()) {
-            questZonesStore.register({ file: [], schemaType: ZoneSchema });
+            questZonesStore.register({ file: [], schemaType: ZoneSchema, isArray: true });
         }
-	}
+    }
 
-	clearProject() {
+    async saveProject(currentProjectFolder: Path) {
+        const questZones = questZonesStore.getByTagInStore(currentProjectTag);
+        const res = [];
+        for (const questZone of questZones.values()) {
+            res.push(questZone.data.toJSON());
+        }
 
-	}
+        new Path(currentProjectFolder, "db/CustomQuestZones/zones.json").saveFile(res);
+    }
 
-	init() {
-		console.log("QuestZones init")
-		this.ensureStore();
-	}
+    clearProject() {}
 
-	async loadFromMod(projectArgs: ProjectArgs) {
-		const fileStore = useFileDataStore();
+    init() {
+        this.ensureStore();
+    }
+
+    async loadFromMod(projectArgs: ProjectArgs) {
+        const fileStore = useFileDataStore();
         for (const filePath of await new Path(projectArgs.folderPath, "db/CustomQuestZones/*.json").findFiles()) {
-			const content = await fileStore.read(filePath.toString());
-            const id = generateUUID24chars();
-            questZonesStore.addSchema(id, content.data)
+            questZonesStore.addFileToStore({ filename: filePath.toString(), tags: projectArgs.tags });
         }
     }
 }
