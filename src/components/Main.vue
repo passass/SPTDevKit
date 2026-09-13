@@ -9,6 +9,8 @@ import { useDataStore, type dataMapRecordType } from "@/stores/dataStore";
 import SettingsComponent from "./SettingsComponent.vue";
 import { isElectron } from "@/utils/utils";
 import { RecordSchema } from "@/types/fields/fields";
+import TradersAssort from "@/project/TradersAssort";
+import TradersAssortInput from "./TradersAssortInput.vue";
 
 const dataStore = useDataStore();
 
@@ -63,6 +65,7 @@ function createTab(content: object, dataStoreId: string): Tab {
     return res as Tab;
 }
 
+const listTabsRef = ref<Component | undefined>();
 const tabsContent = ref<Tab[]>([
     createTab(
         {
@@ -97,12 +100,21 @@ const tabsContent = ref<Tab[]>([
         "questsZones"
     ),
     {
-        id: "settings",
+        id: "tradersAssort",
+        label: "Ассортимент торговцев",
+		icon: "",
+		data: TradersAssort.getTradersAssort(),
+
+        title: "Ассортимент торговцев",
+        component: !isElectron() ? <h1>Electron required</h1> : TradersAssortInput,
+	},
+    {
+        id: "settingsComponent",
         label: "Настройки",
         icon: "⚙️",
 
         title: "Настройки приложения",
-        component: !isElectron() ? <h1>Electron required</h1> : <SettingsComponent></SettingsComponent>,
+        component: !isElectron() ? <h1>Electron required</h1> : SettingsComponent,
     },
 ]);
 

@@ -15,7 +15,7 @@ const props = defineProps<{
 }>();
 
 const items = computed(() => {
-	const result: Map<string, object> = new Map()
+	const result: Map<string, Record<string, any>> = new Map()
 
 	if (Array.isArray(props.recordSchema.parent)) {
 		for (const el of props.recordSchema.parent) {

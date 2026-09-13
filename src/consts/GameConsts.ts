@@ -35,3 +35,56 @@ export const allLocationsLowerCase = [
     "town",
     "woods",
 ];
+
+export const DogTagIds: string[] = [
+	"59f32bb586f774757e1e8442",
+    "6662e9aca7e0b43baa3d5f74",
+    "6662e9cda7e0b43baa3d5f76",
+    "675dc9d37ae1a8792107ca96",
+    "675dcb0545b1a2d108011b2b",
+    "684181208d035f60230f63f9",
+    "684180bc51bf8645f7067bc8",
+	"59f32c3b86f77472a31742f0",
+    "6662ea05f6259762c56f3189",
+    "6662e9f37fa79a6d83730fa0",
+    "6764207f2fa5e32733055c4a",
+    "6764202ae307804338014c1a",
+    "684180ee9b6d80d840042e8a",
+    "68418091b5b0c9e4c60f0e7a"
+];
+
+export const DogTagIdsOptions = {
+	Any: DogTagIds,
+	Bear: [
+		"59f32bb586f774757e1e8442",
+        "6662e9aca7e0b43baa3d5f74",
+        "6662e9cda7e0b43baa3d5f76",
+        "675dc9d37ae1a8792107ca96",
+        "675dcb0545b1a2d108011b2b",
+        "684181208d035f60230f63f9",
+        "684180bc51bf8645f7067bc8"
+	],
+	Usec: [
+		"59f32c3b86f77472a31742f0",
+        "6662ea05f6259762c56f3189",
+        "6662e9f37fa79a6d83730fa0",
+        "6764207f2fa5e32733055c4a",
+        "6764202ae307804338014c1a",
+        "684180ee9b6d80d840042e8a",
+        "68418091b5b0c9e4c60f0e7a"
+	]
+}
+
+export const slotIdOptions = [
+    "Helmet_top", "Helmet_back", "Helmet_ears", "mod_magazine", "mod_sight_rear", "mod_tactical",
+    "mod_pistol_grip", "mod_stock", "mod_muzzle", "mod_reciever", "mod_bipod", "mod_gas_block",
+    "cartridges", "mod_mount", "mod_scope", "mod_handguard", "helmet_top", "helmet_back",
+    "helmet_ears", "mod_mount_001", "mod_pistolgrip", "mod_stock_001", "mod_barrel",
+    "mod_sight_front", "mod_stock_000", "mod_charge", "mod_muzzle_000", "mod_foregrip",
+    "Soft_armor_front", "Soft_armor_back", "Soft_armor_left", "soft_armor_right",
+    "Front_plate", "Back_plate", "Collar", "Groin", "Groin_back", "mod_mount_000",
+    "mod_mount_002", "mod_mount_004", "mod_mount_003", "mod_stock_axis", "mod_scope_000",
+    "mod_scope_001", "mod_trigger", "mod_hammer", "mod_catch", "mod_stock_002",
+    "mod_tactical_002", "mod_tactical_000", "patron_in_weapon", "mod_flashlight",
+    "mod_tactical_001", "slotId",
+];

@@ -31,7 +31,7 @@
 
         <!-- Режим optionsArray: select -->
         <div v-if="isOptionsArray" class="array-input__editor">
-            <template v-if="selectedIndex !== null && Array.isArray(items[selectedIndex])">
+            <template v-if="selectedIndex !== null && Array.isArray(items)">
                 <OptionsInput v-model="items[selectedIndex]" :field="field" :data="items" />
             </template>
         </div>
@@ -39,7 +39,7 @@
         <!-- Режим arrayAdvancedSelect: выбор из справочника -->
         <div v-else-if="isAdvancedSelectArray" class="array-input__editor">
             <template v-if="selectedIndex !== null && typeof items[selectedIndex] === 'string'">
-                <AdvancedSelectInput v-model="items[selectedIndex] as string" :field="field" />
+                <AdvancedSelectInput v-model="items[selectedIndex] as string" :fieldContext="fieldContext" />
             </template>
         </div>
 
@@ -52,7 +52,7 @@
                         :key="subIndex"
                         class="array-input__sub-item"
                     >
-                        <AdvancedSelectInput v-model="currentSubArray[subIndex]" :field="field" />
+                        <AdvancedSelectInput v-model="currentSubArray[subIndex]"  :fieldContext="fieldContext" />
                         <button class="array-input__sub-remove" @click="removeSubItem(subIndex)">✕</button>
                     </div>
                     <button class="array-input__sub-add" @click="addSubItem">+ Добавить</button>
@@ -91,7 +91,7 @@
                 @click="handleNavigate"
                 class="array-input__nav-object-btn"
             >
-                Выбрать объект →
+                {{ getRepresentation(selectedItem) || "Выбрать объект" }} →
             </button>
             <div v-else-if="selectedItem !== null" class="array-input__primitive">
                 {{ String(selectedItem) }}
@@ -110,16 +110,18 @@ import { getStaticField } from "@/utils/classUtils";
 import { Navigator } from "@/utils/navigation";
 import OptionsInput from "./OptionsInput.vue";
 import { type FieldContext } from "@/types/fields/fieldsConsts";
+import { gameLocalization } from "@/types/localization";
 
 type InputType = SchemaValue[];
 const frameNavigator = inject<Navigator>("frameNavigator");
+
+console.log("frameNavigator", frameNavigator)
 
 const props = defineProps<{
     modelValue: Array<any>;
     field: Field;
     selectedIndex?: number;
     fieldContext: FieldContext;
-    navigateHandler?: (key: any) => void;
 }>();
 
 const emit = defineEmits<{
@@ -199,7 +201,7 @@ function prevItem() {
 
 function deleteItem() {
     if (selectedIndex.value === null || selectedIndex.value < 0 || selectedIndex.value > items.value.length - 1) return;
-    if (props.field.onArrayItemDelete) props.field.onArrayItemDelete(props.fieldContext, selectedIndex.value);
+    if (props.field.onArrayItemDelete && props.field.onArrayItemDelete(props.fieldContext, selectedIndex.value)) return;
     items.value.splice(selectedIndex.value, 1);
 
     if (selectedIndex.value !== 0) {
@@ -247,9 +249,9 @@ function addItem() {
                     resultSchema = new choosedSchema.schema(
                         {},
                         {
-                            schemaChooser: props.field.arrayItemSchema,
+                            schemaChooser: (props.field.arrayItemSchema as typeof SchemaChoicer),
                             choosedSchema: choosedSchema,
-                            fillWithDefault: true,
+                            //fillWithDefault: true,
                         }
                     );
                 }
@@ -257,7 +259,7 @@ function addItem() {
                 resultSchema = new arrayItemSchema(
                     {},
                     {
-                        fillWithDefault: true,
+                        //fillWithDefault: true,
                     }
                 ) as RecordSchema;
             }
@@ -287,6 +289,16 @@ function addItem() {
     }
 }
 
+function getRepresentation(item: any): string {
+    if (!item || typeof item !== "object") return "";
+
+	if ("_tpl" in item) {
+    	return gameLocalization.getText({ localeId: [`${item._tpl} ShortName`, item._tpl], default: "" })
+    }
+
+    return "";
+}
+
 function addSubItem() {
     if (selectedIndex.value === null) return;
     const array = items.value[selectedIndex.value];
@@ -303,11 +315,15 @@ function removeSubItem(index: number | string) {
 }
 
 function handleNavigate() {
-    if (props.navigateHandler) {
-        if (props.field.onArrayNavigate && selectedIndex.value !== null)
-            props.field.onArrayNavigate(props.fieldContext, selectedIndex.value);
-        else props.navigateHandler([props.field.key, selectedIndex.value]);
-    }
+	if (selectedIndex.value !== null) {
+		console.log("handleNavigate", props.fieldContext)
+		if (props.field.onArrayNavigate)
+	        props.field.onArrayNavigate(props.fieldContext, selectedIndex.value);
+	    else if (props.fieldContext.navigate) {
+	        props.fieldContext.navigate([props.field.key, selectedIndex.value]);
+	    }
+	}
+
 }
 
 function getSavedData() {

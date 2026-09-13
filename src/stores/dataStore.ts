@@ -18,6 +18,7 @@ export interface DataStoreConfig {
 	schemaType?: typeof RecordSchema | typeof SchemaChoicer;
 	manualClear?: boolean;
 	isArray?: boolean;
+	onFileLoad?: (content: any) => Map<string, RecordSchema> | RecordSchema[];
 }
 export interface dataStoreExtraDataType {
     tags?: string[];
@@ -101,14 +102,25 @@ export const useDataStore = defineStore("dataStore", () => {
 
             const schemaType = config.schemaType;
 
-            for (const file of files) {
-                const filename = file.filename;
-                const tags: string[] = getValueByPath(file, "tags", []);
+			for (const file of files) {
+				const filename = file.filename;
+				const tags: string[] = getValueByPath(file, "tags", []);
 
-                const fileData = await fileStore.read(filename);
-                const fileContent = fileData.data ?? fileData;
+				const fileData = await fileStore.read(filename);
+				const fileContent = fileData.data ?? fileData;
 
-                if (fileContent && typeof fileContent === "object") {
+				if (config.onFileLoad) {
+					if (Array.isArray(store)) {
+						for (const el of config.onFileLoad(fileData))
+							if (el instanceof RecordSchema)
+								store.push(el)
+					} else {
+						for (const [key, el] of config.onFileLoad(fileData).entries())
+							if (el instanceof RecordSchema)
+								store.set(key, el)
+					}
+				}
+                else if (fileContent && typeof fileContent === "object") {
                     let entries: any = {};
                     if (tags.includes("oneObject")) {
                         const idField = idsFields.find((el) => el in fileContent);
@@ -572,5 +584,10 @@ export class dataStore {
 	clearStoreFromObjectWithTags(tag: string) {
 		if (!this.dataSt) this.dataSt = useDataStore();
 		this.dataSt.clearStoreFromObjectWithTags(this.storeId, tag);
+	}
+
+	get(id: string | number) {
+		if (!this.dataSt) this.dataSt = useDataStore();
+		return this.dataSt.get(this.storeId, id);
 	}
 }

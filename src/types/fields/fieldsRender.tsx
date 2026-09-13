@@ -14,19 +14,21 @@ import { gameLocalization } from "@/types/localization";
 import { RecordSchema } from "@/types/fields/fields";
 import { type FieldContext } from "./fieldsConsts";
 import type { Navigator } from "@/utils/navigation";
+import ArrayArrayInput from "@/components/inputs/ArrayArrayInput.vue";
+import ArrayListInput from "@/components/inputs/ArrayListInput.vue";
 
 interface RenderRule {
     condition: (field: Field, recordSchema: RecordSchema) => boolean;
-    component?: (field: Field, recordSchema: RecordSchema, handleNavigate: (key: any) => void) => Component;
+    component?: (fieldContext: FieldContext) => Component;
     componentTemplate?: Component | string;
     componentTemplateProps?: Record<string, any>;
     hasOnInputEmit?: boolean;
     hasOnChangeEmit?: boolean;
 }
 
-function getObjectSummary(value: SchemaValue): string {
+function getObjectSummary(value: any): string {
     if (!value) return "{}";
-    const keys = value instanceof RecordSchema ? Object.keys(value.data) : Object.keys(value);
+    const keys = value instanceof RecordSchema ? value.getFields().map((field) => field.key) : Object.keys(value);
     if (keys.length === 0) return "{}";
     const previewKeys = keys.slice(0, 3);
     const translatedKeys = previewKeys.map((key) => {
@@ -122,23 +124,68 @@ const FieldTemplateWrapper = defineComponent({
 
 const FieldComponentWrapper = defineComponent({
     name: "FieldComponentWrapper",
-    props: ["recordSchema", "field", "handleNavigate", "componentFunc"],
+    props: ["fieldContext", "componentFunc"],
     setup(props) {
         return () => {
-            const vnode = props.componentFunc(props.field, props.recordSchema, props.handleNavigate);
+            const vnode = props.componentFunc(props.fieldContext);
             if (vnode && typeof vnode === "object" && !Array.isArray(vnode) && !(vnode as any).key) {
-                (vnode as any).key = props.field.key;
+                (vnode as any).key = props.fieldContext.field.key;
             }
             return vnode;
         };
     },
 });
 
+const CreateObjectButton = defineComponent({
+    name: "CreateObjectButton",
+    props: ["recordSchema", "field"],
+    setup(props) {
+        return ;
+    },
+});
+
+// Rule - insert before isArray() rule
+
+
 const renderRules: RenderRule[] = [
     {
         condition: (field: Field) => field.type === "localization",
         componentTemplate: LocalizationInput,
-    },
+	},
+	{
+	    condition: (field: Field) => field.type === "arrayArray",
+	    componentTemplate: ArrayArrayInput,
+	},
+	{
+	    condition: (field: Field) => field.type === "arrayList",
+	    componentTemplate: ArrayListInput,
+	},
+    {
+	    condition: (field: Field, recordSchema: RecordSchema) => {
+	        if (!(field.isArray() || field.type === "object") || field.virtual) return false;
+	        return recordSchema.get(field) === undefined;
+	    },
+	    component: (fieldContext: FieldContext) => (
+            <div
+                class="object-summary"
+                onClick={() => {
+                    const field = fieldContext.field as Field;
+                    const recordSchema = fieldContext.recordSchema as RecordSchema;
+                    let defaultValue: any;
+                    if (field.type === "object" && field.nestedSchema) {
+                        defaultValue = new field.nestedSchema({}).toJSON();
+                    } else if (field.isArray()) {
+                        defaultValue = [];
+                    } else {
+                        defaultValue = resolveDefaultValue(field, recordSchema.getData());
+                    }
+                    recordSchema.set(field, defaultValue);
+                }}
+            >
+                Создать
+            </div>
+        ),
+	},
     {
         condition: (field: Field) => field.type === "advancedSelect",
         componentTemplate: AdvancedSelectInput,
@@ -154,11 +201,11 @@ const renderRules: RenderRule[] = [
     {
         condition: (field: Field, recordSchema: RecordSchema) =>
             compareInputFields.includes(field.key) && hasCompareInput(recordSchema),
-        component: (field: Field, recordSchema: RecordSchema) => {
-            if (field.key === "value") {
+        component: (fieldContext: FieldContext) => {
+            if (fieldContext.field.key === "value") {
                 return (
                     <div>
-                        <CompareInput data={recordSchema.data} />
+                        <CompareInput value={fieldContext.data} />
                     </div>
                 );
             }
@@ -209,24 +256,24 @@ const renderRules: RenderRule[] = [
     },
     {
         condition: (field: Field) => field.type === "object",
-        component: (field: Field, recordSchema: RecordSchema, handleNavigate: (key: any) => void) => (
-			<div class="object-summary" onClick={() => handleNavigate(field.key)}>{
-				recordSchema.get(field) ? getObjectSummary(recordSchema.get(field)) : ""
+        component: (fieldContext: FieldContext) => (
+			<div class="object-summary" onClick={() => fieldContext.navigate?.(fieldContext.field.key)}>{
+				fieldContext.recordSchema.getCastedData(fieldContext.field) ? getObjectSummary(fieldContext.recordSchema.getCastedData(fieldContext.field)) : ""
 			}</div>
         ),
-    },
+	},
 ];
 
 const extraRenderRules: RenderRule[] = [
     {
         condition: (field: Field, recordSchema: RecordSchema) => field.key === "items" && field.isArray(),
-        component: (field: Field, recordSchema: RecordSchema) => (
+        component: (fieldContext: FieldContext) => (
             <>
-                <LoadWeaponBuildInput field={field} data={recordSchema.getData()} />
-                {(recordSchema.get(field.key) as unknown as WeaponBuildItem[])?.filter((item: WeaponBuildItem) => !item.parentId).length > 0 && (
+                <LoadWeaponBuildInput field={fieldContext.field} data={fieldContext.recordSchema.getData()} />
+                {(fieldContext.recordSchema.get(fieldContext.field.key) as unknown as WeaponBuildItem[])?.filter((item: WeaponBuildItem) => !item.parentId).length > 0 && (
                     <div class="weapon-build-reward">
-                        <span class="weapon-build-reward__label">Предметы:</span>
-                        <span class="weapon-build-reward__value">{getRewardDisplay(recordSchema.get(field.key) as unknown as WeaponBuildItem[])}</span>
+                        {/*<span class="weapon-build-reward__label">Предметы:</span>*/}
+                        <span class="weapon-build-reward__value">{getRewardDisplay(fieldContext.recordSchema.get(fieldContext.field) as unknown as WeaponBuildItem[])}</span>
                     </div>
                 )}
             </>
@@ -303,9 +350,13 @@ export function fieldRender({
             }
             if (renderRule.component) {
                 return h(FieldComponentWrapper, {
-                    recordSchema, // Передаем оригинальный
-                    field,
-                    handleNavigate,
+                    fieldContext: {
+						field,
+						value: recordSchema.get(field),
+						recordSchema,
+						data: recordSchema.getData(),
+						navigate: handleNavigate,
+					},
                     componentFunc: renderRule.component,
                 });
             }

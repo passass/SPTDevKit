@@ -40,6 +40,7 @@
                 :is="tab.component"
                 v-bind="tab.props || {}"
                 :data="displayData"
+                :list-tabs="passListTabs ? listTabs : undefined"
                 @update="handleUpdate"
             />
             <div v-else-if="displayData">
@@ -91,7 +92,14 @@ export default {
         };
     },
 
-    computed: {
+	computed: {
+		passListTabs(): boolean {
+	        const comp: any = this.tab.component;
+	        const props = comp?.props;
+	        if (!props) return false;
+	        if (Array.isArray(props)) return props.includes("listTabs");
+	        return Object.prototype.hasOwnProperty.call(props, "listTabs");
+	    },
         pathStack(): PathItem[] {
             return this.navigator?.getPathStack() ?? [];
         },

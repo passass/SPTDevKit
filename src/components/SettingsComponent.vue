@@ -47,7 +47,7 @@
             </select>
         </div>
 
-        <button class="" @click="console.log(dataStore.getAllDirties('quests'))">тест</button>
+        <!-- <button class="" @click="console.log(dataStore.getAllDirties('quests'))">тест</button> -->
     </div>
 </template>
 
@@ -55,6 +55,11 @@
 import { isElectron } from "@/utils/utils";
 
 if (!isElectron()) throw new Error("это компонент работает только в electron");
+
+import ListTabs from "./ListTabs.vue";
+const props = defineProps<{
+	listTabs?: InstanceType<typeof ListTabs>;
+}>();
 
 import { ref, onMounted } from "vue";
 import Project from "@/project/Project";

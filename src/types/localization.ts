@@ -71,7 +71,7 @@ export class GameLocalization {
             }
 
             if (config.instance instanceof RecordSchema) {
-                itemId = config.instance.getId() ?? itemId;
+				itemId = config.instance.getId() ?? itemId;
             } else {
                 itemId = data[idsFields.filter((id) => id in data)[0]];
             }

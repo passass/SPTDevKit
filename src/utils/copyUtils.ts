@@ -34,7 +34,7 @@ export function getAllLocalizationKeys(instance: RecordSchema): string[] {
 
 export function copyRecordSchema(
     original: RecordSchema,
-	projectTag: string
+	projectTag?: string
 ): RecordSchema {
 	const sourceId = original.getId();
 	const dataStore = useDataStore();
@@ -65,7 +65,6 @@ export function copyRecordSchema(
 			data: recordSchema.getData(),
             navigate: noopNavigate,
         };
-        // field.onNestedSchemaCopy(ctx, original);
         fnQueue.add("field.onNestedSchemaCopy", field.onNestedSchemaCopy, ctx, original)
 	}
 
@@ -148,6 +147,67 @@ export function copyRecordSchema(
 
     changeAllIds(copiedSchema, true);
 
+    // ===== Второй проход: заменяем все значения, которые совпадают с ключами idsMap =====
+    function replaceRawIdsFromMap(obj: any): void {
+        if (!obj || typeof obj !== "object") return;
+        if (Array.isArray(obj)) {
+            for (let i = 0; i < obj.length; i++) {
+                const v = obj[i];
+                if (typeof v === "string" && idsMap.has(v)) {
+                    obj[i] = idsMap.get(v);
+                } else if (v && typeof v === "object") {
+                    replaceRawIdsFromMap(v);
+                }
+            }
+            return;
+        }
+        for (const [k, v] of Object.entries(obj)) {
+            if (typeof v === "string" && idsMap.has(v)) {
+                obj[k] = idsMap.get(v);
+            } else if (v && typeof v === "object") {
+                replaceRawIdsFromMap(v);
+            }
+        }
+    }
+
+    function replaceAllIdsFromMap(schema: RecordSchema): void {
+        for (const field of schema.getFields()) {
+            if (field.virtual) continue;
+            const key = field.key;
+            if (!key || !schema.has(key)) continue;
+
+            const value = schema.get(key);
+
+            if (field.nestedSchema && value && typeof value === "object" && !Array.isArray(value)) {
+                const nested = schema.getCastedData(key);
+                if (nested) replaceAllIdsFromMap(nested);
+                continue;
+            }
+
+            if (field.arrayItemSchema && Array.isArray(value)) {
+                for (const item of schema.getArrayCastedData(key)) {
+                    replaceAllIdsFromMap(item);
+                }
+                continue;
+            }
+
+            if (typeof value === "string" && idsMap.has(value)) {
+                schema.set(key, idsMap.get(value)!);
+                continue;
+            }
+
+            if (Array.isArray(value)) {
+                replaceRawIdsFromMap(value);
+                continue;
+            }
+            if (value && typeof value === "object") {
+                replaceRawIdsFromMap(value);
+            }
+        }
+    }
+
+    replaceAllIdsFromMap(copiedSchema);
+
     const oldLocaleKeys = getAllLocalizationKeys(original);
     const localeMapping = new Map<string, string>();
 
@@ -162,16 +222,18 @@ export function copyRecordSchema(
         }
     }
 
-    for (const [oldKey, newKey] of localeMapping.entries()) {
-        if (oldKey === newKey) continue;
-        for (const locale of availableLocales) {
-            const storeId = `${locale}${suffixes.localizationSuffix}`;
-            const text = dataStore.get(storeId, oldKey);
-            if (text !== undefined && text !== null) {
-                dataStore.set(storeId, newKey, text);
-                dataStore.addTag(storeId, newKey, projectTag);
-            }
-        }
+	if (projectTag) {
+		for (const [oldKey, newKey] of localeMapping.entries()) {
+	        if (oldKey === newKey) continue;
+	        for (const locale of availableLocales) {
+	            const storeId = `${locale}${suffixes.localizationSuffix}`;
+	            const text = dataStore.get(storeId, oldKey);
+	            if (text !== undefined && text !== null) {
+	                dataStore.set(storeId, newKey, text);
+	                dataStore.addTag(storeId, newKey, projectTag);
+	            }
+	        }
+		}
 	}
 
 	fnQueue.executeAll()

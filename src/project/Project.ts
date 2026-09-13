@@ -11,6 +11,7 @@ import { currentProjectTag, modTag, type ProjectArgs } from "../consts/ProjectCo
 import Locales from "./Locales";
 import RecentProjects from "./RecentProjects";
 import QuestZones from "./QuestZones";
+import TradersAssort from "./TradersAssort";
 
 const ProjectObjects = [
 	Quests,
@@ -18,7 +19,8 @@ const ProjectObjects = [
 	Traders,
 	Locales,
 	lootSpawns,
-	QuestZones
+	QuestZones,
+	TradersAssort,
 ]
 
 class Project {
@@ -72,6 +74,7 @@ class Project {
             this.dataStore?.load("traders"),
             this.dataStore?.load("items"),
             this.dataStore?.load("questsZones"),
+            this.dataStore?.load("TraderAssort"),
         ]);
     }
 

@@ -43,7 +43,7 @@ function sortedOptions(options: any): Array<{ option: any; loc: string }> {
                 option: option,
                 loc: gameLocalization.getObjectLocalization({
                     instance: option,
-                    localeId: [option, `${option} Name`],
+                    localeId: [option, `${option} ShortName`, `${option} Name`],
                     canBeUI: true,
                 }),
             });
@@ -56,7 +56,7 @@ function sortedOptions(options: any): Array<{ option: any; loc: string }> {
                 option: optionValue,
                 loc: gameLocalization.getObjectLocalization({
                     instance: optionKey,
-                    localeId: [optionKey, `${optionKey} Name`],
+                    localeId: [optionKey, `${optionKey} ShortName`, `${optionKey} Name`],
                     canBeUI: true,
                 }),
             });

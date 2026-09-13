@@ -6,12 +6,14 @@ import { itemsSchema } from "@/types/schemas/items";
 import Locales from "./Locales";
 import { lootSpawns, lootSpawndataStore } from "./LootSpawns";
 import { customRef } from "vue";
+import { RecordSchema } from "@/types/fields/fields";
+import { getValueByPath } from "@/utils/utils";
 
 export const itemsDataStore = new dataStore("items");
 
 class Items {
     async loadFromMod(projectArgs: ProjectArgs) {
-	    const filesFound = await new Path(projectArgs.folderPath, "db/CustomItems/*.json").findFiles();
+	    const filesFound = await new Path(projectArgs.folderPath, "db/CustomItems/**/*.json").findFiles();
 	    for (const filepath of filesFound) {
 	        itemsDataStore.addFileToStore({
 	            filename: filepath.filePath,
@@ -75,6 +77,23 @@ class Items {
 			],
 			schemaType: itemsSchema
 		});
+	}
+
+	getFieldResult(itemId: string | number, path: string): any {
+		const item = itemsDataStore.get(itemId)
+		let data;
+		if (item instanceof RecordSchema)
+			data = item.getData();
+		else
+			data = item;
+		const result = getValueByPath(data, path);
+		if (!result) {
+			const parent = data["itemTplToClone"] ?? data["parentId"]
+			if (parent)
+				return this.getFieldResult(parent, path);
+			return undefined;
+		}
+		return result;
 	}
 }
 

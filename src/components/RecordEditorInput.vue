@@ -8,7 +8,7 @@
 
         <div class="form-frame__fields">
             <div class="toolbar">
-                <div class="toolbar-buttons">
+                <div class="toolbar-buttons" v-if="!notHasDeleteAndCopyButtons">
                     <button
                         v-if="(frameNavigator?.getPathStack()?.length ?? 0) === 0"
                         class="toolbar-btn toolbar-btn--danger"
@@ -56,7 +56,12 @@
                         gameLocalization.getUIText({
                             localeId: field.key !== "" ? [field.key, field.label] : field.label,
                             default: field.label,
-                        })
+						})
+                        + (
+                        	(!dataRef.has(field) && !field.virtual) ? ` (${gameLocalization.getUIText({
+								localeId: "notInitialized",
+							})})` : ""
+                        )
                     }}</label>
                 </div>
 
@@ -101,9 +106,10 @@ import { fieldRender, extraFieldRender } from "@/types/fields/fieldsRender";
 
 const props = defineProps<{
     data: any;
-    listTabs: typeof ListTabs;
+    listTabs?: InstanceType<typeof ListTabs>;
     title?: string;
     validate?: boolean;
+    notHasDeleteAndCopyButtons?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -116,7 +122,7 @@ const frameNavigator = inject<Navigator>("frameNavigator");
 const validationErrors = ref<Record<string, string>>({});
 
 const dataRef = computed<RecordSchema>(() => {
-    if (props.data instanceof RecordSchema) {
+	if (props.data instanceof RecordSchema) {
         return props.data;
     }
     let data = props.data;
@@ -131,7 +137,6 @@ const displayFields = computed<Field[]>(() => {
 });
 
 const getData = computed(() => {
-    console.log("fields", dataRef.value.getFields(), dataRef.value.getData());
     return dataRef.value.getData();
 });
 
@@ -161,7 +166,7 @@ const hasCompareInput = computed<boolean>(() => {
 });
 
 function handleNavigate(key: any, compIn: Map<string, any>) {
-    fieldSearchQuery.value = "";
+	fieldSearchQuery.value = "";
     return !!frameNavigator?.navigate?.(key, compIn ?? componentInstances);
 }
 
@@ -222,7 +227,7 @@ function copyCurrentTab() {
         if (newInstanceId && currentTab.dataStoreId) {
             dataStore.set(currentTab.dataStoreId, newInstanceId, newInstance);
             dataStore.addTag(currentTab.dataStoreId, newInstanceId, currentProjectTag);
-            props.listTabs.selectTab(newInstanceId);
+            if (props.listTabs) props.listTabs.selectTab(newInstanceId);
         }
     }
 }
@@ -232,7 +237,7 @@ function deleteCurrentTab() {
     if (current?.dataStoreId) {
         const data = dataStore.getMap(current.dataStoreId);
         data.delete(current?.id);
-        props.listTabs.closeTab();
+        if (props.listTabs) props.listTabs.closeTab();
     }
 }
 

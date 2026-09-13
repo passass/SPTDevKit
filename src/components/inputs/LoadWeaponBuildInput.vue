@@ -1,25 +1,30 @@
 <!-- src/components/inputs/LoadWeaponBuildInput.vue -->
 <template>
-<div class="weapon-build-wrapper">
-    <div class="weapon-build-label">
-        <span class="label-icon">🛠️</span>
-        <span>Загрузить пресет оружия</span>
-    </div>
-    <div class="weapon-build-controls">
-        <div class="select-wrapper">
-            <select ref="selectRef" class="weapon-build-select">
-                <option value="" disabled selected>Выберите сборку...</option>
-                <option v-for="build in builds" :key="build.Name" :value="build.Name">
-                    {{ build.Name }}
-                </option>
-            </select>
+    <div class="weapon-build-wrapper">
+        <div class="weapon-build-label">
+            <span class="label-icon">🛠️</span>
+            <span>Загрузить пресет оружия</span>
         </div>
-        <button @click="handleLoad" class="load-button">
-            <span class="btn-icon">⬇</span>
-            <span>Загрузить</span>
-        </button>
+        <div class="weapon-build-controls">
+            <div class="select-wrapper">
+                <select ref="selectRef" class="weapon-build-select">
+                    <option value="" disabled selected>Выберите сборку...</option>
+                    <option v-for="build in builds" :key="build.Name" :value="build.Name">
+                        {{
+                            build.needLocalization
+                                ? gameLocalization.getText({ localeId: [`${build.Name} ShortName`] }) + " " +
+                                  gameLocalization.getText({ localeId: "Stock build" })
+                                : build.Name
+                        }}
+                    </option>
+                </select>
+            </div>
+            <button @click="handleLoad" class="load-button">
+                <span class="btn-icon">⬇</span>
+                <span>Загрузить</span>
+            </button>
+        </div>
     </div>
-</div>
 </template>
 
 <script setup lang="ts">
@@ -27,11 +32,12 @@ import { computed, ref } from "vue";
 import { useProfilesStore } from "@/stores/profileStore";
 import { type SchemaValue, type SchemaData } from "@/types/fields/fields";
 import { type Field } from "@/types/fields/fields";
+import { gameLocalization } from "@/types/localization";
 
 const profilesStore = useProfilesStore();
 const props = defineProps<{
-	data: SchemaData;
-	field: Field;
+    data: SchemaData;
+    field: Field;
 }>();
 
 const selectRef = ref<HTMLSelectElement | null>(null);
@@ -43,7 +49,7 @@ function handleLoad(event: Event) {
     const value = target.value;
     if (!value) return;
 
-    props.data[props.field.key] = profilesStore.getWeaponBuildItems(value) as unknown as SchemaValue
+    props.data[props.field.key] = profilesStore.getWeaponBuildItems(value) as unknown as SchemaValue;
 }
 </script>
 

@@ -122,7 +122,7 @@ import { currentProjectTag, modTag, vanillaTag } from "@/consts/ProjectConsts";
 import { generateUUID24chars } from "@/utils/uuidUtils";
 
 export default defineComponent({
-    name: "ListTabs",
+	name: "ListTabs",
     components: {
         ListTabsFrame,
         DynamicScroller,

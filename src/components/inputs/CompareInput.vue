@@ -30,13 +30,13 @@ import { onMounted, computed } from 'vue';
 
 
 const props = defineProps<{
-	data: SchemaData;
+	value: SchemaData;
 }>();
 
 const items = computed<SchemaData>(() => {
-	props.data["compareMethod"] ??= ">="
-	props.data["value"] ??= 0
-	return props.data
+	props.value["compareMethod"] ??= ">="
+	props.value["value"] ??= 0
+	return props.value
 });
 </script>
 

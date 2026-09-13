@@ -850,5 +850,6 @@
     "terminal": "Терминал",
     "town": "Городок",
     "woods": "Лес",
-    "LootSpawns": "Спавн лута"
+    "LootSpawns": "Спавн лута",
+    "notInitialized": "Не инициализирован"
 }

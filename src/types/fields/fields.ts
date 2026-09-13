@@ -29,7 +29,9 @@ export type FieldType =
     | "textarea"
     | "select"
     | "object"
-    | "array"
+	| "array"
+    | "arrayList"
+    | "arrayArray"
     | "optionsArray"
     | "stringArray"
     | "numberArray"
@@ -76,7 +78,8 @@ export class Field extends Data {
     onUpdateModelValue?(recordSchema: RecordSchema, newVal: any): void;
 
     getSerializedValue?(fieldContext: FieldContext): any;
-    getDefaultValue?(data: SchemaData): any;
+	getDefaultValue?(data: SchemaData): any;
+    getOptionsItems?(fieldContext: FieldContext): Map<string, Record<string, any> | RecordSchema>;
 
     isArray(): boolean {
         return this.type && this.type.toLocaleLowerCase().includes("array");
@@ -172,6 +175,7 @@ export type recordSchemaOtherData = {
     schemaChooser?: typeof SchemaChoicer | null;
     choosedSchema?: SchemaChoice | null;
     parent?: Record<string, any> | Array<object> | RecordSchema | null;
+    lastSchemaParent?: RecordSchema | null;
     name?: string | null;
     fillWithDefault?: boolean;
     isCreating?: boolean;
@@ -198,7 +202,7 @@ export class RecordSchema {
     }
 
     getFieldByKey(key: string, def?: any) {
-        const fields = (this.constructor as typeof RecordSchema).fields || [];
+        const fields = this.getFields();
         return fields.find((el: Field) => el.key === key) ?? def;
     }
 
@@ -215,8 +219,8 @@ export class RecordSchema {
         return nestedData.map((item: any) => castToRecordSchema(item, field.arrayItemSchema));
     }
 
-    getCastedData(key: string): RecordSchema | undefined {
-        const field = this.getFieldByKey(key);
+    getCastedData(key: string | Field): RecordSchema | undefined {
+        const field = key instanceof Field ? key : this.getFieldByKey(key);
         if (!field) return;
         if (!field.nestedSchema) return;
         const nestedData = this.get(key);
@@ -276,6 +280,7 @@ export class RecordSchema {
     choosedSchema: recordSchemaOtherData["choosedSchema"] = null;
     parent: recordSchemaOtherData["parent"] = null;
     name: recordSchemaOtherData["name"] = null;
+    lastSchemaParent: recordSchemaOtherData["lastSchemaParent"] = null;
 
     storeId?: string;
 
@@ -283,6 +288,8 @@ export class RecordSchema {
 
     data: SchemaData = {};
 
+    onDataLoad?: (data: SchemaData) => void;
+    getRepresentation?(): string;
     constructor(data: SchemaData = {}, otherData?: recordSchemaOtherData) {
         this.extraFields = [];
 
@@ -298,6 +305,7 @@ export class RecordSchema {
             if (otherData.schemaChooser) this.schemaChooser = otherData.schemaChooser;
             if (otherData.choosedSchema) this.choosedSchema = otherData.choosedSchema;
             if (otherData.parent) this.parent = otherData.parent;
+            if (otherData.lastSchemaParent) this.lastSchemaParent = otherData.lastSchemaParent;
             if (otherData.name) this.name = otherData.name;
         }
 
@@ -328,14 +336,14 @@ export class RecordSchema {
             if (
                 otherData?.fillWithDefault ||
                 field.alwaysFillWithDefault ||
-                (otherData?.isCreating && field.fillWithDefaultOnCreate)
+				(otherData?.isCreating && field.fillWithDefaultOnCreate)
             ) {
                 let defVal;
                 if (field.type === "object" && field.nestedSchema) {
                     defVal = new field.nestedSchema(
                         {},
                         {
-                            fillWithDefault: true,
+                            // fillWithDefault: true,
                             isCreating: otherData?.isCreating,
                         }
                     ).toJSON();
@@ -432,9 +440,13 @@ export class RecordSchema {
     /** Получить значение поля */
     get(key: string | Field): SchemaValue {
         return this.data[key instanceof Field ? key.key : key];
-    }
+	}
 
-    /** Установить значение поля */
+	has(key: string | Field): boolean {
+		return key instanceof Field ? key.key in this.data : key in this.data;
+	}
+
+	/** Установить значение поля */
     set(key: string | Field, value: any): void {
         const fieldKey = key instanceof Field ? key.key : key;
         const field = key instanceof Field ? key : this.getField(fieldKey);
@@ -444,11 +456,6 @@ export class RecordSchema {
 
     /** Получить все ключи данных */
     getKeys = (): string[] => Object.keys(this.data);
-
-    /** Проверить, есть ли поле в данных */
-    has(key: string): boolean {
-        return key in this.data;
-    }
 
     /** Получить видимые поля */
     getVisibleFields(): Field[] {
@@ -550,9 +557,17 @@ export class RecordSchema {
         return instance;
     }
 
-    /** Сериализация */
-    /** Сериализация */
+	getSerializedValue?(): any;
+
 	toJSON(): SchemaData {
+		if (this.getSerializedValue) {
+			const result = this.getSerializedValue();
+			if (result) {
+				if (result instanceof RecordSchema)
+					return result.toJSON();
+				return result;
+			}
+		}
         const serialize = (obj: any): any => {
             if (obj === null || obj === undefined) return obj;
 
@@ -615,7 +630,10 @@ export class RecordSchema {
                     if (item === null || item === undefined) return item;
                     if (item instanceof RecordSchema) return item.toJSON();
                     if (typeof item === "object") {
-                        const casted = castToRecordSchema(item, field.arrayItemSchema!);
+						const casted = field.arrayItemSchema!.from(item, {
+							lastSchemaParent: this,
+							parent: value,
+                        });
                         if (casted instanceof RecordSchema) {
                             return casted.toJSON();
                         }

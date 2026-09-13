@@ -45,7 +45,7 @@ async function loadData() {
 		await dataStore.loadAll();
 
 	} catch (e: any) {
-		error.value = e.message
+		error.value = `${e.message}`
 		console.error('Failed to load data:', e)
 	} finally {
 		isLoading.value = false

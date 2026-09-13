@@ -7,50 +7,14 @@ import { type SchemaData } from "@/types/fields/fields";
 import { createSchemaChoiceForCondition } from "@/types/fields/fieldsSchemaChoicer";
 import { allElementsInArray } from "@/utils/utils";
 import { IdField } from "../fields/fieldsClasses";
+import { DogTagIds, DogTagIdsOptions } from "@/consts/GameConsts";
 
 const virtLocField = VirtualLocalizationField.create({
     label: "name",
     order: 2,
 });
 
-const DogTagIds: string[] = [
-	"59f32bb586f774757e1e8442",
-    "6662e9aca7e0b43baa3d5f74",
-    "6662e9cda7e0b43baa3d5f76",
-    "675dc9d37ae1a8792107ca96",
-    "675dcb0545b1a2d108011b2b",
-    "684181208d035f60230f63f9",
-    "684180bc51bf8645f7067bc8",
-	"59f32c3b86f77472a31742f0",
-    "6662ea05f6259762c56f3189",
-    "6662e9f37fa79a6d83730fa0",
-    "6764207f2fa5e32733055c4a",
-    "6764202ae307804338014c1a",
-    "684180ee9b6d80d840042e8a",
-    "68418091b5b0c9e4c60f0e7a"
-];
 
-const DogTagIdsOptions = {
-	Any: DogTagIds,
-	Bear: [
-		"59f32bb586f774757e1e8442",
-        "6662e9aca7e0b43baa3d5f74",
-        "6662e9cda7e0b43baa3d5f76",
-        "675dc9d37ae1a8792107ca96",
-        "675dcb0545b1a2d108011b2b",
-        "684181208d035f60230f63f9",
-        "684180bc51bf8645f7067bc8"
-	],
-	Usec: [
-		"59f32c3b86f77472a31742f0",
-        "6662ea05f6259762c56f3189",
-        "6662e9f37fa79a6d83730fa0",
-        "6764207f2fa5e32733055c4a",
-        "6764202ae307804338014c1a",
-        "684180ee9b6d80d840042e8a",
-        "68418091b5b0c9e4c60f0e7a"
-	]
-}
 
 class DogTagCondition extends RecordSchema {
     static fields: Field[] = [
