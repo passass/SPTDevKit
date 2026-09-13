@@ -239,13 +239,14 @@ function addItem() {
         emit("update:modelValue", arr);
     } else {
         const arrayItemSchema = props.field.arrayItemSchema;
-        let resultSchema: RecordSchema | undefined;
+		let resultSchema: RecordSchema | undefined;
+        console.log("arrayItemSchema", arrayItemSchema, getStaticField(arrayItemSchema as any, "fields"))
 
         if (arrayItemSchema) {
             if (SchemaChoicer.isPrototypeOf(arrayItemSchema)) {
                 const choosedSchema = getStaticField<SchemaChoice[]>(arrayItemSchema, "schemas")?.[0];
 
-                if (choosedSchema) {
+				if (choosedSchema) {
                     resultSchema = new choosedSchema.schema(
                         {},
                         {

@@ -1,5 +1,5 @@
 import { generateUUID24chars } from "@/utils/uuidUtils";
-import { type FieldType, type SchemaData, Field } from "./fields";
+import { type FieldType, type SchemaData, Field, RecordSchema } from "./fields";
 import type { FieldContext } from "./fieldsConsts";
 
 export class AdvSelectField extends Field {
@@ -34,10 +34,18 @@ export class parentIdField extends AdvSelectField {
 	type: FieldType = "advancedSelect";
 	getOptionsItems(fieldContext: FieldContext) {
 		const res = new Map();
+		console.log("fieldContext.recordSchema.lastSchemaParent", fieldContext.recordSchema.lastSchemaParent)
+		if (fieldContext.recordSchema.lastSchemaParent instanceof RecordSchema) {
+			const schema = fieldContext.recordSchema.lastSchemaParent
+			console.log(schema.get("_id"), schema.get("_tpl"))
+			if (schema.has("_id") && schema.has("_tpl"))
+				res.set(schema.get("_id"), schema.get("_tpl"))
+		}
 		if (Array.isArray(fieldContext.recordSchema.parent))
 			for (const obj of fieldContext.recordSchema.parent) {
 				res.set(obj._id, obj._tpl)
 			}
+
 		return res
 	}
 }

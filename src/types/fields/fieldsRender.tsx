@@ -273,7 +273,7 @@ const extraRenderRules: RenderRule[] = [
                 {(fieldContext.recordSchema.get(fieldContext.field.key) as unknown as WeaponBuildItem[])?.filter((item: WeaponBuildItem) => !item.parentId).length > 0 && (
                     <div class="weapon-build-reward">
                         {/*<span class="weapon-build-reward__label">Предметы:</span>*/}
-                        <span class="weapon-build-reward__value">{getRewardDisplay(fieldContext.recordSchema.get(fieldContext.field) as unknown as WeaponBuildItem[])}</span>
+                        {/*<span class="weapon-build-reward__value">{getRewardDisplay(fieldContext.recordSchema.get(fieldContext.field) as unknown as WeaponBuildItem[])}</span>*/}
                     </div>
                 )}
             </>

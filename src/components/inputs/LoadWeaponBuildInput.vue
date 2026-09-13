@@ -33,6 +33,7 @@ import { useProfilesStore } from "@/stores/profileStore";
 import { type SchemaValue, type SchemaData } from "@/types/fields/fields";
 import { type Field } from "@/types/fields/fields";
 import { gameLocalization } from "@/types/localization";
+import { deepClone } from "@/utils/utils";
 
 const profilesStore = useProfilesStore();
 const props = defineProps<{
@@ -46,10 +47,21 @@ const builds = computed(() => profilesStore.getWeaponBuilds());
 function handleLoad(event: Event) {
     if (!selectRef.value) return;
     const target = selectRef.value;
-    const value = target.value;
-    if (!value) return;
+	const value = target.value;
+	const itemsArray = props.data[props.field.key]
+	console.log("props.data", props.data, itemsArray)
+	if (!value || !itemsArray || !Array.isArray(itemsArray)) return;
+    console.log("asdasd")
 
-    props.data[props.field.key] = profilesStore.getWeaponBuildItems(value) as unknown as SchemaValue;
+	if (props.field.extractWeaponBuildIntoChildren) {
+		const res: any = deepClone(profilesStore.getWeaponBuildItems(value))
+		const parent = res[0]
+		parent.children = res.slice(1)
+		console.log(parent)
+		itemsArray.push(parent)
+	} else {
+		props.data[props.field.key] = profilesStore.getWeaponBuildItems(value) as unknown as SchemaValue;
+    }
 }
 </script>
 

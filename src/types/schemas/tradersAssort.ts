@@ -1,33 +1,6 @@
-import { RecordSchema, Field } from "../fields/fields";
+import { RecordSchema, Field, type SchemaData } from "../fields/fields";
 import { IdField, AdvSelectField, parentIdField, HiddenField, UnneccesaryField } from "../fields/fieldsClasses";
-
-export class TradersAssortSchema extends RecordSchema {
-    fields = [
-        Field.create({
-            key: "traders",
-            label: "test",
-            type: "array",
-            arrayItemSchema: TraderAssort,
-        }),
-    ];
-}
-
-class TraderAssort extends RecordSchema {
-    fields = [
-        Field.create({
-            key: "trader",
-            label: "trader",
-            type: "text",
-        }),
-
-        AdvSelectField.create({
-            key: "items",
-            label: "items",
-            type: "arrayList",
-            arrayItemSchema: ItemAssort,
-        }),
-    ];
-}
+import { slotIdOptions } from "@/consts/GameConsts";
 
 class RepairableNestedSchema extends RecordSchema {
     static fields: Field[] = [
@@ -100,17 +73,57 @@ export class CountTplSchema extends RecordSchema {
             label: "Количество",
             type: "number",
             order: 1,
-			defaultValue: 1,
+            defaultValue: 1,
             alwaysFillWithDefault: true,
         }),
         AdvSelectField.create({
             key: "_tpl",
             label: "Шаблон",
             type: "advancedSelect",
-            storeId: "assorts",
-			order: 2,
+            storeId: "items",
+            order: 2,
             defaultValue: "",
             alwaysFillWithDefault: true,
+        }),
+    ];
+}
+
+class HideOutFillField extends HiddenField {
+    alwaysFillWithDefault = true;
+    getDefaultValue(data: SchemaData) {
+        return "hideout";
+    }
+}
+
+export class ItemSlotSchema extends RecordSchema {
+    static fields: Field[] = [
+        IdField.create({
+            key: "_id",
+            label: "ID",
+            order: 1,
+        }),
+        AdvSelectField.create({
+            key: "_tpl",
+            label: "Шаблон",
+            type: "advancedSelect",
+            storeId: "items",
+            order: 2,
+            alwaysFillWithDefault: true,
+            defaultValue: "",
+        }),
+        parentIdField.create({
+            key: "parentId",
+            label: "Parent ID",
+            type: "advancedSelect",
+            storeId: "items",
+            order: 3,
+        }),
+        Field.create({
+            key: "slotId",
+            label: "Slot ID",
+            type: "select",
+            options: slotIdOptions,
+            order: 4,
         }),
     ];
 }
@@ -134,21 +147,16 @@ class ItemAssort extends RecordSchema {
             nestedSchema: UpdNestedSchema,
             order: 3,
         }),
-        parentIdField.create({
+        HideOutFillField.create({
             key: "parentId",
-            alwaysFillWithDefault: true,
-            label: "Parent ID",
-            type: "advancedSelect",
-            storeId: "items",
-            order: 4,
         }),
-        Field.create({ key: "slotId", alwaysFillWithDefault: true, label: "Slot ID", type: "text", order: 5 }),
+        HideOutFillField.create({ key: "slotId" }),
 
         Field.create({
             key: "barter_scheme",
             label: "barter_scheme",
             type: "arrayArray",
-			alwaysFillWithDefault: true,
+            alwaysFillWithDefault: true,
             arrayItemSchema: CountTplSchema,
             order: 7,
         }),
@@ -156,7 +164,7 @@ class ItemAssort extends RecordSchema {
             key: "loyal_level_items",
             label: "loyal_level_items",
             type: "number",
-			alwaysFillWithDefault: true,
+            alwaysFillWithDefault: true,
             defaultValue: 1,
             order: 8,
         }),
@@ -164,8 +172,41 @@ class ItemAssort extends RecordSchema {
             key: "children",
             label: "children",
             type: "array",
+            alwaysFillWithDefault: true,
+			order: 9,
+            arrayItemSchema: ItemSlotSchema,
+        }),
+    ];
+}
+
+class TraderAssort extends RecordSchema {
+    static fields = [
+        Field.create({
+            key: "trader",
+            label: "trader",
+            type: "text",
 			alwaysFillWithDefault: true,
-            order: 9,
+            defaultValue: "",
+        }),
+
+        Field.create({
+            key: "items",
+            label: "items",
+            type: "arrayList",
+            arrayItemSchema: ItemAssort,
+            alwaysFillWithDefault: true,
+            extractWeaponBuildIntoChildren: true,
+        }),
+    ];
+}
+
+export class TradersAssortSchema extends RecordSchema {
+    static fields = [
+        Field.create({
+            key: "traders",
+            label: "test",
+            type: "array",
+            arrayItemSchema: TraderAssort,
         }),
     ];
 }

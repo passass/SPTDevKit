@@ -86,7 +86,6 @@ export class Navigator {
         if (Array.isArray(key)) {
             return key.every((k) => this.navigate(k, vnodes));
 		}
-		console.log(1)
 
 		let lastScrollPosition: ScrollPosition | undefined;
         if (this.container) {
@@ -107,26 +106,21 @@ export class Navigator {
             });
 			return true;
 		}
-		console.log(2)
 
 		const currentData = this.displayData;
         if (!currentData) return false;
 
         const field = currentData instanceof RecordSchema ? currentData.getFieldByKey(key) : null;
-        console.log(2.1, currentData, currentData instanceof RecordSchema, "getFields" in currentData && currentData.getFields(), key, field)
 
         const lastPathItem: PathItem | undefined = this.getLastPathItem();
         const label = field?.label;
 
-        console.log(3)
         let target: Record<string, any> | Array<object>;
 		if (currentData instanceof RecordSchema) {
-			console.log(3.1)
 			const val = currentData.get(key);
 			if (val) target = val as (Record<string, any> | Array<object>);
 			else return false;
         } else if (Array.isArray(currentData)) {
-			console.log(3.2)
             const idx = typeof key === "number" ? key : parseInt(key);
             if (isNaN(idx) || idx < 0 || idx >= currentData.length) return false;
             target = currentData[idx];
@@ -134,7 +128,6 @@ export class Navigator {
             target = currentData[key];
         }
 
-        console.log(4)
         if (!isNavigable(target)) return false;
 
 		if (lastPathItem && vnodes) {
@@ -146,10 +139,8 @@ export class Navigator {
             }
 			lastPathItem.lastSavedData = lastSavedData;
         }
-        console.log(5)
 
 		if (Array.isArray(target)) {
-			console.log("array", field, field?.arrayItemSchema)
             this.pathStack.push({
                 key,
                 type: "array",
@@ -184,7 +175,6 @@ export class Navigator {
 
             console.log("schema", schema.getFields())
         }
-        console.log(6, this.pathStack)
 
         return true;
     }

@@ -3,6 +3,7 @@ import { type SchemaChoice, SchemaChoicer } from "./fieldsSchemaChoicer";
 import { getStaticField } from "@/utils/classUtils";
 import { getValueByPath, getValuesByPath } from "@/utils/utils";
 import { type FieldContext } from "./fieldsConsts";
+import type { BooleanLiteral } from "typescript";
 
 export const idsFields: string[] = ["_id", "id"];
 export function getIdFieldValue(instance: any): string | undefined {
@@ -60,9 +61,11 @@ export class Field extends Data {
 
     initialValue?: (data: SchemaData) => any;
     onChange?: (data: SchemaData, event: Event) => void;
-    onIfInData?: (data: SchemaData) => void;
+	onIfInData?: (data: SchemaData) => void;
 
-    hidden?: boolean;
+	extractWeaponBuildIntoChildren?: boolean;
+
+	hidden?: boolean;
     unneccesary?: boolean;
 
     excludeFromToJSON?: boolean;
@@ -290,7 +293,7 @@ export class RecordSchema {
 
     onDataLoad?: (data: SchemaData) => void;
     getRepresentation?(): string;
-    constructor(data: SchemaData = {}, otherData?: recordSchemaOtherData) {
+	constructor(data: SchemaData = {}, otherData?: recordSchemaOtherData) {
         this.extraFields = [];
 
         if (!data || typeof data !== "object" || Array.isArray(data)) {
@@ -309,7 +312,7 @@ export class RecordSchema {
             if (otherData.name) this.name = otherData.name;
         }
 
-        const fields = (this.constructor as typeof RecordSchema).fields || [];
+        const fields = this.getFields();
         const lazyLoadFunctions = new Map<string, (data: SchemaData) => any>();
         const usedKeys = new Set<string>();
 
