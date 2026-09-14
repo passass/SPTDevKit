@@ -149,10 +149,14 @@ const filteredDisplayFields = computed(() => {
         return res;
     }
     const query = fieldSearchQuery.value.toLowerCase().trim();
-    return res.filter((field) => {
+	return res.filter((field) => {
+		const localizedName = gameLocalization.getUIText({
+            localeId: field.key !== "" ? [field.key, field.label] : field.label,
+            default: field.label,
+		})
         const label = (field.label || "").toLowerCase();
         const key = (field.key || "").toLowerCase();
-        return label.includes(query) || key.includes(query);
+        return label.includes(query) || key.includes(query) || localizedName.toLowerCase().includes(query);
     });
 });
 

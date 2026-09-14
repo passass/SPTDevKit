@@ -158,7 +158,8 @@ export class Navigator {
             while (schemaIndex >= 0 && !this.pathStack[schemaIndex]?.schema) {
                 schemaIndex--;
             }
-            lastSchema = this.pathStack[schemaIndex]?.schema;
+			lastSchema = this.pathStack[schemaIndex]?.schema;
+            console.log("navigate", target, parent, lastSchema)
             schema = castToRecordSchema(target, lastPathItem?.arrayItemSchema ?? field?.nestedSchema, {
 				parent: parent,
                 lastSchemaParent: lastSchema,
@@ -172,8 +173,6 @@ export class Navigator {
                 label: label,
                 lastScrollPosition: lastScrollPosition,
 			});
-
-            console.log("schema", schema.getFields())
         }
 
         return true;

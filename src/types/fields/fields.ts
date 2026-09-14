@@ -131,7 +131,13 @@ export const castToRecordSchema = (
         }
 
         return new RecordSchema(value, otherData);
+	}
+	if (value instanceof RecordSchema && otherData) {
+		for (const [key, otherDataValue] of Object.entries(otherData)) {
+			(value as any)[key] = otherDataValue
+		}
     }
+    console.log("castToRecordSchema value", value)
     return value;
 };
 
@@ -294,7 +300,7 @@ export class RecordSchema {
     onDataLoad?: (data: SchemaData) => void;
     getRepresentation?(): string;
 	constructor(data: SchemaData = {}, otherData?: recordSchemaOtherData) {
-        this.extraFields = [];
+		this.extraFields = [];
 
         if (!data || typeof data !== "object" || Array.isArray(data)) {
             console.error("wrong data type in RecordSchema", data);
@@ -305,11 +311,9 @@ export class RecordSchema {
         this.data = data;
 
         if (otherData) {
-            if (otherData.schemaChooser) this.schemaChooser = otherData.schemaChooser;
-            if (otherData.choosedSchema) this.choosedSchema = otherData.choosedSchema;
-            if (otherData.parent) this.parent = otherData.parent;
-            if (otherData.lastSchemaParent) this.lastSchemaParent = otherData.lastSchemaParent;
-            if (otherData.name) this.name = otherData.name;
+	        for (const [key, otherDataValue] of Object.entries(otherData)) {
+				(this as any)[key] = otherDataValue
+			}
         }
 
         const fields = this.getFields();
@@ -383,7 +387,14 @@ export class RecordSchema {
 
     castToNewSchema(newSchema: typeof RecordSchema, otherData?: recordSchemaOtherData): RecordSchema {
         if (otherData?.choosedSchema?.onSchemaChange) otherData.choosedSchema.onSchemaChange(this);
-        const newInstance = new newSchema(this.data, otherData);
+		const newInstance = new newSchema(this.data, {
+			schemaChooser: this.schemaChooser,
+		    choosedSchema: this.choosedSchema,
+		    parent: this.parent,
+		    name: this.name,
+		    lastSchemaParent: this.lastSchemaParent,
+			...otherData
+		});
         if (otherData?.choosedSchema?.onSchemaPostChange) otherData.choosedSchema.onSchemaPostChange(newInstance);
         return newInstance;
     }

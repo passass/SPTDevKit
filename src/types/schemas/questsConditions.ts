@@ -1,20 +1,38 @@
 // src/types/fieldsQuestsConditions.ts
 
 import { RecordSchema, Field, VirtualLocalizationField, AdvSelectField } from "@/types/fields/fields";
-import { HiddenField, UnneccesaryField } from "@/types/fields/fieldsClasses";
+import { HiddenField, parentIdField, parentIdFieldWithParentsOnlyIds, UnneccesaryField } from "@/types/fields/fieldsClasses";
 import { createLazySchemaChoicer } from "@/utils/lazySchemaLoader";
 import { type SchemaData } from "@/types/fields/fields";
 import { createSchemaChoiceForCondition } from "@/types/fields/fieldsSchemaChoicer";
 import { allElementsInArray } from "@/utils/utils";
 import { IdField } from "../fields/fieldsClasses";
 import { DogTagIds, DogTagIdsOptions } from "@/consts/GameConsts";
+import { type SchemaNode } from "@/utils/schemaGenerator";
+import { SchemaChoicer } from "@/types/fields/fieldsSchemaChoicer";
 
 const virtLocField = VirtualLocalizationField.create({
     label: "name",
     order: 2,
 });
 
-
+function commonFunctionForConditions(schemaNode: SchemaNode) {
+	const choicer: typeof SchemaChoicer | typeof RecordSchema = schemaNode.schema;
+    if (
+        SchemaChoicer.isPrototypeOf(choicer) &&
+        "schemas" in choicer &&
+        Array.isArray(choicer.schemas)
+	) {
+		for (const schema of choicer.schemas) {
+			if (schema.schema.getFieldByKeyStatic("parentId"))
+				schema.schema.replaceFieldWith(parentIdFieldWithParentsOnlyIds.create({
+					alwaysFillWithDefault: true,
+					unneccesary: true,
+					defaultValue: "",
+				}))
+		}
+    }
+}
 
 class DogTagCondition extends RecordSchema {
     static fields: Field[] = [
@@ -118,7 +136,10 @@ export class QuestConditions extends RecordSchema {
             arrayItemSchema: createLazySchemaChoicer(
                 "questsSchemas.json",
                 "*.conditions.AvailableForStart",
-                "AvailableForStartCondition"
+				"AvailableForStartCondition",
+				{
+					onSchemaLoad: commonFunctionForConditions
+                }
             ),
         }),
         Field.create({
@@ -146,7 +167,8 @@ export class QuestConditions extends RecordSchema {
 							}
 						}),
                     ],
-                }
+                    onSchemaLoad: commonFunctionForConditions,
+				},
             ),
         }),
         Field.create({
@@ -155,7 +177,9 @@ export class QuestConditions extends RecordSchema {
             type: "array",
             order: 3,
             defaultValue: [],
-            arrayItemSchema: createLazySchemaChoicer("questsSchemas.json", "*.conditions.Fail", "FailCondition"),
+			arrayItemSchema: createLazySchemaChoicer("questsSchemas.json", "*.conditions.Fail", "FailCondition", {
+				onSchemaLoad: commonFunctionForConditions,
+            }),
         }),
     ];
 }

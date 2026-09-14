@@ -1,7 +1,7 @@
 import { Field, RecordSchema, type FieldType, type SchemaData } from "../fields/fields";
 import { createLazySchemaChoicer } from "@/utils/lazySchemaLoader";
 import { SchemaChoicer } from "../fields/fieldsSchemaChoicer";
-import { HiddenField, parentIdField } from "../fields/fieldsClasses";
+import { HiddenField, parentIdField, UnneccesaryField } from "../fields/fieldsClasses";
 import type { FieldContext } from "../fields/fieldsConsts";
 import { deepClone, getValueByPath, setValueByPath, sum } from "@/utils/utils";
 import { rewardsItemsSchema } from "./rewardsItems";
@@ -9,6 +9,7 @@ import Items from "@/project/Items";
 import { copyRecordSchema } from "@/utils/copyUtils";
 import { generateUUID24chars } from "@/utils/uuidUtils";
 import { getStaticField } from "@/utils/classUtils";
+import type { SchemaNode } from "@/utils/schemaGenerator";
 
 class itemTargetFieldClass extends HiddenField {
     key = "target";
@@ -44,14 +45,18 @@ class itemItemsFieldClass extends Field {
                 continue;
             }
 
-            let remaining = currentStacks;
+			let remaining = currentStacks;
+			if (remaining === 0) continue;
+			let i = 0;
             while (remaining > 0) {
                 const stackSize = Math.min(remaining, maxStack);
                 const cloned = deepClone(rewardItem);
-                cloned["_id"] = generateUUID24chars();
+				if (i !== 0)
+					cloned["_id"] = generateUUID24chars();
                 setValueByPath(cloned, "upd.StackObjectsCount", stackSize);
                 result.push(cloned);
-                remaining -= stackSize;
+				remaining -= stackSize;
+				i++;
             }
         }
 
@@ -73,6 +78,26 @@ class itemValueFieldClass extends HiddenField {
     }
 }
 
+class DynamicLocale extends UnneccesaryField {
+	key = "dynamicLocale"
+	type: FieldType = "boolean"
+	order = 200
+	alwaysFillWithDefault = true;
+}
+
+function commonFunctionForRewards(schemaNode: SchemaNode) {
+	const choicer: typeof SchemaChoicer | typeof RecordSchema = schemaNode.schema;
+    if (
+        SchemaChoicer.isPrototypeOf(choicer) &&
+        "schemas" in choicer &&
+        Array.isArray(choicer.schemas)
+	) {
+		for (const schema of choicer.schemas) {
+			schema.schema.replaceFieldWith(DynamicLocale.create({}))
+		}
+    }
+}
+
 export class RewardsSchemas extends RecordSchema {
     static fields: Field[] = [
         Field.create({
@@ -82,7 +107,8 @@ export class RewardsSchemas extends RecordSchema {
             order: 1,
             arrayItemSchema: createLazySchemaChoicer("questsSchemas.json", "*.rewards.Success", "SuccessReward", {
                 onSchemaLoad: (schemaNode) => {
-                    const choicer: typeof SchemaChoicer | typeof RecordSchema = schemaNode.schema;
+					const choicer: typeof SchemaChoicer | typeof RecordSchema = schemaNode.schema;
+                    commonFunctionForRewards(schemaNode)
                     if (
                         SchemaChoicer.isPrototypeOf(choicer) &&
                         "schemas" in choicer &&
@@ -150,14 +176,18 @@ export class RewardsSchemas extends RecordSchema {
             label: "Started",
             type: "array",
             order: 2,
-            arrayItemSchema: createLazySchemaChoicer("questsSchemas.json", "*.rewards.Started", "StartedReward"),
+			arrayItemSchema: createLazySchemaChoicer("questsSchemas.json", "*.rewards.Started", "StartedReward", {
+				onSchemaLoad: commonFunctionForRewards
+            }),
         }),
         Field.create({
             key: "Fail",
             label: "Fail",
             type: "array",
             order: 3,
-            arrayItemSchema: createLazySchemaChoicer("questsSchemas.json", "*.rewards.Fail", "FailReward"),
+            arrayItemSchema: createLazySchemaChoicer("questsSchemas.json", "*.rewards.Fail", "FailReward", {
+				onSchemaLoad: commonFunctionForRewards
+            }),
         }),
     ];
 }
