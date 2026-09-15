@@ -39,9 +39,9 @@ export interface ElectronAPI {
 		filename: string,
 		data: any,
 	) => Promise<{ success: boolean; error?: string }>;
-	getDataDir: () => string;
+	getDataDir: () => Promise<string>;
 
-	findFilesSync: (pattern: string) => string[];
+	findFilesSync: (pattern: string) => Promise<string[]>;
 	findFolders: (pattern: string) => Promise<string[]>;
 	findFiles: (pattern: string) => Promise<string[]>;
     fileExists: (filePath: string) => Promise<boolean>;
@@ -51,7 +51,7 @@ export interface ElectronAPI {
 	pathUtils: {
 		isAbsolute(filePath: string): boolean;
         join: (...args: string[]) => string;
-        basename: (filePath: string) => string;
+		basename: (filePath: string) => string;
         dirname: (filePath: string) => string;
         relative: (filePath1: string, filePath2: string) => string;
     };

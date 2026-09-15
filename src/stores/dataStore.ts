@@ -8,6 +8,8 @@ import { getValueByPath } from "@/utils/utils";
 import { gameLocalization, type locales } from "@/types/localization";
 import { allElementsInArray } from "@/utils/utils";
 import type { SchemaChoicer } from "@/types/fields/fieldsSchemaChoicer";
+import { vanillaTag } from "@/consts/ProjectConsts";
+import type { onFileLoadContext } from "@/consts/DataStoreConsts";
 
 export interface DataStoreConfigFiles {
     filename: string;
@@ -18,7 +20,9 @@ export interface DataStoreConfig {
 	schemaType?: typeof RecordSchema | typeof SchemaChoicer;
 	manualClear?: boolean;
 	isArray?: boolean;
-	onFileLoad?: (content: any) => Map<string, RecordSchema> | RecordSchema[];
+
+	onFileLoad?: (ctx: onFileLoadContext) => Map<string, RecordSchema> | RecordSchema[];
+	onStoreClear?: (data: dataMapRecordType[] | Map<string | number, dataMapRecordType>) => void;
 }
 export interface dataStoreExtraDataType {
     tags?: string[];
@@ -93,6 +97,7 @@ export const useDataStore = defineStore("dataStore", () => {
             const files = Array.isArray(config.file) ? config.file : [config.file];
             const store = dataMap.value.get(key)!;
 
+			if (config.onStoreClear) config.onStoreClear(store);
             if (Array.isArray(store)) {
                 store.splice(0, store.length);
             } else {
@@ -110,12 +115,16 @@ export const useDataStore = defineStore("dataStore", () => {
 				const fileContent = fileData.data ?? fileData;
 
 				if (config.onFileLoad) {
+					const ctx: onFileLoadContext = {
+						content: fileData,
+						tags: tags
+					}
 					if (Array.isArray(store)) {
-						for (const el of config.onFileLoad(fileData))
+						for (const el of config.onFileLoad(ctx))
 							if (el instanceof RecordSchema)
 								store.push(el)
 					} else {
-						for (const [key, el] of config.onFileLoad(fileData).entries())
+						for (const [key, el] of config.onFileLoad(ctx).entries())
 							if (el instanceof RecordSchema)
 								store.set(key, el)
 					}
@@ -441,13 +450,22 @@ export const useDataStore = defineStore("dataStore", () => {
 	}
 
 	function markDirty(storeId: string, id: string | number) {
-		getDataRecord(storeId, id)!.dirty = true;
+		const record = getDataRecord(storeId, id)
+
+		if (record) {
+			console.log("marked dirty", storeId, id)
+			record.dirty = true;
+		}
 	}
 
-	function getAllDirties(storeId: string): dataMapRecordType[] {
+	function getAllDirties(storeId: string): Map<string | number, dataMapRecordType> {
 		const store = getMap(storeId);
-		return Array.from(store.values())
-			.filter((data) => data.dirty);
+		const res = new Map();
+		for (const [id, data] of store.entries()) {
+			if (data.dirty && data.tags && data.tags.includes(vanillaTag))
+				res.set(id, data)
+		}
+		return res;
 	}
 
 	function isArray(storeId: string): boolean {
@@ -589,5 +607,10 @@ export class dataStore {
 	get(id: string | number) {
 		if (!this.dataSt) this.dataSt = useDataStore();
 		return this.dataSt.get(this.storeId, id);
+	}
+
+	getAllDirties() {
+		if (!this.dataSt) this.dataSt = useDataStore();
+		return this.dataSt.getAllDirties(this.storeId);
 	}
 }

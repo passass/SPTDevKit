@@ -136,8 +136,8 @@ export const castToRecordSchema = (
 		for (const [key, otherDataValue] of Object.entries(otherData)) {
 			(value as any)[key] = otherDataValue
 		}
-    }
-    console.log("castToRecordSchema value", value)
+	}
+
     return value;
 };
 

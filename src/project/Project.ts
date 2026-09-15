@@ -63,8 +63,7 @@ class Project {
             });
 		}
 
-		await Promise.all([
-			lootSpawns.loadFromEFT(this.EFTFolder),
+		const prePromises = [
 			profilesStore.load(this.EFTFolder),
             this.dataStore?.load("quests"),
             async () => {
@@ -75,14 +74,26 @@ class Project {
             this.dataStore?.load("items"),
             this.dataStore?.load("questsZones"),
             this.dataStore?.load("TraderAssort"),
-        ]);
+        ]
+
+		for (const projectObject of ProjectObjects) {
+			if ("loadFromEFT" in projectObject) {
+				prePromises.push(projectObject.loadFromEFT(this.EFTFolder))
+			}
+		}
+
+		await Promise.all(prePromises);
     }
 
     async init() {
-		await Traders.load();
+		const promises = [];
         for (const projectObject of ProjectObjects) {
-            if ("init" in projectObject && typeof projectObject.init === "function") projectObject.init()
-        }
+			if ("init" in projectObject && typeof projectObject.init === "function")
+				projectObject.init()
+			if ("asyncInit" in projectObject && typeof projectObject.asyncInit === "function")
+				promises.push(projectObject.asyncInit())
+		}
+		await Promise.all(promises);
         if (!isElectron()) return;
         this.dataStore ??= useDataStore();
         const savedEftPath = localStorage.getItem("eftFolderPath");
@@ -91,11 +102,16 @@ class Project {
         }
     }
 
-	async saveProject() {
+	async saveProject(saveWithOriginalChanges?: boolean) {
 		if (!this.currentProjectFolder) return;
 		const promises = [];
+		const projectArgs: ProjectArgs = {
+			folderPath: this.currentProjectFolder,
+			saveWithOriginalChanges: saveWithOriginalChanges
+		}
 		for (const projectObject of ProjectObjects) {
-			if ("saveProject" in projectObject && typeof projectObject.saveProject === "function") promises.push(projectObject.saveProject(this.currentProjectFolder));
+			if ("saveProject" in projectObject && typeof projectObject.saveProject === "function")
+				promises.push(projectObject.saveProject(projectArgs));
 		}
 		await Promise.all(promises);
     }

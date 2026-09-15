@@ -52,7 +52,7 @@ class LootSpawns {
                     const id = (spawnPoint["locationId"] as string) ?? generateUUID24chars();
                     spawnPoint["locationId"] = id;
                     lootSpawndataStore.addSchema(spawnPoint, id);
-                    for (const tag of projectArgs.tags) {
+                    for (const tag of (projectArgs.tags ?? [])) {
                         lootSpawndataStore.addTag(id, tag);
 					}
 				}

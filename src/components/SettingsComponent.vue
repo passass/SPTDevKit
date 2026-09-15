@@ -26,7 +26,15 @@
             </ul>
         </div>
 
-        <button class="save-project-btn" @click="Project.saveProject()">💾 Сохранить проект</button>
+        <div class="save-project-row">
+            <button class="save-project-btn" @click="Project.saveProject(saveWithOriginalChanges)">
+                💾 Сохранить проект
+            </button>
+            <label class="save-with-original-checkbox">
+                <input type="checkbox" v-model="saveWithOriginalChanges" />
+                <span>с изменениями в оригинальных объектах</span>
+            </label>
+        </div>
 
         <FolderSelector
             v-model="eftPath"
@@ -76,6 +84,7 @@ const selectedPath = ref<string>(Project.currentProjectFolder?.filePath ?? "");
 const isLoading = ref(false);
 const eftPath = ref<string>("");
 const isLoadingEft = ref(false);
+const saveWithOriginalChanges = ref(false);
 
 async function selectFolder() {
     if (isLoading.value) return;
@@ -282,5 +291,70 @@ onMounted(() => {
   white-space: nowrap;
   font-family: "Consolas", "Monaco", monospace;
   font-size: 12px;
+}
+
+.save-project-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin: 12px 0 16px 0;
+}
+
+.save-project-btn {
+    margin: 0; /* убираем прежний margin, теперь отступы у .save-project-row */
+}
+
+.save-with-original-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #b0b0b0;
+    cursor: pointer;
+    user-select: none;
+}
+
+.save-with-original-checkbox input[type="checkbox"] {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    background: #333333;
+    border: 2px solid #4a4a4a;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin: 0;
+    position: relative;
+}
+
+.save-with-original-checkbox input[type="checkbox"]:checked {
+    background: #42b883;
+    border-color: #42b883;
+}
+
+.save-with-original-checkbox input[type="checkbox"]:checked::after {
+    content: "✓";
+    color: #1a1a1a;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 1;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.save-with-original-checkbox input[type="checkbox"]:hover {
+    border-color: #66d9a0;
+}
+
+.save-with-original-checkbox input[type="checkbox"]:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(66, 184, 131, 0.2);
 }
 </style>

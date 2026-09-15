@@ -1,6 +1,6 @@
 // src/types/fieldsQuestsConditions.ts
 
-import { RecordSchema, Field, VirtualLocalizationField, AdvSelectField } from "@/types/fields/fields";
+import { RecordSchema, Field, VirtualLocalizationField, AdvSelectField, type FieldType } from "@/types/fields/fields";
 import { HiddenField, parentIdField, parentIdFieldWithParentsOnlyIds, UnneccesaryField } from "@/types/fields/fieldsClasses";
 import { createLazySchemaChoicer } from "@/utils/lazySchemaLoader";
 import { type SchemaData } from "@/types/fields/fields";
@@ -16,6 +16,22 @@ const virtLocField = VirtualLocalizationField.create({
     order: 2,
 });
 
+class DynamicLocale extends UnneccesaryField {
+	key = "dynamicLocale"
+    label = "Dynamic Locale"
+    type: FieldType = "boolean"
+    order = 200
+    alwaysFillWithDefault = true
+}
+
+class LeaveItemAtLocationPlantTime extends Field {
+	key = "plantTime"
+    label = "plant Time"
+    type: FieldType = "number"
+	alwaysFillWithDefault = true
+	defaultValue = 5
+}
+
 function commonFunctionForConditions(schemaNode: SchemaNode) {
 	const choicer: typeof SchemaChoicer | typeof RecordSchema = schemaNode.schema;
     if (
@@ -24,12 +40,14 @@ function commonFunctionForConditions(schemaNode: SchemaNode) {
         Array.isArray(choicer.schemas)
 	) {
 		for (const schema of choicer.schemas) {
-			if (schema.schema.getFieldByKeyStatic("parentId"))
-				schema.schema.replaceFieldWith(parentIdFieldWithParentsOnlyIds.create({
-					alwaysFillWithDefault: true,
-					unneccesary: true,
-					defaultValue: "",
-				}))
+			schema.schema.replaceFieldWith(LeaveItemAtLocationPlantTime.create({}))
+			schema.schema.replaceFieldWith(parentIdFieldWithParentsOnlyIds.create({
+				alwaysFillWithDefault: true,
+				unneccesary: true,
+				defaultValue: "",
+			}))
+
+			schema.schema.replaceFieldWith(DynamicLocale.create({}))
 		}
     }
 }
@@ -70,7 +88,8 @@ class DogTagCondition extends RecordSchema {
             key: "dynamicLocale",
             label: "Dynamic Locale",
             type: "boolean",
-            order: 200,
+			order: 200,
+			alwaysFillWithDefault: true,
         }),
         UnneccesaryField.create({
             key: "globalQuestCounterId",

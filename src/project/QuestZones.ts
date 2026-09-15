@@ -13,14 +13,14 @@ class QuestZones {
         }
     }
 
-    async saveProject(currentProjectFolder: Path) {
+    async saveProject(projectArgs: ProjectArgs) {
         const questZones = questZonesStore.getByTagInStore(currentProjectTag);
         const res = [];
         for (const questZone of questZones.values()) {
             res.push(questZone.data.toJSON());
         }
 
-        new Path(currentProjectFolder, "db/CustomQuestZones/zones.json").saveFile(res);
+        new Path(projectArgs.folderPath, "db/CustomQuestZones/zones.json").saveFile(res);
     }
 
 	clearProject() {
@@ -33,7 +33,7 @@ class QuestZones {
 
     async loadFromMod(projectArgs: ProjectArgs) {
         for (const filePath of await new Path(projectArgs.folderPath, "db/CustomQuestZones/*.json").findFiles()) {
-            questZonesStore.addFileToStore({ filename: filePath.toString(), tags: projectArgs.tags });
+            questZonesStore.addFileToStore({ filename: filePath.toString(), tags: projectArgs.tags ?? [] });
         }
         if (!projectArgs.notLoadImmediately) await questZonesStore.load();
     }

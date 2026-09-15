@@ -150,8 +150,9 @@ function getRepresentation(item: any, index: number): string {
 	if (item === null || item === undefined) return "—";
 
 
-	if ("_tpl" in item) {
-    	return gameLocalization.getText({ localeId: [`${item._tpl} Name`, `${item._tpl} ShortName`, item._tpl], default: "" })
+	if ("_tpl" in item || item instanceof RecordSchema && item.has("_tpl")) {
+		const tpl = item instanceof RecordSchema ? item.get("_tpl") : item["_tpl"]
+    	return gameLocalization.getText({ localeId: [`${tpl} Name`, `${tpl} ShortName`, tpl], default: "" })
     }
 
     if (typeof item !== "object") return String(item);

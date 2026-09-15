@@ -22,7 +22,7 @@ class Traders {
         if (!projectArgs.notLoadImmediately) await this.dataStore?.load("traders");
     }
 
-	async load() {
+	async asyncInit() {
 		this.dataStore = useDataStore();
 		if (!isElectron()) {
 			this.dataStore.register("traders", {

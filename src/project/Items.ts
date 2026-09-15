@@ -17,7 +17,7 @@ class Items {
 	    for (const filepath of filesFound) {
 	        itemsDataStore.addFileToStore({
 	            filename: filepath.filePath,
-	            tags: projectArgs.tags,
+	            tags: projectArgs.tags ?? [],
 	        });
 	    }
 	    if (!projectArgs.notLoadImmediately) await itemsDataStore.load();
@@ -42,7 +42,7 @@ class Items {
 		}
 	}
 
-	async saveProject(currentProjectFolder: Path) {
+	async saveProject(projectArgs: ProjectArgs) {
 		const res = new Map<string | number, dataMapRecordType>();
         for (const [itemId, item] of itemsDataStore.getByTagInStore(currentProjectTag).entries()) {
             res.set(itemId, item.data);
@@ -60,13 +60,13 @@ class Items {
 		}
 
 		await Promise.all([
-			new Path(currentProjectFolder, `db/CustomLootspawns/CustomSpawnpointsForced/spawns.json`).saveFile(lootSpawnsResult),
-			this.saveLocales(currentProjectFolder),
-			new Path(currentProjectFolder, `db/CustomItems/items.json`).saveFile(res),
+			new Path(projectArgs.folderPath, `db/CustomLootspawns/CustomSpawnpointsForced/spawns.json`).saveFile(lootSpawnsResult),
+			this.saveLocales(projectArgs.folderPath),
+			new Path(projectArgs.folderPath, `db/CustomItems/items.json`).saveFile(res),
 		]);
 	}
 
-	async load() {
+	async asyncInit() {
 		const dataStore = useDataStore();
 		dataStore.register("items", {
 			file: [

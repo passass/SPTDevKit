@@ -1,6 +1,7 @@
 import { RecordSchema, Field, type SchemaData } from "../fields/fields";
 import { IdField, AdvSelectField, parentIdField, HiddenField, UnneccesaryField } from "../fields/fieldsClasses";
 import { slotIdOptions } from "@/consts/GameConsts";
+import { gameLocalization } from "../localization";
 
 class RepairableNestedSchema extends RecordSchema {
     static fields: Field[] = [
@@ -128,7 +129,7 @@ export class ItemSlotSchema extends RecordSchema {
     ];
 }
 
-class ItemAssort extends RecordSchema {
+export class ItemAssort extends RecordSchema {
     static fields: Field[] = [
         IdField.create({ key: "_id" }),
         AdvSelectField.create({
@@ -160,13 +161,24 @@ class ItemAssort extends RecordSchema {
             arrayItemSchema: CountTplSchema,
             order: 7,
         }),
+        HiddenField.create({
+            key: "traderId",
+            label: "traderId",
+            alwaysFillWithDefault: true,
+            defaultValue: 1,
+			order: 8,
+
+			excludeFromToJSON: true,
+        }),
         Field.create({
             key: "loyal_level_items",
             label: "loyal_level_items",
             type: "number",
             alwaysFillWithDefault: true,
             defaultValue: 1,
-            order: 8,
+			order: 8,
+
+			excludeFromToJSON: true,
         }),
         Field.create({
             key: "children",
@@ -174,17 +186,26 @@ class ItemAssort extends RecordSchema {
             type: "array",
             alwaysFillWithDefault: true,
 			order: 9,
-            arrayItemSchema: ItemSlotSchema,
-        }),
+			arrayItemSchema: ItemSlotSchema,
+
+			excludeFromToJSON: true,
+		}),
     ];
 }
 
 class TraderAssort extends RecordSchema {
+	getRepresentation(): string {
+		return gameLocalization.getText({
+			localeId: `${this.get("trader")} Nickname`
+		})
+	}
+
     static fields = [
-        Field.create({
+        AdvSelectField.create({
             key: "trader",
             label: "trader",
-            type: "text",
+			type: "advancedSelect",
+            storeId: "traders",
 			alwaysFillWithDefault: true,
             defaultValue: "",
         }),

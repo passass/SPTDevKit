@@ -23,7 +23,7 @@ export default new class Locales {
                     storeIds.add(storeId);
                     dataStore?.addFileToStore(storeId, {
                         filename: localeFilePath.toString(),
-                        tags: [...projectArgs.tags, "locales", traderId.basename()],
+                        tags: [...(projectArgs.tags ?? []), "locales", traderId.basename()],
                     });
                 }
             }

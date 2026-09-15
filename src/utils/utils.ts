@@ -42,6 +42,20 @@ export function toJsonObject(obj: any): any {
     return obj;
 }
 
+export function groupBy<T>(
+    source: Map<string | number, T>,
+    getKey: (item: T, id: string | number) => string | number | undefined | null
+): Map<string | number, Map<string | number, T>> {
+    const res = new Map<any, any>();
+    for (const [id, value] of source.entries()) {
+        const key = getKey(value, id);
+        if (key === undefined || key === null) continue;
+        if (!res.has(key)) res.set(key, new Map());
+        res.get(key)!.set(id, value);
+    }
+    return res;
+}
+
 export function allElementsInArray(arr: any[], targetArr: any[]): boolean {
     const targetSet = new Set(targetArr);
     return arr.every((element) => targetSet.has(element));

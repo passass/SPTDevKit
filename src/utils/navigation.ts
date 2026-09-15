@@ -146,7 +146,7 @@ export class Navigator {
                 type: "array",
                 label: label,
                 value: target,
-                arrayItemSchema: field?.arrayItemSchema,
+                arrayItemSchema: field?.arrayItemSchema ?? (lastPathItem?.type === "array" ? lastPathItem.arrayItemSchema : undefined),
 				lastScrollPosition: lastScrollPosition,
             });
         } else if (typeof target === "object") {
@@ -159,7 +159,6 @@ export class Navigator {
                 schemaIndex--;
             }
 			lastSchema = this.pathStack[schemaIndex]?.schema;
-            console.log("navigate", target, parent, lastSchema)
             schema = castToRecordSchema(target, lastPathItem?.arrayItemSchema ?? field?.nestedSchema, {
 				parent: parent,
                 lastSchemaParent: lastSchema,

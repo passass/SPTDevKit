@@ -111,6 +111,7 @@ import { Navigator } from "@/utils/navigation";
 import OptionsInput from "./OptionsInput.vue";
 import { type FieldContext } from "@/types/fields/fieldsConsts";
 import { gameLocalization } from "@/types/localization";
+import { isInDestructureAssignment } from "vue/compiler-sfc";
 
 type InputType = SchemaValue[];
 const frameNavigator = inject<Navigator>("frameNavigator");
@@ -295,7 +296,13 @@ function getRepresentation(item: any): string {
 
 	if ("_tpl" in item) {
     	return gameLocalization.getText({ localeId: [`${item._tpl} ShortName`, item._tpl], default: "" })
-    }
+	}
+
+	if (props.field.arrayItemSchema) {
+		const recSch = props.field.arrayItemSchema.from(item)
+		if (recSch && recSch.getRepresentation)
+			return recSch.getRepresentation!()
+	}
 
     return "";
 }

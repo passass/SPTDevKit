@@ -56,12 +56,12 @@
                         gameLocalization.getUIText({
                             localeId: field.key !== "" ? [field.key, field.label] : field.label,
                             default: field.label,
-						})
-                        + (
-                        	(!dataRef.has(field) && !field.virtual) ? ` (${gameLocalization.getUIText({
-								localeId: "notInitialized",
-							})})` : ""
-                        )
+                        }) +
+                        (!dataRef.has(field) && !field.virtual
+                            ? ` (${gameLocalization.getUIText({
+                                  localeId: "notInitialized",
+                              })})`
+                            : "")
                     }}</label>
                 </div>
 
@@ -92,7 +92,18 @@
 <!-- src/components/RecordEditorInput.vue -->
 
 <script setup lang="tsx">
-import { inject, ref, watch, computed, triggerRef, toValue, nextTick, defineComponent, type Component, cloneVNode } from "vue";
+import {
+    inject,
+    ref,
+    watch,
+    computed,
+    triggerRef,
+    toValue,
+    nextTick,
+    defineComponent,
+    type Component,
+    cloneVNode,
+} from "vue";
 import { copyRecordSchema } from "@/utils/copyUtils";
 import SchemaChooserInput from "@/components/inputs/SchemaChooserInput.vue";
 import { RecordSchema, Field } from "@/types/fields/fields";
@@ -123,6 +134,7 @@ const validationErrors = ref<Record<string, string>>({});
 
 const dataRef = computed<RecordSchema>(() => {
 	if (props.data instanceof RecordSchema) {
+    	console.log("dataRef", props.data.getFields())
         return props.data;
     }
     let data = props.data;
@@ -149,11 +161,11 @@ const filteredDisplayFields = computed(() => {
         return res;
     }
     const query = fieldSearchQuery.value.toLowerCase().trim();
-	return res.filter((field) => {
-		const localizedName = gameLocalization.getUIText({
+    return res.filter((field) => {
+        const localizedName = gameLocalization.getUIText({
             localeId: field.key !== "" ? [field.key, field.label] : field.label,
             default: field.label,
-		})
+        });
         const label = (field.label || "").toLowerCase();
         const key = (field.key || "").toLowerCase();
         return label.includes(query) || key.includes(query) || localizedName.toLowerCase().includes(query);
@@ -170,7 +182,7 @@ const hasCompareInput = computed<boolean>(() => {
 });
 
 function handleNavigate(key: any, compIn: Map<string, any>) {
-	fieldSearchQuery.value = "";
+    fieldSearchQuery.value = "";
     return !!frameNavigator?.navigate?.(key, compIn ?? componentInstances);
 }
 
@@ -195,7 +207,7 @@ const VNodeRenderer = defineComponent({
         if (!vnode) return null;
         if (this.onRef && this.fieldKey) {
             return cloneVNode(vnode, {
-                ref: (el: any) => (this.onRef as any)(el, this.fieldKey)
+                ref: (el: any) => (this.onRef as any)(el, this.fieldKey),
             });
         }
         return vnode;
@@ -203,20 +215,23 @@ const VNodeRenderer = defineComponent({
 });
 
 const vnodes = computed(() => {
-	const res: Map<string, Array<Component | undefined>> = new Map();
-	for (const field of filteredDisplayFields.value) {
-		const extra = extraFieldRender({ recordSchema: dataRef.value, field });
-		const main = fieldRender({recordSchema: dataRef.value, field, handleNavigate,
-			extraProps: frameNavigator?.getLastPathItem()?.lastSavedData?.get(field.key)
-		});
-		res.set(field.key, [extra, main]);
-	}
+    const res: Map<string, Array<Component | undefined>> = new Map();
+    for (const field of filteredDisplayFields.value) {
+        const extra = extraFieldRender({ recordSchema: dataRef.value, field });
+        const main = fieldRender({
+            recordSchema: dataRef.value,
+            field,
+            handleNavigate,
+            extraProps: frameNavigator?.getLastPathItem()?.lastSavedData?.get(field.key),
+        });
+        res.set(field.key, [extra, main]);
+    }
 
-	return res;
+    return res;
 });
 
 function getFieldVnodes(field: Field) {
-	return vnodes.value.get(field.key);
+    return vnodes.value.get(field.key);
 }
 
 function getCurrentTab() {
@@ -224,14 +239,20 @@ function getCurrentTab() {
 }
 
 function copyCurrentTab() {
-	const currentTab: Tab | undefined = getCurrentTab();
-	if (currentTab && currentTab.schemaType && currentTab.data instanceof RecordSchema) {
+    const currentTab: Tab | undefined = getCurrentTab();
+    if (currentTab && currentTab.schemaType && currentTab.data instanceof RecordSchema && currentTab.dataStoreId) {
         const newInstance = copyRecordSchema(currentTab.data, currentProjectTag);
         const newInstanceId = newInstance.getId();
-        if (newInstanceId && currentTab.dataStoreId) {
-            dataStore.set(currentTab.dataStoreId, newInstanceId, newInstance);
-            dataStore.addTag(currentTab.dataStoreId, newInstanceId, currentProjectTag);
-            if (props.listTabs) props.listTabs.selectTab(newInstanceId);
+        if (newInstanceId || dataStore.isArray(currentTab.dataStoreId)) {
+            dataStore.addSchema(currentTab.dataStoreId, newInstance, newInstanceId, currentProjectTag);
+            console.log("copy", newInstance);
+            const resultId = dataStore.isArray(currentTab.dataStoreId)
+                ? dataStore.getArray(currentTab.dataStoreId).length-1
+                : newInstanceId
+			if (props.listTabs && resultId !== undefined)
+                props.listTabs.selectTab(
+                    resultId
+                );
         }
     }
 }
@@ -239,9 +260,17 @@ function copyCurrentTab() {
 function deleteCurrentTab() {
     const current = getCurrentTab();
     if (current?.dataStoreId) {
-        const data = dataStore.getMap(current.dataStoreId);
-        data.delete(current?.id);
-        if (props.listTabs) props.listTabs.closeTab();
+        if (dataStore.isArray(current.dataStoreId)) {
+            if (typeof current?.id === "number") {
+                const data = dataStore.getArray(current.dataStoreId);
+                data.splice(current?.id, 1);
+                if (props.listTabs) props.listTabs.closeTab();
+            }
+        } else {
+            const data = dataStore.getMap(current.dataStoreId);
+            data.delete(current?.id);
+            if (props.listTabs) props.listTabs.closeTab();
+        }
     }
 }
 
@@ -263,7 +292,7 @@ watch(
     () => {
         if (frameNavigator?.tab && initialized.value) {
             const id = frameNavigator.tab.id;
-            const storeId = frameNavigator.tab.dataStoreId;
+			const storeId = frameNavigator.tab.dataStoreId;
             if (storeId && id) dataStore.markDirty(storeId, id);
         }
     },
@@ -383,19 +412,19 @@ watch(
     cursor: pointer;
     transition: all 0.2s ease;
     user-select: none;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .object-summary:hover {
     background: #3a3a4a;
     border-color: #66d9a0;
-    box-shadow: 0 0 0 2px rgba(102, 217, 160, 0.2), 0 4px 8px rgba(0,0,0,0.3);
+    box-shadow: 0 0 0 2px rgba(102, 217, 160, 0.2), 0 4px 8px rgba(0, 0, 0, 0.3);
     transform: translateY(-1px);
 }
 
 .object-summary:active {
     transform: translateY(0px);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .field-description {
