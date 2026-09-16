@@ -23,15 +23,22 @@ export interface WeaponBuild {
     needLocalization?: boolean;
 }
 
-function changeAllIds(result: Array<WeaponBuildItem>) {
-	const idsChange = new Map<string, string>();
+export function objectChangeAllIds(result: Array<WeaponBuildItem>, _idsChange?: Map<string, string>) {
+	const idsChange = _idsChange ?? new Map<string, string>();
 	for (const item of result) {
 		if (item.parentId && idsChange.has(item.parentId)) {
-		item.parentId = idsChange.get(item.parentId);
+			item.parentId = idsChange.get(item.parentId);
 		};
 		const newId = generateUUID24chars();
 		idsChange.set(item._id, newId);
 		item._id = newId;
+
+
+		for (const [key, value] of Object.entries(item)) {
+			if (Array.isArray(value)) {
+				objectChangeAllIds(value, idsChange)
+			}
+		}
     }
 }
 
@@ -110,7 +117,7 @@ export const useProfilesStore = defineStore("profiles", {
             const weaponBuildItems = weaponBuild.Items.filter((item) => item.slotId !== "patron_in_weapon");
             const result = deepClone(weaponBuildItems);
 
-            changeAllIds(result)
+            objectChangeAllIds(result)
             return result;
         },
     },

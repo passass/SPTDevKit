@@ -52,9 +52,9 @@ import { FieldContext } from "@/types/fields/fieldsConsts";
 
 const props = defineProps<{
     modelValue: any;
-	fieldContext?: FieldContext;
+    fieldContext?: FieldContext;
 
-	itemsOverride?: Map<string | number, Record<string, any> | RecordSchema | string>;
+    itemsOverride?: Map<string | number, Record<string, any> | RecordSchema | string>;
 }>();
 
 const emit = defineEmits<{
@@ -68,10 +68,10 @@ const isOpen = ref(false);
 const selectedIndex = ref(-1);
 
 const items = computed(() => {
-	const result: Array<{ id: string | number; label: string }> = [];
-	if (!props.fieldContext) return result;
-	const itemMap: Map<string | number, Record<string, any> | RecordSchema | string> =
-    	(props.itemsOverride && props.itemsOverride) ??
+    const result: Array<{ id: string | number; label: string }> = [];
+    if (!props.fieldContext) return result;
+    const itemMap: Map<string | number, Record<string, any> | RecordSchema | string> =
+        (props.itemsOverride && props.itemsOverride) ??
         (props.fieldContext.field.getOptionsItems && props.fieldContext.field.getOptionsItems(props.fieldContext)) ??
         dataStore.getMap((props.fieldContext.field as AdvSelectField)?.storeId ?? "items");
 
@@ -79,7 +79,9 @@ const items = computed(() => {
         let data: any = record;
         if (typeof data === "object" && "data" in data) data = data.data;
 
-        const name = gameLocalization.getObjectLocalization({ instance: data });
+        let name;
+        if (typeof data === "string") name = gameLocalization.getText({ localeId: [`${data} Name`, data] });
+        else name = gameLocalization.getObjectLocalization({ instance: data });
         result.push({
             id,
             label: name ?? id,

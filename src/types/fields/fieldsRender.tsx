@@ -266,7 +266,9 @@ const renderRules: RenderRule[] = [
 
 const extraRenderRules: RenderRule[] = [
     {
-        condition: (field: Field, recordSchema: RecordSchema) => field.key === "items" && field.isArray(),
+		condition: (field: Field, recordSchema: RecordSchema) => field.key === "items" && field.isArray() && (
+			recordSchema.get("type") !== "AssortmentUnlock"
+        ),
         component: (fieldContext: FieldContext) => (
             <>
                 <LoadWeaponBuildInput field={fieldContext.field} fieldContext={fieldContext} data={fieldContext.recordSchema.getData()} />
@@ -303,6 +305,14 @@ export function fieldRender({
     for (const renderRule of exactRenderRules ?? renderRules) {
         if (renderRule.condition(field, recordSchema)) {
             if (renderRule.componentTemplate) {
+				const fieldContext: FieldContext = {
+					field,
+					value: recordSchema.get(field),
+					recordSchema,
+					data: recordSchema.getData(),
+					navigate: handleNavigate ?? (() => false),
+				};
+
                 const OnInput = (e: Event): void => {
                     if (field.virtual) return;
                     recordSchema.set(field, (e.target as HTMLInputElement)?.value);
@@ -317,7 +327,13 @@ export function fieldRender({
                     }
                 };
 				const OnModelValueInput = (val: any): void => {
-                    if (field.onUpdateModelValue) field.onUpdateModelValue(recordSchema, val);
+					if (field.onUpdateModelValue) {
+						const res = field.onUpdateModelValue(fieldContext, val);
+						if (res !== undefined) {
+							recordSchema.set(field, res)
+							return
+						}
+					}
                     if (!field.virtual) recordSchema.set(field, val);
                 };
 
@@ -329,14 +345,6 @@ export function fieldRender({
 
                 if (renderRule.hasOnInputEmit) eventHandlers.onInput = OnInput;
 				if (renderRule.hasOnChangeEmit) eventHandlers.onChange = OnChange;
-
-				const fieldContext: FieldContext = {
-					field,
-					value: recordSchema.get(field),
-					recordSchema,
-					data: recordSchema.getData(),
-					navigate: handleNavigate ?? (() => false),
-				};
 
 				return h(FieldTemplateWrapper, {
                     recordSchema,

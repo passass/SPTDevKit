@@ -295,10 +295,11 @@ function getRepresentation(item: any): string {
     	return gameLocalization.getText({ localeId: [`${item._tpl} ShortName`, item._tpl], default: "" })
 	}
 
-	if (props.field.arrayItemSchema) {
-		const recSch = props.field.arrayItemSchema.from(item)
-		if (recSch && recSch.getRepresentation)
-			return recSch.getRepresentation!()
+	const arrSchema = props.field.arrayItemSchema
+	if (arrSchema && arrSchema.from({})?.getRepresentation) {
+		const res = arrSchema.from(item)?.getRepresentation!()
+		if (res)
+			return res
 	}
 
     return "";

@@ -80,11 +80,11 @@ export class Field extends Data {
     onArrayItemAdd?(fieldContext: FieldContext, newVal: any): void;
     onArrayNavigate?(fieldContext: FieldContext, index: number): void;
 
-    onUpdateModelValue?(recordSchema: RecordSchema, newVal: any): void;
+    onUpdateModelValue?(fieldContext: FieldContext, newVal: any): any;
 
     getSerializedValue?(fieldContext: FieldContext): any;
 	getDefaultValue?(data: SchemaData): any;
-    getOptionsItems?(fieldContext: FieldContext): Map<string, Record<string, any> | RecordSchema>;
+    getOptionsItems?(fieldContext: FieldContext): Map<string | number, Record<string, any> | RecordSchema | string>;
 
     isArray(): boolean {
         return this.type && this.type.toLocaleLowerCase().includes("array");

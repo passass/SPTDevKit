@@ -132,17 +132,6 @@ export class ItemSlotSchema extends RecordSchema {
     ];
 }
 
-// if (props.field.storeId) {
-// 			const schemaType = dataStore.getSchemaType(props.field.storeId)
-
-// 			if (schemaType) {
-// 				const newSchema = schemaType.from(parent)
-
-// 				if (newSchema)
-// 					dataStore.addSchema(props.field.storeId, newSchema, newSchema?.getId(), currentProjectTag)
-// 			}
-// 		}
-
 export class ItemAssort extends RecordSchema {
     static fields: Field[] = [
         IdField.create({ key: "_id" }),

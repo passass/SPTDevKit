@@ -11,7 +11,7 @@ import { groupBy } from "@/utils/utils";
 export const assortDataStore = new dataStore("TraderAssort");
 
 type ITraderAssort = {
-    items: Record<string, Record<string, any>>;
+    items: Array<Record<string, any>>;
     barter_scheme: Record<string, Array<Array<Record<string, any>>>>;
     loyal_level_items: Record<string, number>;
 };
@@ -25,7 +25,7 @@ class TradersAssort {
 
     transferContentIntoSchemas(content: any, _traderId: string): ItemAssort[] {
         const res: ItemAssort[] = [];
-        if (content === null || typeof content !== "object") return res;
+        if (content === null || typeof content !== "object" || !("items" in content)) return res;
 
         let traderId: string;
         if (_traderId in tradersMongoIdToUUID) {
@@ -147,7 +147,7 @@ class TradersAssort {
 
         for (const [traderId, records] of groupedByTraders.entries()) {
             const traderAssorts: ITraderAssort = {
-                items: {},
+                items: [],
                 barter_scheme: {},
                 loyal_level_items: {},
             };
@@ -158,14 +158,14 @@ class TradersAssort {
 				if (!(assort instanceof RecordSchema)) continue;
 				const recordId = String(assort.getId())
 
-                traderAssorts.items[recordId] = assort.toJSON();
+                traderAssorts.items.push(assort.toJSON());
 				const children = assort.get("children");
                 if (Array.isArray(children))
 					for (const assortChildren of children) {
 						if (typeof assortChildren !== "object" || assortChildren === null) continue;
 						const id = assortChildren instanceof RecordSchema ? assortChildren.getId() : ((assortChildren as any)["_id"] ?? (assortChildren as any)["id"])
 						if (id)
-							traderAssorts.items[id] = assortChildren instanceof RecordSchema ? assortChildren.toJSON() : assortChildren;
+							traderAssorts.items.push(assortChildren instanceof RecordSchema ? assortChildren.toJSON() : assortChildren);
                     }
 
 				const barter_scheme = assort.get("barter_scheme")
@@ -193,7 +193,13 @@ class TradersAssort {
             });
         }
         return TradersAssortSchema.from(resData) as TradersAssortSchema;
-    }
+	}
+
+	getTradersAssortForTraderId(traderId: string): TradersAssortSchema[] {
+		return Array.from(assortDataStore.getMap().values())
+			.map((el) => el.data)
+			.filter((data) => data.get("traderId") === traderId);
+	}
 }
 
 export default new TradersAssort();
