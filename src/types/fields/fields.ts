@@ -30,7 +30,7 @@ export type FieldType =
     | "textarea"
     | "select"
     | "object"
-	| "array"
+    | "array"
     | "arrayList"
     | "arrayArray"
     | "optionsArray"
@@ -62,12 +62,12 @@ export class Field extends Data {
 
     initialValue?: (data: SchemaData) => any;
     onChange?: (data: SchemaData, event: Event) => void;
-	onIfInData?: (data: SchemaData) => void;
+    onIfInData?: (data: SchemaData) => void;
 
-	extractWeaponBuildIntoChildren?: boolean;
-	onExtractWeaponBuildIntoChildren?(fieldContext: FieldContext, newVal: SchemaData): void;
+    extractWeaponBuildIntoChildren?: boolean;
+    onExtractWeaponBuildIntoChildren?(fieldContext: FieldContext, newVal: SchemaData): void;
 
-	hidden?: boolean;
+    hidden?: boolean;
     unneccesary?: boolean;
 
     excludeFromToJSON?: boolean;
@@ -83,7 +83,7 @@ export class Field extends Data {
     onUpdateModelValue?(fieldContext: FieldContext, newVal: any): any;
 
     getSerializedValue?(fieldContext: FieldContext): any;
-	getDefaultValue?(data: SchemaData): any;
+    getDefaultValue?(data: SchemaData): any;
     getOptionsItems?(fieldContext: FieldContext): Map<string | number, Record<string, any> | RecordSchema | string>;
 
     isArray(): boolean {
@@ -131,12 +131,12 @@ export const castToRecordSchema = (
         }
 
         return new RecordSchema(value, otherData);
-	}
-	if (value instanceof RecordSchema && otherData) {
-		for (const [key, otherDataValue] of Object.entries(otherData)) {
-			(value as any)[key] = otherDataValue
-		}
-	}
+    }
+    if (value instanceof RecordSchema && otherData) {
+        for (const [key, otherDataValue] of Object.entries(otherData)) {
+            (value as any)[key] = otherDataValue;
+        }
+    }
 
     return value;
 };
@@ -261,20 +261,12 @@ export class RecordSchema {
                     const arrayData = instance.get(field.key);
                     if (Array.isArray(arrayData)) {
                         for (const item of arrayData) {
-                            if (item && typeof item === "object") {
-                                if (SchemaChoicer.isPrototypeOf(field.arrayItemSchema)) {
-                                    const choicer = field.arrayItemSchema as unknown as typeof SchemaChoicer;
-                                    for (const schemaChoice of choicer.schemas) {
-                                        const nestedInstance = castToRecordSchema(item, schemaChoice.schema);
-                                        processSchema(nestedInstance);
-                                    }
-                                } else {
-                                    const nestedInstance = castToRecordSchema(
-                                        item,
-                                        field.arrayItemSchema as typeof RecordSchema
-                                    );
-                                    processSchema(nestedInstance);
-                                }
+                            if (item && typeof item === "object" && !Array.isArray(item)) {
+                                const schema = field.arrayItemSchema.from(item, {
+                                    parent: arrayData,
+                                    lastSchemaParent: instance,
+                                });
+                                if (schema) processSchema(schema);
                             }
                         }
                     }
@@ -299,8 +291,8 @@ export class RecordSchema {
 
     onDataLoad?: (data: SchemaData) => void;
     getRepresentation?(): string;
-	constructor(data: SchemaData = {}, otherData?: recordSchemaOtherData) {
-		this.extraFields = [];
+    constructor(data: SchemaData = {}, otherData?: recordSchemaOtherData) {
+        this.extraFields = [];
 
         if (!data || typeof data !== "object" || Array.isArray(data)) {
             console.error("wrong data type in RecordSchema", data);
@@ -311,9 +303,9 @@ export class RecordSchema {
         this.data = data;
 
         if (otherData) {
-	        for (const [key, otherDataValue] of Object.entries(otherData)) {
-				(this as any)[key] = otherDataValue
-			}
+            for (const [key, otherDataValue] of Object.entries(otherData)) {
+                (this as any)[key] = otherDataValue;
+            }
         }
 
         const fields = this.getFields();
@@ -343,7 +335,7 @@ export class RecordSchema {
             if (
                 otherData?.fillWithDefault ||
                 field.alwaysFillWithDefault ||
-				(otherData?.isCreating && field.fillWithDefaultOnCreate)
+                (otherData?.isCreating && field.fillWithDefaultOnCreate)
             ) {
                 let defVal;
                 if (field.type === "object" && field.nestedSchema) {
@@ -387,14 +379,14 @@ export class RecordSchema {
 
     castToNewSchema(newSchema: typeof RecordSchema, otherData?: recordSchemaOtherData): RecordSchema {
         if (otherData?.choosedSchema?.onSchemaChange) otherData.choosedSchema.onSchemaChange(this);
-		const newInstance = new newSchema(this.data, {
-			schemaChooser: this.schemaChooser,
-		    choosedSchema: this.choosedSchema,
-		    parent: this.parent,
-		    name: this.name,
-		    lastSchemaParent: this.lastSchemaParent,
-			...otherData
-		});
+        const newInstance = new newSchema(this.data, {
+            schemaChooser: this.schemaChooser,
+            choosedSchema: this.choosedSchema,
+            parent: this.parent,
+            name: this.name,
+            lastSchemaParent: this.lastSchemaParent,
+            ...otherData,
+        });
         if (otherData?.choosedSchema?.onSchemaPostChange) otherData.choosedSchema.onSchemaPostChange(newInstance);
         return newInstance;
     }
@@ -454,13 +446,13 @@ export class RecordSchema {
     /** Получить значение поля */
     get(key: string | Field): SchemaValue {
         return this.data[key instanceof Field ? key.key : key];
-	}
+    }
 
-	has(key: string | Field): boolean {
-		return key instanceof Field ? key.key in this.data : key in this.data;
-	}
+    has(key: string | Field): boolean {
+        return key instanceof Field ? key.key in this.data : key in this.data;
+    }
 
-	/** Установить значение поля */
+    /** Установить значение поля */
     set(key: string | Field, value: any): void {
         const fieldKey = key instanceof Field ? key.key : key;
         const field = key instanceof Field ? key : this.getField(fieldKey);
@@ -507,11 +499,11 @@ export class RecordSchema {
             return field.type === "object" || field.type === "array" || !!field.nestedSchema || !!field.arrayItemSchema;
         }
         return rawValue !== null && typeof rawValue === "object";
-	}
+    }
 
-	getSchemaLabel?(): string;
+    getSchemaLabel?(): string;
 
-	/** Получить label */
+    /** Получить label */
     getLabel(key: string): string {
         return this.getField(key)?.label ?? this.formatKey(key);
     }
@@ -571,17 +563,16 @@ export class RecordSchema {
         return instance;
     }
 
-	getSerializedValue?(): any;
+    getSerializedValue?(): any;
 
-	toJSON(): SchemaData {
-		if (this.getSerializedValue) {
-			const result = this.getSerializedValue();
-			if (result) {
-				if (result instanceof RecordSchema)
-					return result.toJSON();
-				return result;
-			}
-		}
+    toJSON(): SchemaData {
+        if (this.getSerializedValue) {
+            const result = this.getSerializedValue();
+            if (result) {
+                if (result instanceof RecordSchema) return result.toJSON();
+                return result;
+            }
+        }
         const serialize = (obj: any): any => {
             if (obj === null || obj === undefined) return obj;
 
@@ -644,9 +635,9 @@ export class RecordSchema {
                     if (item === null || item === undefined) return item;
                     if (item instanceof RecordSchema) return item.toJSON();
                     if (typeof item === "object") {
-						const casted = field.arrayItemSchema!.from(item, {
-							lastSchemaParent: this,
-							parent: value,
+                        const casted = field.arrayItemSchema!.from(item, {
+                            lastSchemaParent: this,
+                            parent: value,
                         });
                         if (casted instanceof RecordSchema) {
                             return casted.toJSON();
@@ -661,9 +652,9 @@ export class RecordSchema {
         };
 
         const result: Record<string, any> = {};
-		for (const [key, value] of Object.entries(data)) {
-			const field = fieldsMap.get(key);
-			if (field?.excludeFromToJSON) continue;
+        for (const [key, value] of Object.entries(data)) {
+            const field = fieldsMap.get(key);
+            if (field?.excludeFromToJSON) continue;
 
             if (field?.getSerializedValue) {
                 result[key] = field.getSerializedValue({
@@ -685,5 +676,5 @@ export class RecordSchema {
             .replace(/([A-Z])/g, " $1")
             .replace(/_/g, " ")
             .replace(/^./, (str) => str.toUpperCase());
-	}
+    }
 }

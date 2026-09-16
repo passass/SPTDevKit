@@ -16,7 +16,11 @@ export class SchemaChoicer {
 	static from(data: SchemaData, otherData?: recordSchemaOtherData): RecordSchema | null {
 		for (const schemaChoice of this.schemas) {
 			if (schemaChoice.condition(data)) {
-				return schemaChoice.schema.from(data, otherData)
+				return schemaChoice.schema.from(data, {
+					schemaChooser: this,
+					choosedSchema: schemaChoice,
+					...otherData,
+				})
 			}
 		}
 		return null

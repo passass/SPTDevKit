@@ -96,7 +96,7 @@ class itemsAssortsFieldClass extends Field {
     arrayItemSchema = itemsAssortsSchema;
 
     getSerializedValue(fieldContext: FieldContext): any {
-        const items = fieldContext.value;
+		const items = fieldContext.value;
         if (!Array.isArray(items)) return items;
 
         const result: any[] = [];
@@ -212,21 +212,22 @@ function commonFunctionForRewards(schemaNode: SchemaNode) {
                 itemsAssortsFieldClass.create({
                     onIfInData: (data: SchemaData) => {
                         const items = data["items"];
-                        if (!Array.isArray(items) || items.length === 0) return;
+						if (!Array.isArray(items) || items.length === 0) return;
 
                         const hasFlatChildren = items.some(
                             (item: any) => item && typeof item === "object" && (item.parentId || item.slotId)
                         );
                         if (!hasFlatChildren) return;
 
-                        const newItems: any[] = [];
+						const newItems: any[] = [];
                         for (const item of items) {
                             if (!item || typeof item !== "object" || !("_id" in item) || item.parentId || item.slotId)
                                 continue;
-                            newItems.push({
+                            const newItem = {
                                 ...item,
                                 children: (Array.isArray(item.children) && item.children.length > 0) ? item.children : collectDescendants(items, String(item._id)),
-                            });
+                            }
+							newItems.push(newItem);
                         }
 
                         data["items"] = newItems;
