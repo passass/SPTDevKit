@@ -51,6 +51,7 @@ export class Field extends Data {
     visible?: boolean = true;
     editable?: boolean = true;
     order?: number = 1;
+    storeId?: string;
     options?: string[] | Record<any, string>;
     defaultValue?: any;
     validate?: (value: any, record: SchemaData) => true | string;
@@ -64,6 +65,7 @@ export class Field extends Data {
 	onIfInData?: (data: SchemaData) => void;
 
 	extractWeaponBuildIntoChildren?: boolean;
+	onExtractWeaponBuildIntoChildren?(fieldContext: FieldContext, newVal: SchemaData): void;
 
 	hidden?: boolean;
     unneccesary?: boolean;
@@ -91,8 +93,6 @@ export class Field extends Data {
 
 export class AdvSelectField extends Field {
     type: FieldType = "arrayAdvancedSelect";
-
-    storeId!: string;
 }
 
 function autoDetectType(value: any): FieldType {

@@ -269,7 +269,7 @@ const extraRenderRules: RenderRule[] = [
         condition: (field: Field, recordSchema: RecordSchema) => field.key === "items" && field.isArray(),
         component: (fieldContext: FieldContext) => (
             <>
-                <LoadWeaponBuildInput field={fieldContext.field} data={fieldContext.recordSchema.getData()} />
+                <LoadWeaponBuildInput field={fieldContext.field} fieldContext={fieldContext} data={fieldContext.recordSchema.getData()} />
                 {(fieldContext.recordSchema.get(fieldContext.field.key) as unknown as WeaponBuildItem[])?.filter((item: WeaponBuildItem) => !item.parentId).length > 0 && (
                     <div class="weapon-build-reward">
                         {/*<span class="weapon-build-reward__label">Предметы:</span>*/}

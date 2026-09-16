@@ -18,6 +18,21 @@
             >−</button>
         </div>
 
+        <div v-if="availableTags.length > 0" class="array-list-input__tag-filter">
+            <div class="array-list-input__tag-label">Фильтр по тегам:</div>
+            <div class="array-list-input__tag-list">
+                <label
+                    v-for="tag in availableTags"
+                    :key="tag"
+                    class="array-list-input__tag-item"
+                    :class="{ active: selectedTags.includes(tag) }"
+                >
+                    <input type="checkbox" :value="tag" v-model="selectedTags" />
+                    <span>{{ tag }}</span>
+                </label>
+            </div>
+        </div>
+
         <div class="array-list-input__list" ref="listRef">
             <div v-if="filteredItems.length === 0" class="array-list-input__empty">
                 {{ items.length === 0 ? "Нет элементов" : "Ничего не найдено" }}
@@ -99,6 +114,8 @@ import { getStaticField } from "@/utils/classUtils";
 import { Navigator } from "@/utils/navigation";
 import { type FieldContext } from "@/types/fields/fieldsConsts";
 import { gameLocalization } from "@/types/localization";
+import { useDataStore } from "@/stores/dataStore";
+import { currentProjectTag, modTag, vanillaTag } from "@/consts/ProjectConsts";
 
 type InputType = SchemaValue[];
 
@@ -128,6 +145,54 @@ const items = computed({
     set: (val: InputType) => emit("update:modelValue", val),
 });
 
+const dataStore = useDataStore();
+const selectedTags = ref<string[]>([]);
+const filterableTags = [currentProjectTag, vanillaTag, modTag];
+
+// Стор, в котором ищем теги: берём из поля (AdvSelectField.storeId) или из схемы-родителя
+const tagStoreId = computed<string | undefined>(() => {
+    return (props.field as any).storeId
+        ?? (props.fieldContext?.recordSchema as any)?.storeId;
+});
+
+// id (по _id/id) -> tags, построенный один раз для выбранного стора
+const idToTags = computed<Map<string, string[]>>(() => {
+    const result = new Map<string, string[]>();
+    const storeId = tagStoreId.value;
+    if (!storeId) return result;
+
+    try {
+        const map = dataStore.getMap(storeId);
+        for (const [key, record] of map.entries()) {
+            // Элемент может быть как dataMapRecordType { data, tags }, так и сырым RecordSchema
+            const data: any = (record as any)?.data ?? record;
+            const id: any = (data instanceof RecordSchema ? data.getId() : (data?._id ?? data?.id)) ?? key;
+            const tags: string[] = (record as any)?.tags ?? [];
+            if (id !== undefined) result.set(String(id), tags);
+        }
+    } catch {
+        // Стор не зарегистрирован — просто пустой результат
+    }
+
+    return result;
+});
+
+function getTagsForItem(item: any): string[] {
+    if (!item) return [];
+    const id = item instanceof RecordSchema ? item.getId() : (item?._id ?? item?.id);
+	if (id === undefined) return [];
+    return idToTags.value.get(String(id)) ?? [];
+}
+
+const availableTags = computed<string[]>(() => {
+    const present = new Set<string>();
+    for (const item of items.value ?? []) {
+		for (const tag of getTagsForItem(item))
+			present.add(tag);
+	}
+    return filterableTags.filter((tag) => present.has(tag));
+});
+
 const isStringArray = computed(() => {
     return (
         props.field.type === "stringArray" ||
@@ -147,12 +212,11 @@ const isNumberArray = computed(() => {
 const isOptionsArray = computed(() => props.field.type === "optionsArray");
 
 function getRepresentation(item: any, index: number): string {
-	if (item === null || item === undefined) return "—";
+    if (item === null || item === undefined) return "—";
 
-
-	if ("_tpl" in item || item instanceof RecordSchema && item.has("_tpl")) {
-		const tpl = item instanceof RecordSchema ? item.get("_tpl") : item["_tpl"]
-    	return gameLocalization.getText({ localeId: [`${tpl} Name`, `${tpl} ShortName`, tpl], default: "" })
+    if ("_tpl" in item || item instanceof RecordSchema && item.has("_tpl")) {
+        const tpl = item instanceof RecordSchema ? item.get("_tpl") : item["_tpl"]
+        return gameLocalization.getText({ localeId: [`${tpl} Name`, `${tpl} ShortName`, tpl], default: "" })
     }
 
     if (typeof item !== "object") return String(item);
@@ -192,13 +256,26 @@ const entries = computed(() =>
 );
 
 const filteredItems = computed(() => {
+    let result = entries.value;
+
+    // Фильтр по тегам
+    if (selectedTags.value.length > 0) {
+        result = result.filter((entry) =>
+            selectedTags.value.every((tag) => getTagsForItem(entry.item).includes(tag))
+        );
+    }
+
+    // Фильтр по поиску
     const q = searchQuery.value.trim().toLowerCase();
-    if (!q) return entries.value;
-    return entries.value.filter(
-        (entry) =>
-            entry.label.toLowerCase().includes(q) ||
-            String(entry.index + 1).includes(q)
-    );
+    if (q) {
+        result = result.filter(
+            (entry) =>
+                entry.label.toLowerCase().includes(q) ||
+                String(entry.index + 1).includes(q)
+        );
+    }
+
+    return result;
 });
 
 // ===== ДЕЙСТВИЯ =====
@@ -546,5 +623,57 @@ watch(
     border-radius: 4px;
     color: #b0b0b0;
     font-size: 13px;
+}
+
+/* ===== ФИЛЬТР ПО ТЕГАМ ===== */
+.array-list-input__tag-filter {
+    padding: 4px 0 6px 0;
+    border-bottom: 1px solid #3d3d3d;
+    margin-bottom: 4px;
+}
+
+.array-list-input__tag-label {
+    font-size: 10px;
+    color: #888;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.array-list-input__tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.array-list-input__tag-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    background: #3d3d3d;
+    border: 1px solid #4a4a4a;
+    border-radius: 10px;
+    font-size: 10px;
+    color: #b0b0b0;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+
+.array-list-input__tag-item:hover {
+    border-color: #42b883;
+    color: #e0e0e0;
+}
+
+.array-list-input__tag-item.active {
+    background: #42b883;
+    border-color: #42b883;
+    color: #1a1a1a;
+}
+
+.array-list-input__tag-item input[type="checkbox"] {
+    display: none;
 }
 </style>

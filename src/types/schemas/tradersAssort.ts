@@ -1,7 +1,10 @@
-import { RecordSchema, Field, type SchemaData } from "../fields/fields";
+import { RecordSchema, Field, type SchemaData, type FieldType } from "../fields/fields";
 import { IdField, AdvSelectField, parentIdField, HiddenField, UnneccesaryField } from "../fields/fieldsClasses";
 import { slotIdOptions } from "@/consts/GameConsts";
 import { gameLocalization } from "../localization";
+import type { FieldContext } from "../fields/fieldsConsts";
+import { useDataStore } from "@/stores/dataStore";
+import { currentProjectTag } from "@/consts/ProjectConsts";
 
 class RepairableNestedSchema extends RecordSchema {
     static fields: Field[] = [
@@ -129,6 +132,17 @@ export class ItemSlotSchema extends RecordSchema {
     ];
 }
 
+// if (props.field.storeId) {
+// 			const schemaType = dataStore.getSchemaType(props.field.storeId)
+
+// 			if (schemaType) {
+// 				const newSchema = schemaType.from(parent)
+
+// 				if (newSchema)
+// 					dataStore.addSchema(props.field.storeId, newSchema, newSchema?.getId(), currentProjectTag)
+// 			}
+// 		}
+
 export class ItemAssort extends RecordSchema {
     static fields: Field[] = [
         IdField.create({ key: "_id" }),
@@ -160,15 +174,16 @@ export class ItemAssort extends RecordSchema {
             alwaysFillWithDefault: true,
             arrayItemSchema: CountTplSchema,
             order: 7,
+            excludeFromToJSON: true,
         }),
         HiddenField.create({
             key: "traderId",
             label: "traderId",
             alwaysFillWithDefault: true,
             defaultValue: 1,
-			order: 8,
+            order: 8,
 
-			excludeFromToJSON: true,
+            excludeFromToJSON: true,
         }),
         Field.create({
             key: "loyal_level_items",
@@ -176,48 +191,64 @@ export class ItemAssort extends RecordSchema {
             type: "number",
             alwaysFillWithDefault: true,
             defaultValue: 1,
-			order: 8,
+            order: 8,
 
-			excludeFromToJSON: true,
+            excludeFromToJSON: true,
         }),
         Field.create({
             key: "children",
             label: "children",
             type: "array",
             alwaysFillWithDefault: true,
-			order: 9,
-			arrayItemSchema: ItemSlotSchema,
+            order: 9,
+            arrayItemSchema: ItemSlotSchema,
 
-			excludeFromToJSON: true,
-		}),
+            excludeFromToJSON: true,
+        }),
     ];
 }
 
+class arrayListTraderAssort extends Field {
+    key = "items";
+    label = "items";
+    type: FieldType = "arrayList";
+    storeId = "TraderAssort";
+    arrayItemSchema = ItemAssort;
+    alwaysFillWithDefault = true;
+    extractWeaponBuildIntoChildren = true;
+
+	onExtractWeaponBuildIntoChildren(fieldContext: FieldContext, newVal: SchemaData): void {
+		newVal["traderId"] = fieldContext.recordSchema.get("trader")
+		const dataStore = useDataStore();
+		const schemaType = dataStore.getSchemaType(this.storeId);
+
+        if (schemaType) {
+            const newSchema = schemaType.from(newVal);
+
+            if (newSchema)
+                dataStore.addSchema(this.storeId, newSchema, newSchema?.getId(), currentProjectTag);
+        }
+    }
+}
+
 class TraderAssort extends RecordSchema {
-	getRepresentation(): string {
-		return gameLocalization.getText({
-			localeId: `${this.get("trader")} Nickname`
-		})
-	}
+    getRepresentation(): string {
+        return gameLocalization.getText({
+            localeId: `${this.get("trader")} Nickname`,
+        });
+    }
 
     static fields = [
         AdvSelectField.create({
             key: "trader",
             label: "trader",
-			type: "advancedSelect",
+            type: "advancedSelect",
             storeId: "traders",
-			alwaysFillWithDefault: true,
+            alwaysFillWithDefault: true,
             defaultValue: "",
         }),
 
-        Field.create({
-            key: "items",
-            label: "items",
-            type: "arrayList",
-            arrayItemSchema: ItemAssort,
-            alwaysFillWithDefault: true,
-            extractWeaponBuildIntoChildren: true,
-        }),
+        arrayListTraderAssort.create({}),
     ];
 }
 

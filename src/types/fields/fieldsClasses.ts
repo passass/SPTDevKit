@@ -4,8 +4,6 @@ import type { FieldContext } from "./fieldsConsts";
 
 export class AdvSelectField extends Field {
 	type: FieldType = 'arrayAdvancedSelect';
-
-	storeId!: string;
 }
 
 export class HiddenField extends Field {

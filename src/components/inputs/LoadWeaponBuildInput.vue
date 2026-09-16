@@ -34,11 +34,16 @@ import { type SchemaValue, type SchemaData } from "@/types/fields/fields";
 import { type Field } from "@/types/fields/fields";
 import { gameLocalization } from "@/types/localization";
 import { deepClone } from "@/utils/utils";
+import { useDataStore } from "@/stores/dataStore";
+import { currentProjectTag } from "@/consts/ProjectConsts";
+import { type FieldContext } from "@/types/fields/fieldsConsts";
 
 const profilesStore = useProfilesStore();
+const dataStore = useDataStore();
 const props = defineProps<{
     data: SchemaData;
-    field: Field;
+	field: Field;
+	fieldContext: FieldContext;
 }>();
 
 const selectRef = ref<HTMLSelectElement | null>(null);
@@ -56,6 +61,10 @@ function handleLoad(event: Event) {
 		const parent = res[0]
 		parent.children = res.slice(1)
 		itemsArray.push(parent)
+
+		if (props.field.onExtractWeaponBuildIntoChildren) {
+			props.field.onExtractWeaponBuildIntoChildren(props.fieldContext, parent)
+		}
 	} else {
 		props.data[props.field.key] = profilesStore.getWeaponBuildItems(value) as unknown as SchemaValue;
     }

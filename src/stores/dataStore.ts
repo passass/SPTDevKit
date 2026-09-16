@@ -122,11 +122,17 @@ export const useDataStore = defineStore("dataStore", () => {
 					if (Array.isArray(store)) {
 						for (const el of config.onFileLoad(ctx))
 							if (el instanceof RecordSchema)
-								store.push(el)
+								store.push({
+									"data": el,
+									"tags": tags,
+								})
 					} else {
 						for (const [key, el] of config.onFileLoad(ctx).entries())
 							if (el instanceof RecordSchema)
-								store.set(key, el)
+								store.set(key, {
+									"data": el,
+									"tags": tags,
+								})
 					}
 				}
                 else if (fileContent && typeof fileContent === "object") {
