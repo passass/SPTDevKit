@@ -40,7 +40,6 @@ class Quests {
         const dirtiesQuests = questDataStore.getAllDirties();
 
         const groupedDirtiesQuests = groupBy(dirtiesQuests, (quest) => quest.data.get("traderId") as string);
-        console.log(Array.from(groupedDirtiesQuests.keys()))
 
         for (const [traderId, quests] of this.getProjectQuestsFilteredByTraders().entries()) {
 			if (projectArgs.saveWithOriginalChanges) {

@@ -116,8 +116,6 @@ import { isInDestructureAssignment } from "vue/compiler-sfc";
 type InputType = SchemaValue[];
 const frameNavigator = inject<Navigator>("frameNavigator");
 
-console.log("frameNavigator", frameNavigator)
-
 const props = defineProps<{
     modelValue: Array<any>;
     field: Field;
@@ -241,7 +239,6 @@ function addItem() {
     } else {
         const arrayItemSchema = props.field.arrayItemSchema;
 		let resultSchema: RecordSchema | undefined;
-        console.log("arrayItemSchema", arrayItemSchema, getStaticField(arrayItemSchema as any, "fields"))
 
         if (arrayItemSchema) {
             if (SchemaChoicer.isPrototypeOf(arrayItemSchema)) {
@@ -324,7 +321,6 @@ function removeSubItem(index: number | string) {
 
 function handleNavigate() {
 	if (selectedIndex.value !== null) {
-		console.log("handleNavigate", props.fieldContext)
 		if (props.field.onArrayNavigate)
 	        props.field.onArrayNavigate(props.fieldContext, selectedIndex.value);
 	    else if (props.fieldContext.navigate) {

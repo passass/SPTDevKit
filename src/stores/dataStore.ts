@@ -453,7 +453,6 @@ export const useDataStore = defineStore("dataStore", () => {
 		const record = getDataRecord(storeId, id)
 
 		if (record) {
-			console.log("marked dirty", storeId, id)
 			record.dirty = true;
 		}
 	}

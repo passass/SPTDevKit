@@ -134,7 +134,6 @@ const validationErrors = ref<Record<string, string>>({});
 
 const dataRef = computed<RecordSchema>(() => {
 	if (props.data instanceof RecordSchema) {
-    	console.log("dataRef", props.data.getFields())
         return props.data;
     }
     let data = props.data;
@@ -245,7 +244,6 @@ function copyCurrentTab() {
         const newInstanceId = newInstance.getId();
         if (newInstanceId || dataStore.isArray(currentTab.dataStoreId)) {
             dataStore.addSchema(currentTab.dataStoreId, newInstance, newInstanceId, currentProjectTag);
-            console.log("copy", newInstance);
             const resultId = dataStore.isArray(currentTab.dataStoreId)
                 ? dataStore.getArray(currentTab.dataStoreId).length-1
                 : newInstanceId

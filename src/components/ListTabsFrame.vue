@@ -56,10 +56,13 @@
 </template>
 
 <script lang="ts">
-import { capitalize, type PropType } from "vue";
+import { capitalize, nextTick, type PropType } from "vue";
 import type { Tab } from "@/types/tabs";
 import { Navigator, type PathItem } from "@/utils/navigation";
 import { gameLocalization } from "@/types/localization";
+import { savedNavigatorStates } from "@/utils/navigation";
+
+// ===== Состояние навигатора по вкладкам (module-level, переживает пересоздание компонента) =====
 
 export default {
     name: "ListTabsFrame",
@@ -70,7 +73,7 @@ export default {
             required: true,
         },
         hasCloseReloadButtons: {
-			type: Boolean,
+            type: Boolean,
             default: true,
         },
         listTabs: {
@@ -92,14 +95,14 @@ export default {
         };
     },
 
-	computed: {
-		passListTabs(): boolean {
-	        const comp: any = this.tab.component;
-	        const props = comp?.props;
-	        if (!props) return false;
-	        if (Array.isArray(props)) return props.includes("listTabs");
-	        return Object.prototype.hasOwnProperty.call(props, "listTabs");
-	    },
+    computed: {
+        passListTabs(): boolean {
+            const comp: any = this.tab.component;
+            const props = comp?.props;
+            if (!props) return false;
+            if (Array.isArray(props)) return props.includes("listTabs");
+            return Object.prototype.hasOwnProperty.call(props, "listTabs");
+        },
         pathStack(): PathItem[] {
             return this.navigator?.getPathStack() ?? [];
         },
@@ -125,21 +128,71 @@ export default {
 
     watch: {
         tab: {
-            handler(newTab: Tab) {
-                if (this.navigator && this.navigator.tab.id !== newTab.id) {
-                    this.navigator.goRoot();
+            handler(newTab: Tab, oldTab: Tab | undefined) {
+                if (!this.navigator) return;
+
+                // 1) Сохраняем состояние уходящей вкладки
+                if (oldTab && this.navigator.tab?.id === oldTab.id) {
+                    const pathStack = this.navigator.getPathStack();
+                    const container = this.navigator.container;
+                    savedNavigatorStates.set(oldTab.id, {
+                        sourceLastSavedData: this.navigator.sourcePathItem.lastSavedData,
+                        containerScrollPosition: container
+                            ? { scrollLeft: container.scrollLeft, scrollTop: container.scrollTop }
+                            : undefined,
+                        items: pathStack.map((item) => ({
+                            key: item.key,
+                            lastSavedData: item.lastSavedData,
+                            lastScrollPosition: item.lastScrollPosition,
+                        })),
+                    });
+                }
+
+                // 2) Переключаемся на новую вкладку и восстанавливаем её состояние
+                if (this.navigator.tab?.id !== newTab.id) {
                     this.navigator.setTab(newTab);
+                    this.restoreNavigatorState(newTab.id);
                 }
             },
             deep: false,
         },
     },
 
-	mounted() {
+    mounted() {
         this.navigator.container = this.$refs.container as HTMLElement;
+        // Восстанавливаем состояние для вкладки, с которой стартовали
+        this.restoreNavigatorState(this.tab.id);
     },
 
     methods: {
+        restoreNavigatorState(tabId: string | number): void {
+            const saved = savedNavigatorStates.get(tabId);
+            if (!saved) return;
+
+            if (saved.sourceLastSavedData) {
+                this.navigator.sourcePathItem.lastSavedData = saved.sourceLastSavedData;
+            }
+
+            for (let i = 0; i < saved.items.length; i++) {
+                const item = saved.items[i];
+                const success = this.navigator.navigate(item.key);
+                if (!success) break;
+
+                const newItem = this.navigator.getPathItem(i);
+                if (!newItem) continue;
+
+                if (item.lastSavedData) newItem.lastSavedData = item.lastSavedData;
+                if (item.lastScrollPosition) newItem.lastScrollPosition = item.lastScrollPosition;
+            }
+
+            if (saved.containerScrollPosition && this.navigator.container) {
+                const pos = saved.containerScrollPosition;
+                nextTick(() => {
+                    this.navigator.container?.scrollTo(pos.scrollLeft, pos.scrollTop);
+                });
+            }
+        },
+
         handleRefresh() {
             this.$emit("refresh");
         },

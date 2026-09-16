@@ -3,6 +3,21 @@ import { RecordSchema, castToRecordSchema, type arrayItemSchemaType } from "@/ty
 import type { Tab } from "@/types/tabs";
 import { customRef, nextTick, type Component } from "vue";
 
+export interface SavedNavigatorState {
+    sourceLastSavedData?: Map<string, any>;
+    containerScrollPosition?: { scrollLeft: number; scrollTop: number };
+    items: Array<{
+        key: string | number;
+        lastSavedData?: Map<string, any>;
+        lastScrollPosition?: { scrollLeft: number; scrollTop: number };
+    }>;
+}
+export const savedNavigatorStates = new Map<string | number, SavedNavigatorState>();
+
+export function clearSavedNavigatorState(tabId: string | number): void {
+    savedNavigatorStates.delete(tabId);
+}
+
 export interface NavigatorOptions {
     tab: Tab;
 }

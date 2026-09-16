@@ -53,7 +53,7 @@
                 :items="filteredTabs"
                 :min-item-size="36"
                 key-field="id"
-                ref="tabListRef"
+                ref="scrollerRef"
             >
                 <template #default="{ item, index, active }">
                     <DynamicScrollerItem :item="item" :active="active" :size-dependencies="[item.label]">
@@ -109,7 +109,7 @@
 </template>
 
 <script lang="tsx">
-import { defineComponent, ref, computed, onMounted, inject, nextTick, toValue } from "vue";
+import { defineComponent, ref, computed, onMounted, inject, nextTick, toValue, watch } from "vue";
 import ListTabsFrame from "./ListTabsFrame.vue";
 import type { Tab } from "@/types/tabs";
 import type { Component } from "vue";
@@ -120,6 +120,7 @@ import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
 import { Navigator } from "@/utils/navigation";
 import { currentProjectTag, modTag, vanillaTag } from "@/consts/ProjectConsts";
 import { generateUUID24chars } from "@/utils/uuidUtils";
+import { savedNavigatorStates, SavedNavigatorState, clearSavedNavigatorState } from "@/utils/navigation";
 
 export default defineComponent({
 	name: "ListTabs",
@@ -143,7 +144,12 @@ export default defineComponent({
         const dataStore = useDataStore();
         const frameNavigator = inject<Navigator | null>("frameNavigator", null);
         const activeTab = ref<string | number | null>(null);
-        const searchQuery = ref("");
+		const searchQuery = ref("");
+		const scrollerRef = ref<any>(null);
+
+  		const storageKey = computed(() =>
+            props.storeId ? `activeTab:${props.storeId}` : "activeTab"
+        );
 
         const selectedTags = ref<string[]>([]);
         const filterableTags = [currentProjectTag, vanillaTag, modTag];
@@ -228,14 +234,25 @@ export default defineComponent({
             }
         }
 
+        function scrollToActiveTab() {
+            if (activeTab.value === null || activeTab.value === undefined) return;
+            const index = filteredTabs.value.findIndex(t => t.id === activeTab.value);
+            if (index !== -1 && scrollerRef.value) {
+                nextTick(() => {
+                    scrollerRef.value?.scrollToItem(index);
+                });
+            }
+        }
+
         function selectTab(tabId: string | number) {
             if (isTabVisible(tabId)) {
                 if (activeTab.value !== tabId) {
                     frameNavigator?.goRoot?.();
                 }
                 activeTab.value = tabId;
-                localStorage.setItem("activeTab", tabId.toString());
+                localStorage.setItem(storageKey.value, tabId.toString());
                 emit("tab-selected", tabId);
+                scrollToActiveTab();
             }
         }
 
@@ -244,8 +261,11 @@ export default defineComponent({
         }
 
         function closeTab() {
+            if (activeTab.value !== null) {
+                clearSavedNavigatorState(activeTab.value);
+            }
             activeTab.value = null;
-            localStorage.removeItem("activeTab");
+            localStorage.removeItem(storageKey.value);
         }
 
         function handleContentUpdate(data: any) {
@@ -295,13 +315,41 @@ export default defineComponent({
         }
 
         onMounted(() => {
-            const savedTab = localStorage.getItem("activeTab");
-            if (savedTab && props.tabs.some((t) => t.id === savedTab)) {
-                activeTab.value = savedTab;
-            } else if (props.tabs.length > 0) {
-                activeTab.value = props.tabs[0]?.id || null;
+            const savedTab = localStorage.getItem(storageKey.value);
+            if (savedTab) {
+                const matched = props.tabs.find((t) => String(t.id) === savedTab);
+                if (matched) {
+                    activeTab.value = matched.id;
+                    scrollToActiveTab();
+                    return;
+                }
+            }
+            if (props.tabs.length > 0) {
+                activeTab.value = props.tabs[0]?.id ?? null;
+                scrollToActiveTab();
             }
         });
+
+        watch(
+            () => props.tabs,
+            (newTabs) => {
+                if (!Array.isArray(newTabs) || newTabs.length === 0) return;
+                const savedTab = localStorage.getItem(storageKey.value);
+                if (savedTab) {
+                    const matched = newTabs.find((t) => String(t.id) === savedTab);
+                    if (matched) {
+                        activeTab.value = matched.id;
+                        scrollToActiveTab();
+                        return;
+                    }
+                }
+                if (activeTab.value === null || !newTabs.some((t) => t.id === activeTab.value)) {
+                    activeTab.value = newTabs[0]?.id ?? null;
+                }
+                scrollToActiveTab();
+            },
+            { deep: false }
+        );
 
         return {
             activeTab,
@@ -321,7 +369,8 @@ export default defineComponent({
             clearSearch,
             highlightMatch,
             dataStore,
-            frameNavigator,
+			frameNavigator,
+            scrollerRef,
         };
     },
 });
