@@ -62,6 +62,7 @@ class Quests {
                     res.set(questId, quest.data);
                 }
                 await new Path(projectArgs.folderPath, `db/CustomQuests/${traderId}/Quests/quest.json`).saveFile(res);
+                await this.saveQuestAssorts(res, new Path(projectArgs.folderPath, `db/CustomQuests/${traderId}/QuestAssort/assort.json`))
             }
         }
     }

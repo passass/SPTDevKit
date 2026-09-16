@@ -61,6 +61,12 @@ const emit = defineEmits<{
     (e: "update:modelValue", value: string | null): void;
 }>();
 
+interface ISelectItem {
+	id: string | number;
+	label: string;
+	record?: Record<string, any> | RecordSchema;
+}
+
 const dataStore = useDataStore();
 const searchInput = ref<HTMLInputElement | null>(null);
 const searchQuery = ref("");
@@ -68,7 +74,7 @@ const isOpen = ref(false);
 const selectedIndex = ref(-1);
 
 const items = computed(() => {
-    const result: Array<{ id: string | number; label: string }> = [];
+    const result: Array<ISelectItem> = [];
     if (!props.fieldContext) return result;
     const itemMap: Map<string | number, Record<string, any> | RecordSchema | string> =
         (props.itemsOverride && props.itemsOverride) ??
@@ -79,13 +85,19 @@ const items = computed(() => {
         let data: any = record;
         if (typeof data === "object" && "data" in data) data = data.data;
 
-        let name;
-        if (typeof data === "string") name = gameLocalization.getText({ localeId: [`${data} Name`, data] });
-        else name = gameLocalization.getObjectLocalization({ instance: data });
-        result.push({
+		let name;
+		if (record instanceof RecordSchema && record.getRepresentation) name = record.getRepresentation()
+        else if (typeof data === "string") name = gameLocalization.getText({ localeId: [`${data} Name`, data] });
+		else name = gameLocalization.getObjectLocalization({ instance: data });
+
+        const resultObject: ISelectItem = {
             id,
-            label: name ?? id,
-        });
+			label: name ?? id,
+		}
+
+		if (typeof record === "object")
+        	resultObject["record"] = record
+        result.push(resultObject);
     }
 
     return result;
@@ -113,8 +125,15 @@ function handleSearch() {
     isOpen.value = true;
 }
 
-function selectItem(item: { id: string; label: string; data: any }) {
-    emit("update:modelValue", item.id);
+function selectItem(item: ISelectItem) {
+	let resultValue = String(item.id)
+	if (props.fieldContext?.field.onOptionChange) {
+		const res = props.fieldContext?.field.onOptionChange(props.fieldContext, item)
+		if (res !== undefined) {
+			resultValue = res
+		}
+	}
+    emit("update:modelValue", resultValue);
     searchQuery.value = item.label;
     isOpen.value = false;
     selectedIndex.value = -1;

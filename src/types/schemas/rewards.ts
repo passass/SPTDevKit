@@ -30,18 +30,19 @@ class TemplateAssort extends Field {
     type: FieldType = "advancedSelect";
     label = "template";
 
-    onUpdateModelValue(fieldContext: FieldContext, newVal: any): any {
-        const assortSchema = fieldContext.recordSchema.lastSchemaParent;
-        if (!assortSchema) return;
-        const traderId = assortSchema.get("traderId");
-        if (!traderId || typeof traderId !== "string") return;
+    onOptionChange(
+        fieldContext: FieldContext,
+        option: {
+            id: string | number;
+            label: string;
+            record?: Record<string, any> | RecordSchema;
+        }
+    ): any {
+        if (!option.record) return;
 
-        const assort = assortDataStore
-            .getArray()
-            .find((el) => el.data.get("_tpl") === newVal && el.data.get("traderId") === traderId);
-
-        if (!assort) return;
-        const copiedAssort = deepClone(assort.data instanceof RecordSchema ? assort.data.getData() : assort.data);
+        const copiedAssort = deepClone(
+            option.record instanceof RecordSchema ? option.record.getData() : option.record
+        );
         objectChangeAllIds([copiedAssort] as WeaponBuildItem[]);
 
         fieldContext.recordSchema.set("_id", copiedAssort["_id"]);
@@ -56,9 +57,10 @@ class TemplateAssort extends Field {
         const traderId = assortSchema.get("traderId");
         if (!traderId || typeof traderId !== "string") return res;
 
+        console.log("TradersAssort.getTradersAssortForTraderId(traderId)", TradersAssort.getTradersAssortForTraderId(traderId))
         for (const assort of TradersAssort.getTradersAssortForTraderId(traderId)) {
             // const id = assort.getId()
-            if (assort.has("_tpl")) res.set(assort.get("_tpl") as string, assort.get("_tpl") as string);
+            if (assort.has("_tpl")) res.set(assort.get("_tpl") as string, assort);
         }
 
         return res;
@@ -96,7 +98,7 @@ class itemsAssortsFieldClass extends Field {
     arrayItemSchema = itemsAssortsSchema;
 
     getSerializedValue(fieldContext: FieldContext): any {
-		const items = fieldContext.value;
+        const items = fieldContext.value;
         if (!Array.isArray(items)) return items;
 
         const result: any[] = [];
@@ -212,22 +214,25 @@ function commonFunctionForRewards(schemaNode: SchemaNode) {
                 itemsAssortsFieldClass.create({
                     onIfInData: (data: SchemaData) => {
                         const items = data["items"];
-						if (!Array.isArray(items) || items.length === 0) return;
+                        if (!Array.isArray(items) || items.length === 0) return;
 
                         const hasFlatChildren = items.some(
                             (item: any) => item && typeof item === "object" && (item.parentId || item.slotId)
                         );
                         if (!hasFlatChildren) return;
 
-						const newItems: any[] = [];
+                        const newItems: any[] = [];
                         for (const item of items) {
                             if (!item || typeof item !== "object" || !("_id" in item) || item.parentId || item.slotId)
                                 continue;
                             const newItem = {
                                 ...item,
-                                children: (Array.isArray(item.children) && item.children.length > 0) ? item.children : collectDescendants(items, String(item._id)),
-                            }
-							newItems.push(newItem);
+                                children:
+                                    Array.isArray(item.children) && item.children.length > 0
+                                        ? item.children
+                                        : collectDescendants(items, String(item._id)),
+                            };
+                            newItems.push(newItem);
                         }
 
                         data["items"] = newItems;

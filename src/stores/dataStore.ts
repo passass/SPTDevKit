@@ -376,7 +376,7 @@ export const useDataStore = defineStore("dataStore", () => {
 	}
 
 	// Удалить элемент
-	function remove(storeId: string, id: string): boolean {
+	function remove(storeId: string, id: string | number): boolean {
 		if (isArray(storeId)) {
 			if (typeof id !== "number") return false;
 			getArray(storeId).splice(id, 1);
@@ -574,7 +574,7 @@ export class dataStore {
 		return this.dataSt.getKeys().includes(this.storeId);
 	}
 
-	remove(id: string) {
+	remove(id: string | number) {
 		if (!this.dataSt) this.dataSt = useDataStore();
 		this.dataSt.remove(this.storeId, id);
 	}

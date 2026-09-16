@@ -80,9 +80,15 @@ export class Field extends Data {
     onArrayItemAdd?(fieldContext: FieldContext, newVal: any): void;
     onArrayNavigate?(fieldContext: FieldContext, index: number): void;
 
-    onUpdateModelValue?(fieldContext: FieldContext, newVal: any): any;
+	onUpdateModelValue?(fieldContext: FieldContext, newVal: any): any;
 
-    getSerializedValue?(fieldContext: FieldContext): any;
+	onOptionChange?(fieldContext: FieldContext, option: {
+		id: string | number;
+		label: string;
+		record?: Record<string, any> | RecordSchema;
+	}): any;
+
+	getSerializedValue?(fieldContext: FieldContext): any;
     getDefaultValue?(data: SchemaData): any;
     getOptionsItems?(fieldContext: FieldContext): Map<string | number, Record<string, any> | RecordSchema | string>;
 

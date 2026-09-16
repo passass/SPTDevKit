@@ -3,8 +3,9 @@ import { IdField, AdvSelectField, parentIdField, HiddenField, UnneccesaryField }
 import { slotIdOptions } from "@/consts/GameConsts";
 import { gameLocalization } from "../localization";
 import type { FieldContext } from "../fields/fieldsConsts";
-import { useDataStore } from "@/stores/dataStore";
+import { useDataStore, type dataMapRecordType } from "@/stores/dataStore";
 import { currentProjectTag } from "@/consts/ProjectConsts";
+import { assortDataStore } from "@/project/TradersAssort";
 
 class RepairableNestedSchema extends RecordSchema {
     static fields: Field[] = [
@@ -133,6 +134,10 @@ export class ItemSlotSchema extends RecordSchema {
 }
 
 export class ItemAssort extends RecordSchema {
+	getRepresentation(): string {
+		return gameLocalization.getText({localeId: `${this.get("_tpl") as string} Name`})
+	}
+
     static fields: Field[] = [
         IdField.create({ key: "_id" }),
         AdvSelectField.create({
@@ -204,7 +209,15 @@ class arrayListTraderAssort extends Field {
     storeId = "TraderAssort";
     arrayItemSchema = ItemAssort;
     alwaysFillWithDefault = true;
-    extractWeaponBuildIntoChildren = true;
+	extractWeaponBuildIntoChildren = true;
+
+	onArrayItemDelete(fieldContext: FieldContext, index: number): void {
+		const id = fieldContext.value[index].get("_id")
+		const store = assortDataStore.getArray()
+		const findIndex = store.findIndex((el: dataMapRecordType) => el.data.get("_id") === id)
+		if (findIndex)
+			assortDataStore.remove(findIndex)
+	}
 
 	onExtractWeaponBuildIntoChildren(fieldContext: FieldContext, newVal: SchemaData): void {
 		newVal["traderId"] = fieldContext.recordSchema.get("trader")
