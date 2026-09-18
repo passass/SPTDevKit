@@ -76,10 +76,14 @@ class DogTagField extends Field {
 }
 
 class DogTagCondition extends RecordSchema {
+
+
     static fields: Field[] = [
         UnneccesaryField.create({
             key: "conditionType",
-            type: "text",
+			type: "text",
+			alwaysFillWithDefault: true,
+            defaultValue: "HandoverItem",
         }),
         Field.create({
             key: "dogtagLevel",
@@ -145,7 +149,8 @@ class DogTagCondition extends RecordSchema {
 
 export class ItemsListField extends Field {
     type: FieldType = "arrayList";
-    getRepresentation(fieldContext: FieldContext, item: any): string | undefined {
+	getRepresentation(fieldContext: FieldContext, item: any): string | undefined {
+		console.log("item", item)
         const schemaName = (fieldContext.field.arrayItemSchema as typeof SchemaChoicer).from(item)?.choosedSchema?.name;
         if (typeof schemaName !== "string") return undefined;
         const items = item["items"];
@@ -164,7 +169,7 @@ export class ItemsListField extends Field {
             if (conditionType === "Quest" && typeof item.target === "string" && item.target) {
                 return `${uitext("Quest")}: ${translateId(item.target)}`;
             }
-            if (conditionType === "HandoverItem" && Array.isArray(item.target) && item.target.length > 0) {
+            if ((conditionType === "FindItem" || conditionType === "HandoverItem") && Array.isArray(item.target) && item.target.length > 0) {
                 const itemsTemplates = [];
                 for (const tplItem of item.target) {
                     itemsTemplates.push(tplItem);

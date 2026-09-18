@@ -11,6 +11,24 @@
             <button
                 type="button"
                 class="array-list-input__btn"
+                @click="moveUp"
+                :disabled="selectedIndex === null || selectedIndex <= 0"
+                :title="uitext('moveUp')"
+            >
+                ↑
+            </button>
+            <button
+                type="button"
+                class="array-list-input__btn"
+                @click="moveDown"
+                :disabled="selectedIndex === null || selectedIndex >= items.length - 1"
+                :title="uitext('moveDown')"
+            >
+                ↓
+            </button>
+            <button
+                type="button"
+                class="array-list-input__btn"
                 @click="addItem"
                 :title="uitext('add')"
             >
@@ -221,6 +239,26 @@ const isNumberArray = computed(() => {
 });
 
 const isOptionsArray = computed(() => props.field.type === "optionsArray");
+
+function moveUp() {
+	const idx = selectedIndex.value;
+    if (idx === null || idx <= 0) return;
+    const arr = items.value;
+    const [moved] = arr.splice(idx, 1);
+    arr.splice(idx - 1, 0, moved);
+    selectedIndex.value = idx - 1;
+    emit("update:modelValue", arr);
+}
+
+function moveDown() {
+	const idx = selectedIndex.value;
+    if (idx === null || idx >= items.value.length - 1) return;
+    const arr = items.value;
+    const [moved] = arr.splice(idx, 1);
+    arr.splice(idx + 1, 0, moved);
+    selectedIndex.value = idx + 1;
+    emit("update:modelValue", arr);
+}
 
 function getRepresentation(item: any, index: number): string {
     if (item === null || item === undefined) return "—";

@@ -939,8 +939,8 @@
     "gameModes": "Режимы игры",
     "arenaLocations": "Арены",
     "rankingModes": "Рейтинговые режимы",
-    "Success": "Success",
-    "Started": "Started",
+    "Success": "Выполнен",
+    "Started": "Начат",
     "trader": "Торговец",
     "traders": "Торговцы",
     "UnlimitedCount": "Бесконечное количество",
@@ -968,5 +968,6 @@
     "selectImage": "Выбрать изображение",
     "select": "Выбрать",
     "questsAvailableAfterthis": "Квесты доступные после этого",
+    "search": "Поиск",
     "selectTabToView": "Выберите вкладку для просмотра"
 }
