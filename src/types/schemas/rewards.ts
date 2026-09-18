@@ -15,6 +15,7 @@ import { collectDescendants } from "@/utils/treeUtils";
 import { useDataStore } from "@/stores/dataStore";
 import { objectChangeAllIds, type WeaponBuildItem } from "@/stores/profileStore";
 import type { IOptionItem, ISelectItem } from "@/consts/AdvancedSelectInputConsts";
+import { ItemsListField } from "./questsConditions";
 
 class itemTargetFieldClass extends HiddenField {
     key = "target";
@@ -240,15 +241,26 @@ function commonFunctionForRewards(schemaNode: SchemaNode) {
             );
             assortmentUnlockSchema.schema.replaceFieldWith(itemTargetFieldClass.create({}));
         }
+
+
+		const itemSchema = choicer.schemas.find((el) => el.name === "Item");
+		if (itemSchema) {
+			itemSchema.schema.replaceFieldWith(itemTargetFieldClass.create({}));
+			itemSchema.schema.replaceFieldWith(itemValueFieldClass.create({}));
+
+			const itemsRewardSchema = itemSchema.schema.getFieldByKeyStatic("items")
+                ?.arrayItemSchema as typeof RecordSchema;
+			if (itemsRewardSchema) {
+                itemsRewardSchema.replaceFieldWith(parentIdField.create({}));
+            }
+        }
     }
 }
 
 export class RewardsSchemas extends RecordSchema {
     static fields: Field[] = [
-        Field.create({
+        ItemsListField.create({
             key: "Success",
-            type: "array",
-            order: 1,
             arrayItemSchema: createLazySchemaChoicer("questsSchemas.json", "*.rewards.Success", "SuccessReward", {
                 onSchemaLoad: (schemaNode) => {
                     const choicer: typeof SchemaChoicer | typeof RecordSchema = schemaNode.schema;
@@ -307,31 +319,19 @@ export class RewardsSchemas extends RecordSchema {
                                     },
                                 })
                             );
-                            itemSchema.schema.replaceFieldWith(itemTargetFieldClass.create({}));
-                            itemSchema.schema.replaceFieldWith(itemValueFieldClass.create({}));
-
-                            const itemsRewardSchema = itemSchema.schema.getFieldByKeyStatic("items")
-                                ?.arrayItemSchema as typeof RecordSchema;
-                            if (itemsRewardSchema) {
-                                itemsRewardSchema.replaceFieldWith(parentIdField.create({}));
-                            }
                         }
                     }
                 },
             }),
         }),
-        Field.create({
+        ItemsListField.create({
             key: "Started",
-            type: "array",
-            order: 2,
             arrayItemSchema: createLazySchemaChoicer("questsSchemas.json", "*.rewards.Started", "StartedReward", {
                 onSchemaLoad: commonFunctionForRewards,
             }),
         }),
-        Field.create({
+        ItemsListField.create({
             key: "Fail",
-            type: "array",
-            order: 3,
             arrayItemSchema: createLazySchemaChoicer("questsSchemas.json", "*.rewards.Fail", "FailReward", {
                 onSchemaLoad: commonFunctionForRewards,
             }),

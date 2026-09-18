@@ -45,6 +45,16 @@
                 <SchemaChooserInput :record-schema="dataRef" @schemaСhoose="handleSchemaChoose" />
             </div>
 
+            <div v-if="customRenderComponent" class="form-frame__custom-render">
+                <component
+                    :is="customRenderComponent"
+                    :record-schema="dataRef"
+                    :navigate="handleNavigate"
+                    :list-tabs="props.listTabs"
+                    :validation-errors="validationErrors"
+                />
+            </div>
+
             <div
                 v-for="field in filteredDisplayFields"
                 :key="field.key || field.label"
@@ -254,6 +264,14 @@ function copyCurrentTab() {
         }
     }
 }
+
+const customRenderComponent = computed<Component | undefined>(() => {
+    const schema = dataRef.value;
+    if (!schema) return undefined;
+    const fn = (schema as any).getRenderComponent;
+    if (typeof fn !== "function") return undefined;
+    return fn.call(schema);
+});
 
 function deleteCurrentTab() {
     const current = getCurrentTab();
@@ -629,4 +647,79 @@ watch(
     color: #888;
     white-space: nowrap;
 }
+
+/* В <style scoped> — добавить в конец, либо рядом с .form-field input */
+
+/* ===== Кастомный рендер из RecordSchema.getRenderComponent() ===== */
+.form-frame__custom-render {
+    margin-bottom: 16px;
+}
+
+.form-frame__custom-render :deep(input),
+.form-frame__custom-render :deep(textarea),
+.form-frame__custom-render :deep(select) {
+    width: 100%;
+    padding: 8px 12px;
+    background: #333333;
+    border: 1px solid #4a4a4a;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #e0e0e0;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
+
+.form-frame__custom-render :deep(input:focus),
+.form-frame__custom-render :deep(textarea:focus),
+.form-frame__custom-render :deep(select:focus) {
+    outline: none;
+    border-color: #42b883;
+    box-shadow: 0 0 0 2px rgba(66, 184, 131, 0.15);
+}
+
+.form-frame__custom-render :deep(input::placeholder),
+.form-frame__custom-render :deep(textarea::placeholder) {
+    color: #777;
+}
+
+.form-frame__custom-render :deep(input[type="checkbox"]) {
+    width: 18px;
+    height: 18px;
+    margin-top: 4px;
+    accent-color: #42b883;
+    cursor: pointer;
+}
+
+/* Чтобы вложенные .form-field получали те же отступы и заголовки, что и поля по умолчанию */
+.form-frame__custom-render :deep(.form-field) {
+    margin-bottom: 16px;
+}
+
+.form-frame__custom-render :deep(.form-field__header) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.form-frame__custom-render :deep(.form-field label) {
+    font-weight: 500;
+    font-size: 14px;
+    color: #b0b0b0;
+}
+
+.form-frame__custom-render :deep(.field-description) {
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+    line-height: 1.3;
+}
+
+.form-frame__custom-render :deep(.field-error) {
+    color: #ff6b6b;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+
 </style>

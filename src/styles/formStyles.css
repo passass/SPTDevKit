@@ -1,0 +1,35 @@
+.link-style-text {
+    display: inline-block;
+    padding: 2px 8px;
+    margin: 2px 2px;
+    font-size: 13px;
+    color: #66d9a0;
+    background: rgba(66, 184, 131, 0.08);
+    border: 1px solid rgba(66, 184, 131, 0.35);
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s ease, color 0.15s ease,
+                border-color 0.15s ease, transform 0.08s ease,
+                box-shadow 0.15s ease;
+}
+
+.link-style-text:hover {
+    background: rgba(66, 184, 131, 0.2);
+    border-color: #42b883;
+    color: #88eebb;
+    box-shadow: 0 0 0 2px rgba(66, 184, 131, 0.15);
+}
+
+.link-style-text:active {
+    background: #42b883;
+    border-color: #42b883;
+    color: #1a1a1a;
+    transform: translateY(1px);
+    box-shadow: none;
+}
+
+.link-style-text:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(66, 184, 131, 0.4);
+}

@@ -15,6 +15,8 @@ import { IdField } from "../fields/fieldsClasses";
 import { DogTagIds, DogTagIdsOptions } from "@/consts/GameConsts";
 import { type SchemaNode } from "@/utils/schemaGenerator";
 import { SchemaChoicer } from "@/types/fields/fieldsSchemaChoicer";
+import type { FieldContext } from "../fields/fieldsConsts";
+import { gameLocalization, translateId, uitext } from "../localization";
 
 const virtLocField = VirtualLocalizationField.create({
     label: "name",
@@ -40,6 +42,8 @@ class LeaveItemAtLocationPlantTime extends Field {
 function commonFunctionForConditions(schemaNode: SchemaNode) {
     const choicer: typeof SchemaChoicer | typeof RecordSchema = schemaNode.schema;
     if (SchemaChoicer.isPrototypeOf(choicer) && "schemas" in choicer && Array.isArray(choicer.schemas)) {
+        choicer;
+
         for (const schema of choicer.schemas) {
             schema.schema.replaceFieldWith(LeaveItemAtLocationPlantTime.create({}));
             schema.schema.replaceFieldWith(
@@ -56,8 +60,8 @@ function commonFunctionForConditions(schemaNode: SchemaNode) {
 }
 
 class DogTagField extends Field {
-	virtual = true;
-	key = "targetField";
+    virtual = true;
+    key = "targetField";
     label = "Target";
     type: FieldType = "select";
     options = Array.from(Object.keys(DogTagIdsOptions));
@@ -139,13 +143,46 @@ class DogTagCondition extends RecordSchema {
     ];
 }
 
+export class ItemsListField extends Field {
+    type: FieldType = "arrayList";
+    getRepresentation(fieldContext: FieldContext, item: any): string | undefined {
+        const schemaName = (fieldContext.field.arrayItemSchema as typeof SchemaChoicer).from(item)?.choosedSchema?.name;
+        if (typeof schemaName !== "string") return undefined;
+        const items = item["items"];
+        if (items && typeof items === "object" && Array.isArray(items) && items.length > 0) {
+            const itemsTemplates = [];
+            for (const tplItem of items) {
+                if (!tplItem._tpl || tplItem.parentId || typeof tplItem._tpl !== "string") continue;
+                itemsTemplates.push(tplItem._tpl);
+            }
+
+            if (itemsTemplates.length > 0)
+                return `${uitext("Items")}: ${itemsTemplates.map((tpl) => translateId(tpl)).join(", ")}`;
+        }
+        const conditionType = item.conditionType;
+        if (typeof conditionType === "string" && conditionType) {
+            if (conditionType === "Quest" && typeof item.target === "string" && item.target) {
+                return `${uitext("Quest")}: ${translateId(item.target)}`;
+            }
+            if (conditionType === "HandoverItem" && Array.isArray(item.target) && item.target.length > 0) {
+                const itemsTemplates = [];
+                for (const tplItem of item.target) {
+                    itemsTemplates.push(tplItem);
+                }
+
+                if (itemsTemplates.length > 0)
+                    return `${uitext("HandoverItem")}: ${itemsTemplates.map((tpl) => translateId(tpl)).join(", ")}`;
+            }
+        }
+
+        return uitext(schemaName);
+    }
+}
+
 export class QuestConditions extends RecordSchema {
     static fields: Field[] = [
-        Field.create({
+        ItemsListField.create({
             key: "AvailableForStart",
-            type: "array",
-            order: 1,
-            defaultValue: [],
             arrayItemSchema: createLazySchemaChoicer(
                 "questsSchemas.json",
                 "*.conditions.AvailableForStart",
@@ -155,11 +192,8 @@ export class QuestConditions extends RecordSchema {
                 }
             ),
         }),
-        Field.create({
+        ItemsListField.create({
             key: "AvailableForFinish",
-            type: "array",
-            order: 2,
-            defaultValue: [],
             arrayItemSchema: createLazySchemaChoicer(
                 "questsSchemas.json",
                 "*.conditions.AvailableForFinish",
@@ -185,11 +219,8 @@ export class QuestConditions extends RecordSchema {
                 }
             ),
         }),
-        Field.create({
+        ItemsListField.create({
             key: "Fail",
-            type: "array",
-            order: 3,
-            defaultValue: [],
             arrayItemSchema: createLazySchemaChoicer("questsSchemas.json", "*.conditions.Fail", "FailCondition", {
                 onSchemaLoad: commonFunctionForConditions,
             }),

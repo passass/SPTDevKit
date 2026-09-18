@@ -231,7 +231,14 @@ function getRepresentation(item: any, index: number): string {
             localeId: [`${tpl} Name`, `${tpl} name`, `${tpl} ShortName`, tpl],
             default: tpl,
         });
-    }
+	}
+
+	if (props.fieldContext.field.getRepresentation) {
+		const res = props.fieldContext.field.getRepresentation(props.fieldContext, item)
+		if (res) {
+			return res
+		}
+	}
 
     if (typeof item !== "object") return String(item);
     if (item instanceof RecordSchema) {

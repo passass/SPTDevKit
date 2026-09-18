@@ -30,12 +30,12 @@ export interface localizationTextParams {
 }
 
 export class GameLocalization {
-	locales: Map<string, FileConfig<Record<string, string>>> = new Map();
+    locales: Map<string, FileConfig<Record<string, string>>> = new Map();
     defaultLocale: locales = "en";
     currentLocale: Ref<locales> = ref(this.loadSavedLocale());
-	dataStore: ReturnType<typeof useDataStore> | null = null;
+    dataStore: ReturnType<typeof useDataStore> | null = null;
 
- 	private loadSavedLocale(): locales {
+    private loadSavedLocale(): locales {
         try {
             const saved = localStorage.getItem("uiLocale");
             if (saved && availableLocales.includes(saved)) {
@@ -45,16 +45,18 @@ export class GameLocalization {
         return this.defaultLocale;
     }
 
-	getObjectLocalization(config: { instance: any; locale?: locales; localeId?: string[]; canBeUI?: boolean }): string {
+    getObjectLocalization(config: { instance: any; locale?: locales; localeId?: string[]; canBeUI?: boolean }): string {
         if (Array.isArray(config.instance)) {
             if (config.instance.length === 0) return "";
             return config.instance
-				.map((item: any) => this.getObjectLocalization({
-					instance: item,
-					locale: config.locale,
-					localeId: config.localeId,
-					canBeUI: config.canBeUI,
-				}))
+                .map((item: any) =>
+                    this.getObjectLocalization({
+                        instance: item,
+                        locale: config.locale,
+                        localeId: config.localeId,
+                        canBeUI: config.canBeUI,
+                    })
+                )
                 .join(", ");
         } else if (typeof config.instance === "string") {
             const ui_translate = config.canBeUI
@@ -81,7 +83,7 @@ export class GameLocalization {
             }
 
             if (config.instance instanceof RecordSchema) {
-				itemId = config.instance.getId() ?? itemId;
+                itemId = config.instance.getId() ?? itemId;
             } else {
                 itemId = data[idsFields.filter((id) => id in data)[0]];
             }
@@ -164,4 +166,8 @@ export class GameLocalization {
 }
 
 export const gameLocalization = new GameLocalization();
-export const uitext = (text: string | string[]) => gameLocalization.getUIText({localeId: text})
+export const uitext = (text: string | string[]) => gameLocalization.getUIText({ localeId: text });
+export const translateId = (text: string) =>
+    gameLocalization.getText({
+        localeId: [`${text} Name`, `${text} name`, `${text} ShortName`, `${text} shortname`, text],
+    });

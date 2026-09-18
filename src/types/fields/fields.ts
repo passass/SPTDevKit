@@ -5,6 +5,7 @@ import { getValueByPath, getValuesByPath } from "@/utils/utils";
 import { type FieldContext } from "./fieldsConsts";
 import type { BooleanLiteral } from "typescript";
 import type { IOptionItem, ISelectItem } from "@/consts/AdvancedSelectInputConsts";
+import type { Component } from "vue";
 
 export const idsFields: string[] = ["_id", "id"];
 export function getIdFieldValue(instance: any): string | undefined {
@@ -83,10 +84,12 @@ export class Field extends Data {
 	onUpdateModelValue?(fieldContext: FieldContext, newVal: any): any;
 
 	onOptionChange?(fieldContext: FieldContext, option: ISelectItem): any;
-
+	getRenderComponent?(): Component | undefined;
 	getSerializedValue?(fieldContext: FieldContext): any;
     getDefaultValue?(data: SchemaData): any;
-    getOptionsItems?(fieldContext: FieldContext): Map<string | number, IOptionItem | RecordSchema | string>;
+	getOptionsItems?(fieldContext: FieldContext): Map<string | number, IOptionItem | RecordSchema | string>;
+
+	getRepresentation?(fieldContext: FieldContext, item: any): string | undefined;
 
 	extraEmits?: Record<string, (fieldContext: FieldContext, ...args: any[]) => void>;
 

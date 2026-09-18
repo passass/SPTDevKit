@@ -34,6 +34,8 @@ export class SchemaChoicer {
 		}
 		return null
 	}
+
+	static getRepresentation?(): any;
 }
 
 export function createSchemaChoiceForCondition(
