@@ -33,7 +33,6 @@ export class ZoneSchema extends RecordSchema {
     static fields: Field[] = [
         Field.create({
             key: "ZoneId",
-            label: "ID зоны",
             type: "text",
 			order: 1,
 			fillWithDefaultOnCreate: true,
@@ -41,7 +40,6 @@ export class ZoneSchema extends RecordSchema {
         ZoneName.create({}),
         Field.create({
             key: "ZoneLocation",
-            label: "Локация",
             type: "select",
             options: zoneLocations,
 			order: 3,
@@ -49,7 +47,6 @@ export class ZoneSchema extends RecordSchema {
         }),
         Field.create({
             key: "ZoneType",
-            label: "Тип зоны",
             type: "select",
             options: ["placeitem", "visit", "botkillzone", "flarezone"],
             order: 4,
@@ -57,7 +54,6 @@ export class ZoneSchema extends RecordSchema {
         }),
         Field.create({
             key: "FlareType",
-            label: "Тип флаера",
             type: "text",
             order: 5,
             defaultValue: "",
@@ -65,7 +61,6 @@ export class ZoneSchema extends RecordSchema {
         }),
         Field.create({
             key: "Position",
-            label: "Позиция",
             type: "object",
             nestedSchema: ZoneVector4Schema,
 			order: 6,
@@ -74,7 +69,6 @@ export class ZoneSchema extends RecordSchema {
         }),
         Field.create({
             key: "Rotation",
-            label: "Поворот",
             type: "object",
             nestedSchema: ZoneVector4Schema,
 			order: 7,
@@ -83,7 +77,6 @@ export class ZoneSchema extends RecordSchema {
         }),
         Field.create({
             key: "Scale",
-            label: "Масштаб",
             type: "object",
             nestedSchema: ZoneVector4Schema,
 			order: 8,

@@ -14,19 +14,19 @@
                         class="toolbar-btn toolbar-btn--danger"
                         @click="deleteCurrentTab()"
                     >
-                        🗑 удалить
+                        🗑 {{uitext('delete')}}
                     </button>
                     <button
                         v-if="(frameNavigator?.getPathStack()?.length ?? 0) === 0"
                         class="toolbar-btn toolbar-btn--primary"
                         @click="copyCurrentTab()"
                     >
-                        📋 копировать
+                        📋 {{uitext('copy')}}
                     </button>
                 </div>
 
                 <div class="toolbar-checkbox" v-if="isShowUnneccesaryFieldsCheckmark">
-                    <label for="ShowUnneccesaryFields">Показывать неважные поля</label>
+                    <label for="ShowUnneccesaryFields">{{uitext('showUnneccesaryFields')}}</label>
                     <input v-model="isShowUnneccesaryFields" id="ShowUnneccesaryFields" type="checkbox" />
                 </div>
 
@@ -34,7 +34,7 @@
                     <input
                         type="text"
                         v-model="fieldSearchQuery"
-                        placeholder="Поиск полей..."
+                        :placeholder="`${uitext('fieldSearch')}...`"
                         class="field-search-input"
                     />
                 </div>
@@ -107,7 +107,7 @@ import {
 import { copyRecordSchema } from "@/utils/copyUtils";
 import SchemaChooserInput from "@/components/inputs/SchemaChooserInput.vue";
 import { RecordSchema, Field } from "@/types/fields/fields";
-import { gameLocalization } from "@/types/localization";
+import { gameLocalization, uitext } from "@/types/localization";
 import { Navigator, isNavigable } from "@/utils/navigation";
 import { Tab } from "@/types/tabs";
 import ListTabs from "./ListTabs.vue";
@@ -287,10 +287,11 @@ watch(
 
 watch(
     () => getData.value,
-    () => {
+	() => {
         if (frameNavigator?.tab && initialized.value) {
             const id = frameNavigator.tab.id;
 			const storeId = frameNavigator.tab.dataStoreId;
+			console.log("marked", id)
             if (storeId && id) dataStore.markDirty(storeId, id);
         }
     },

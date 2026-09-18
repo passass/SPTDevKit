@@ -112,6 +112,15 @@ ipcMain.handle("read-file", async (event, filePath) => {
 	};
 });
 
+ipcMain.handle('delete-folder', async (event, folderPath) => {
+    try {
+        await fs.rm(folderPath, { recursive: true, force: true });
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
 ipcMain.handle('read-json', async (event, filePath) => {
 	let fileContent
 	try {
@@ -186,6 +195,37 @@ ipcMain.handle('write-local-json', async (event, { filename, data }) => {
 ipcMain.handle('data-dir', () => {
 	return DATA_DIR
 })
+
+ipcMain.handle('select-file', async (event, selectArgs) => {
+	const result = await dialog.showOpenDialog({
+        properties: ['openFile'],
+        title: selectArgs.title,
+        buttonLabel: selectArgs.buttonLabel,
+        filters: selectArgs.filters,
+    });
+
+    if (result.canceled || result.filePaths.length === 0) {
+        return { success: false, canceled: true };
+    }
+
+    const filePath = result.filePaths[0];
+
+    try {
+        return { success: true, path: filePath };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('copy-file', async (event, { sourcePath, destinationPath }) => {
+    try {
+        await fs.mkdir(path.dirname(destinationPath), { recursive: true });
+        await fs.copyFile(sourcePath, destinationPath);
+        return { success: true, path: destinationPath };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
 
 ipcMain.handle('select-folder', async () => {
     const result = await dialog.showOpenDialog({

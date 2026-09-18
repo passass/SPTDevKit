@@ -4,6 +4,7 @@ import { getStaticField } from "@/utils/classUtils";
 import { getValueByPath, getValuesByPath } from "@/utils/utils";
 import { type FieldContext } from "./fieldsConsts";
 import type { BooleanLiteral } from "typescript";
+import type { IOptionItem, ISelectItem } from "@/consts/AdvancedSelectInputConsts";
 
 export const idsFields: string[] = ["_id", "id"];
 export function getIdFieldValue(instance: any): string | undefined {
@@ -60,7 +61,6 @@ export class Field extends Data {
     virtual?: boolean;
     extraKeys?: string[];
 
-    initialValue?: (data: SchemaData) => any;
     onChange?: (data: SchemaData, event: Event) => void;
     onIfInData?: (data: SchemaData) => void;
 
@@ -82,15 +82,13 @@ export class Field extends Data {
 
 	onUpdateModelValue?(fieldContext: FieldContext, newVal: any): any;
 
-	onOptionChange?(fieldContext: FieldContext, option: {
-		id: string | number;
-		label: string;
-		record?: Record<string, any> | RecordSchema;
-	}): any;
+	onOptionChange?(fieldContext: FieldContext, option: ISelectItem): any;
 
 	getSerializedValue?(fieldContext: FieldContext): any;
     getDefaultValue?(data: SchemaData): any;
-    getOptionsItems?(fieldContext: FieldContext): Map<string | number, Record<string, any> | RecordSchema | string>;
+    getOptionsItems?(fieldContext: FieldContext): Map<string | number, IOptionItem | RecordSchema | string>;
+
+	extraEmits?: Record<string, (fieldContext: FieldContext, ...args: any[]) => void>;
 
     isArray(): boolean {
         return this.type && this.type.toLocaleLowerCase().includes("array");

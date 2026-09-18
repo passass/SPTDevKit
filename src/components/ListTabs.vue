@@ -11,21 +11,21 @@
                         v-model="searchQuery"
                         type="text"
                         class="search-input"
-                        :placeholder="searchPlaceholder || 'Поиск вкладок...'"
+                        :placeholder="searchPlaceholder || `${getLocalizedSearch}...`"
                         @input="handleSearch"
                         @keydown.esc="clearSearch"
                     />
-                    <button v-if="searchQuery" class="search-clear" @click="clearSearch" title="Очистить поиск">
+                    <button v-if="searchQuery" class="search-clear" @click="clearSearch" :title="uitext('clearSearch')">
                         ✕
                     </button>
                 </div>
                 <div v-if="searchQuery" class="search-info">
-                    <span class="search-count"> Найдено: {{ filteredTabs.length }} из {{ tabs.length }} </span>
+                    <span class="search-count"> {{uitext("found")}}: {{ filteredTabs.length }} / {{ tabs.length }} </span>
                 </div>
             </div>
 
             <div v-if="availableTags.length > 0" class="tag-filter-container">
-                <div class="tag-filter-label">Фильтр по тегам:</div>
+                <div class="tag-filter-label">{{uitext('filterByTag')}}:</div>
                 <div class="tag-filter-list">
                     <label
                         v-for="tag in availableTags"
@@ -44,7 +44,7 @@
                 </div>
             </div>
 
-            <button v-if="schemaType" class="create-btn" @click="createNewSchema">Создать</button>
+            <button v-if="schemaType" class="create-btn" @click="createNewSchema">{{uitext("add")}}</button>
 
             <!-- Виртуальный список вкладок -->
             <DynamicScroller
@@ -83,7 +83,7 @@
             <!-- Сообщение, если ничего не найдено -->
             <div v-if="isSearch && searchQuery && filteredTabs.length === 0" class="no-results">
                 <span class="no-results-icon">🔍</span>
-                <span>Ничего не найдено</span>
+                <span>{{uitext('nothingFound')}}</span>
             </div>
         </div>
 
@@ -102,7 +102,7 @@
                 </template>
             </ListTabsFrame>
             <div v-else class="empty-state">
-                <p>Выберите вкладку для просмотра</p>
+                <p>{{uitext("selectTabToView")}}</p>
             </div>
         </div>
     </div>
@@ -121,6 +121,7 @@ import { Navigator } from "@/utils/navigation";
 import { currentProjectTag, modTag, vanillaTag } from "@/consts/ProjectConsts";
 import { generateUUID24chars } from "@/utils/uuidUtils";
 import { savedNavigatorStates, SavedNavigatorState, clearSavedNavigatorState } from "@/utils/navigation";
+import { gameLocalization, uitext } from "@/types/localization";
 
 export default defineComponent({
 	name: "ListTabs",
@@ -152,7 +153,9 @@ export default defineComponent({
         );
 
         const selectedTags = ref<string[]>([]);
-        const filterableTags = [currentProjectTag, vanillaTag, modTag];
+		const filterableTags = [currentProjectTag, vanillaTag, modTag];
+
+		const getLocalizedSearch = computed(() => gameLocalization.getUIText({ localeId: "searchTab" }))
 
         const availableTags = computed(() => {
             const present = new Set<string>();
@@ -370,7 +373,9 @@ export default defineComponent({
             highlightMatch,
             dataStore,
 			frameNavigator,
-            scrollerRef,
+			scrollerRef,
+			getLocalizedSearch,
+            uitext
         };
     },
 });

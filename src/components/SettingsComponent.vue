@@ -4,14 +4,14 @@
         <FolderSelector
             v-model="selectedPath"
             :loading="isLoading"
-            label="Выбрать папку проекта"
+            :label="gameLocalization.getUIText({localeId: 'selectProjectFolder'})"
             icon="📁"
             variant="project"
             @select="selectFolder"
         />
 
         <div v-if="recentProjects.length > 0" class="recent-projects">
-            <div class="recent-projects__title">Недавние проекты</div>
+            <div class="recent-projects__title">{{gameLocalization.getUIText({localeId: "recentProject"})}}</div>
             <ul class="recent-projects__list">
                 <li
                     v-for="path in recentProjects"
@@ -28,18 +28,18 @@
 
         <div class="save-project-row">
             <button class="save-project-btn" @click="Project.saveProject(saveWithOriginalChanges)">
-                💾 Сохранить проект
+                💾 {{gameLocalization.getUIText({localeId: "saveProject"})}}
             </button>
             <label class="save-with-original-checkbox">
                 <input type="checkbox" v-model="saveWithOriginalChanges" />
-                <span>с изменениями в оригинальных объектах</span>
+                <span>{{gameLocalization.getUIText({localeId: "withVanillaObjectChanges"})}}</span>
             </label>
         </div>
 
         <FolderSelector
             v-model="eftPath"
             :loading="isLoadingEft"
-            label="Выбрать папку EFT"
+            :label="gameLocalization.getUIText({localeId: 'selectEFTFolder'})"
             icon="🎮"
             path-icon="🎮"
             variant="eft"
@@ -47,12 +47,27 @@
         />
 
         <div class="profile-select-wrapper">
-            <label class="profile-label">👤 Профиль</label>
+            <label class="profile-label">👤 {{gameLocalization.getUIText({localeId: 'profile'})}}</label>
             <select v-model="profilesStore.selectedProfile" class="profile-select">
                 <option v-for="username in Object.keys(profilesStore.profiles)" :key="username" :value="username">
                     {{ username }}
                 </option>
             </select>
+        </div>
+
+        <div class="lang-select-wrapper">
+            <label class="lang-label">🌐 {{gameLocalization.getUIText({localeId: 'interfaceLanguage'})}}</label>
+            <div class="lang-buttons">
+                <button
+                    v-for="locale in availableLocales"
+                    :key="locale"
+                    class="lang-btn"
+                    :class="{ active: gameLocalization.currentLocale.value === locale }"
+                    @click="setLocale(locale as locales)"
+                >
+                    {{ locale.toUpperCase() }}
+                </button>
+            </div>
         </div>
 
         <!-- <button class="" @click="console.log(dataStore.getAllDirties('quests'))">тест</button> -->
@@ -76,6 +91,7 @@ import FolderSelector from "@/components/selectors/FolderSelector.vue";
 import { Path } from "@/utils/pathUtils";
 import { useProfilesStore } from "@/stores/profileStore";
 import { useDataStore } from "@/stores/dataStore";
+import { availableLocales, gameLocalization, type locales } from "@/types/localization";
 
 const profilesStore = useProfilesStore();
 const dataStore = useDataStore();
@@ -85,6 +101,23 @@ const isLoading = ref(false);
 const eftPath = ref<string>("");
 const isLoadingEft = ref(false);
 const saveWithOriginalChanges = ref(false);
+
+function setLocale(locale: locales) {
+    gameLocalization.currentLocale.value = locale;
+    localStorage.setItem("uiLocale", locale);
+}
+
+onMounted(() => {
+    const savedEftPath = localStorage.getItem("eftFolderPath");
+    if (savedEftPath) {
+        eftPath.value = savedEftPath;
+    }
+
+    const savedLocale = localStorage.getItem("uiLocale") as locales | null;
+    if (savedLocale && availableLocales.includes(savedLocale)) {
+        gameLocalization.currentLocale.value = savedLocale;
+    }
+});
 
 async function selectFolder() {
     if (isLoading.value) return;
@@ -356,5 +389,50 @@ onMounted(() => {
 .save-with-original-checkbox input[type="checkbox"]:focus {
     outline: none;
     box-shadow: 0 0 0 2px rgba(66, 184, 131, 0.2);
+}
+
+.lang-select-wrapper {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.lang-label {
+    font-weight: 500;
+    font-size: 14px;
+    color: #b0b0b0;
+}
+
+.lang-buttons {
+    display: inline-flex;
+    gap: 6px;
+    padding: 3px;
+    background: #2a2a2a;
+    border: 1px solid #3d3d3d;
+    border-radius: 8px;
+}
+
+.lang-btn {
+    padding: 6px 16px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: #b0b0b0;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.lang-btn:hover {
+    background: #3d3d3d;
+    color: #e0e0e0;
+}
+
+.lang-btn.active {
+    background: #42b883;
+    color: #1a1a1a;
 }
 </style>

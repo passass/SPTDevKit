@@ -28,7 +28,7 @@
                 @mouseenter="selectedIndex = index"
             >
                 <span class="item-select__option-name">{{ item.label }}</span>
-                <span class="item-select__option-id">{{ item.id }}</span>
+                <span class="item-select__option-id">{{ item.shownId ?? item.id }}</span>
             </div>
         </div>
 
@@ -49,6 +49,7 @@ import { useDataStore } from "@/stores/dataStore";
 import { gameLocalization } from "@/types/localization";
 import { AdvSelectField, RecordSchema, type Field } from "@/types/fields/fields";
 import { FieldContext } from "@/types/fields/fieldsConsts";
+import { ISelectItem } from "@/consts/AdvancedSelectInputConsts";
 
 const props = defineProps<{
     modelValue: any;
@@ -61,12 +62,6 @@ const emit = defineEmits<{
     (e: "update:modelValue", value: string | null): void;
 }>();
 
-interface ISelectItem {
-	id: string | number;
-	label: string;
-	record?: Record<string, any> | RecordSchema;
-}
-
 const dataStore = useDataStore();
 const searchInput = ref<HTMLInputElement | null>(null);
 const searchQuery = ref("");
@@ -76,27 +71,72 @@ const selectedIndex = ref(-1);
 const items = computed(() => {
     const result: Array<ISelectItem> = [];
     if (!props.fieldContext) return result;
+
+    if (props.fieldContext.field.getOptionsItems) {
+        const items = props.fieldContext.field.getOptionsItems(props.fieldContext);
+
+        for (const [_id, item] of items) {
+			let record;
+			let id;
+			let shownId;
+
+			if (typeof item === "object" && !(item instanceof RecordSchema)) {
+				record = item.record
+				id = item.id
+				shownId = item.shownId
+			} else {
+				record = item
+				id = _id
+				shownId = _id
+			}
+
+			let name;
+			if (record instanceof RecordSchema) {
+				if (record.getRepresentation)
+					name = record.getRepresentation();
+				else
+					name = gameLocalization.getObjectLocalization({ instance: item });
+			}
+			else if (typeof record === "string") name = gameLocalization.getText({ localeId: [`${record} Name`, record] });
+			else name = String(record)
+
+
+            const resultObject: ISelectItem = {
+				id,
+                shownId,
+                label: name ?? id,
+            };
+
+            if (record instanceof RecordSchema) resultObject["record"] = record;
+            result.push(resultObject);
+        }
+
+        return result;
+    }
+
     const itemMap: Map<string | number, Record<string, any> | RecordSchema | string> =
-        (props.itemsOverride && props.itemsOverride) ??
-        (props.fieldContext.field.getOptionsItems && props.fieldContext.field.getOptionsItems(props.fieldContext)) ??
+        props.itemsOverride ??
         dataStore.getMap((props.fieldContext.field as AdvSelectField)?.storeId ?? "items");
 
     for (const [id, record] of itemMap.entries()) {
         let data: any = record;
         if (typeof data === "object" && "data" in data) data = data.data;
 
-		let name;
-		if (record instanceof RecordSchema && record.getRepresentation) name = record.getRepresentation()
+        let name;
+        if (record instanceof RecordSchema && record.getRepresentation) name = record.getRepresentation();
         else if (typeof data === "string") name = gameLocalization.getText({ localeId: [`${data} Name`, data] });
-		else name = gameLocalization.getObjectLocalization({ instance: data });
+		else {
+			name = gameLocalization.getObjectLocalization({ instance: data });
+		}
+
+
 
         const resultObject: ISelectItem = {
             id,
-			label: name ?? id,
-		}
+            label: name ?? id,
+        };
 
-		if (typeof record === "object")
-        	resultObject["record"] = record
+        if (typeof record === "object") resultObject["record"] = record;
         result.push(resultObject);
     }
 
@@ -126,13 +166,13 @@ function handleSearch() {
 }
 
 function selectItem(item: ISelectItem) {
-	let resultValue = String(item.id)
-	if (props.fieldContext?.field.onOptionChange) {
-		const res = props.fieldContext?.field.onOptionChange(props.fieldContext, item)
-		if (res !== undefined) {
-			resultValue = res
-		}
-	}
+    let resultValue = String(item.id);
+    if (props.fieldContext?.field.onOptionChange) {
+        const res = props.fieldContext?.field.onOptionChange(props.fieldContext, item);
+        if (res !== undefined) {
+            resultValue = res;
+        }
+    }
     emit("update:modelValue", resultValue);
     searchQuery.value = item.label;
     isOpen.value = false;

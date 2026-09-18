@@ -14,6 +14,7 @@ class QuestZones {
     }
 
     async saveProject(projectArgs: ProjectArgs) {
+    	await window.electronAPI.removeFolder(new Path(projectArgs.folderPath, "db/CustomQuestZones").toString())
         const questZones = questZonesStore.getByTagInStore(currentProjectTag);
         const res = [];
         for (const questZone of questZones.values()) {

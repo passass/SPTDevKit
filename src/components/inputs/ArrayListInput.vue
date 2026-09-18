@@ -6,20 +6,29 @@
                 v-model="searchQuery"
                 type="text"
                 class="array-list-input__search"
-                placeholder="Поиск..."
+                :placeholder="`${uitext('search')}...`"
             />
-            <button type="button" class="array-list-input__btn" @click="addItem" title="Добавить">+</button>
+            <button
+                type="button"
+                class="array-list-input__btn"
+                @click="addItem"
+                :title="uitext('add')"
+            >
+                +
+            </button>
             <button
                 type="button"
                 class="array-list-input__btn array-list-input__btn--danger"
                 @click="deleteItem"
                 :disabled="selectedIndex === null"
-                title="Удалить выбранный"
-            >−</button>
+                :title="uitext('delete')"
+            >
+                −
+            </button>
         </div>
 
         <div v-if="availableTags.length > 0" class="array-list-input__tag-filter">
-            <div class="array-list-input__tag-label">Фильтр по тегам:</div>
+            <div class="array-list-input__tag-label">{{ uitext("filterByTag") }}</div>
             <div class="array-list-input__tag-list">
                 <label
                     v-for="tag in availableTags"
@@ -35,7 +44,11 @@
 
         <div class="array-list-input__list" ref="listRef">
             <div v-if="filteredItems.length === 0" class="array-list-input__empty">
-                {{ items.length === 0 ? "Нет элементов" : "Ничего не найдено" }}
+                {{
+                    items.length === 0
+                        ? gameLocalization.getUIText({ localeId: "noElements" })
+                        : gameLocalization.getUIText({ localeId: "nothingFound" })
+                }}
             </div>
             <div
                 v-for="entry in filteredItems"
@@ -49,8 +62,10 @@
                 <button
                     class="array-list-input__row-remove"
                     @click.stop="removeAt(entry.index)"
-                    title="Удалить"
-                >✕</button>
+                    :title="gameLocalization.getUIText({ localeId: 'delete' })"
+                >
+                    ✕
+                </button>
             </div>
         </div>
 
@@ -92,9 +107,7 @@
 
             <!-- object -->
             <template v-else-if="typeof items[selectedIndex] === 'object'">
-                <button @click="handleNavigate" class="array-list-input__nav-object-btn">
-                    Редактировать →
-                </button>
+                <button @click="handleNavigate" class="array-list-input__nav-object-btn">Редактировать →</button>
             </template>
 
             <template v-else>
@@ -113,7 +126,7 @@ import { SchemaChoicer, type SchemaChoice } from "@/types/fields/fieldsSchemaCho
 import { getStaticField } from "@/utils/classUtils";
 import { Navigator } from "@/utils/navigation";
 import { type FieldContext } from "@/types/fields/fieldsConsts";
-import { gameLocalization } from "@/types/localization";
+import { gameLocalization, uitext } from "@/types/localization";
 import { useDataStore } from "@/stores/dataStore";
 import { currentProjectTag, modTag, vanillaTag } from "@/consts/ProjectConsts";
 
@@ -151,8 +164,7 @@ const filterableTags = [currentProjectTag, vanillaTag, modTag];
 
 // Стор, в котором ищем теги: берём из поля (AdvSelectField.storeId) или из схемы-родителя
 const tagStoreId = computed<string | undefined>(() => {
-    return (props.field as any).storeId
-        ?? (props.fieldContext?.recordSchema as any)?.storeId;
+    return (props.field as any).storeId ?? (props.fieldContext?.recordSchema as any)?.storeId;
 });
 
 // id (по _id/id) -> tags, построенный один раз для выбранного стора
@@ -166,7 +178,7 @@ const idToTags = computed<Map<string, string[]>>(() => {
         for (const [key, record] of map.entries()) {
             // Элемент может быть как dataMapRecordType { data, tags }, так и сырым RecordSchema
             const data: any = (record as any)?.data ?? record;
-            const id: any = (data instanceof RecordSchema ? data.getId() : (data?._id ?? data?.id)) ?? key;
+            const id: any = (data instanceof RecordSchema ? data.getId() : data?._id ?? data?.id) ?? key;
             const tags: string[] = (record as any)?.tags ?? [];
             if (id !== undefined) result.set(String(id), tags);
         }
@@ -179,17 +191,16 @@ const idToTags = computed<Map<string, string[]>>(() => {
 
 function getTagsForItem(item: any): string[] {
     if (!item) return [];
-    const id = item instanceof RecordSchema ? item.getId() : (item?._id ?? item?.id);
-	if (id === undefined) return [];
+    const id = item instanceof RecordSchema ? item.getId() : item?._id ?? item?.id;
+    if (id === undefined) return [];
     return idToTags.value.get(String(id)) ?? [];
 }
 
 const availableTags = computed<string[]>(() => {
     const present = new Set<string>();
     for (const item of items.value ?? []) {
-		for (const tag of getTagsForItem(item))
-			present.add(tag);
-	}
+        for (const tag of getTagsForItem(item)) present.add(tag);
+    }
     return filterableTags.filter((tag) => present.has(tag));
 });
 
@@ -214,9 +225,12 @@ const isOptionsArray = computed(() => props.field.type === "optionsArray");
 function getRepresentation(item: any, index: number): string {
     if (item === null || item === undefined) return "—";
 
-    if ("_tpl" in item || item instanceof RecordSchema && item.has("_tpl")) {
-        const tpl = item instanceof RecordSchema ? item.get("_tpl") : item["_tpl"]
-        return gameLocalization.getText({ localeId: [`${tpl} Name`, `${tpl} ShortName`, tpl], default: "" })
+    if ("_tpl" in item || (item instanceof RecordSchema && item.has("_tpl"))) {
+        const tpl = item instanceof RecordSchema ? item.get("_tpl") : item["_tpl"];
+        return gameLocalization.getText({
+            localeId: [`${tpl} Name`, `${tpl} name`, `${tpl} ShortName`, tpl],
+            default: tpl,
+        });
     }
 
     if (typeof item !== "object") return String(item);
@@ -229,7 +243,9 @@ function getRepresentation(item: any, index: number): string {
             const value = item.get(field.key);
             if (value === undefined || value === null || value === "") continue;
             parts.push(
-                `${gameLocalization.getUIText({ localeId: [field.key, field.label], default: field.label })}: ${String(value)}`
+                `${gameLocalization.getUIText({ localeId: [field.key, field.label], default: field.label })}: ${String(
+                    value
+                )}`
             );
             if (parts.length >= 2) break;
         }
@@ -260,19 +276,13 @@ const filteredItems = computed(() => {
 
     // Фильтр по тегам
     if (selectedTags.value.length > 0) {
-        result = result.filter((entry) =>
-            selectedTags.value.every((tag) => getTagsForItem(entry.item).includes(tag))
-        );
+        result = result.filter((entry) => selectedTags.value.every((tag) => getTagsForItem(entry.item).includes(tag)));
     }
 
     // Фильтр по поиску
     const q = searchQuery.value.trim().toLowerCase();
     if (q) {
-        result = result.filter(
-            (entry) =>
-                entry.label.toLowerCase().includes(q) ||
-                String(entry.index + 1).includes(q)
-        );
+        result = result.filter((entry) => entry.label.toLowerCase().includes(q) || String(entry.index + 1).includes(q));
     }
 
     return result;

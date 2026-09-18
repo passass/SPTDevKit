@@ -16,7 +16,7 @@ class RepairableNestedSchema extends RecordSchema {
 
 class FireModeNestedSchema extends RecordSchema {
     static fields: Field[] = [
-        Field.create({ key: "FireMode", label: "FireMode", type: "select", options: ["fullauto", "single", "burst"] }),
+        Field.create({ key: "FireMode", type: "select", options: ["fullauto", "single", "burst"] }),
     ];
 }
 
@@ -24,21 +24,18 @@ class UpdNestedSchema extends RecordSchema {
     static fields: Field[] = [
         HiddenField.create({
             key: "Repairable",
-            label: "Repairable",
             type: "object",
             nestedSchema: RepairableNestedSchema,
             order: 1,
         }),
         HiddenField.create({
             key: "FireMode",
-            label: "FireMode",
             type: "object",
             nestedSchema: FireModeNestedSchema,
             order: 2,
         }),
         UnneccesaryField.create({
             key: "UnlimitedCount",
-            label: "UnlimitedCount",
             type: "boolean",
             defaultValue: true,
             alwaysFillWithDefault: true,
@@ -46,7 +43,6 @@ class UpdNestedSchema extends RecordSchema {
         }),
         UnneccesaryField.create({
             key: "StackObjectsCount",
-            label: "StackObjectsCount",
             type: "number",
             defaultValue: 9999,
             alwaysFillWithDefault: true,
@@ -54,7 +50,6 @@ class UpdNestedSchema extends RecordSchema {
         }),
         Field.create({
             key: "BuyRestrictionMax",
-            label: "BuyRestrictionMax",
             type: "number",
             defaultValue: 0,
             alwaysFillWithDefault: true,
@@ -62,7 +57,6 @@ class UpdNestedSchema extends RecordSchema {
         }),
         UnneccesaryField.create({
             key: "BuyRestrictionCurrent",
-            label: "BuyRestrictionCurrent",
             type: "number",
             defaultValue: 0,
             alwaysFillWithDefault: true,
@@ -75,7 +69,6 @@ export class CountTplSchema extends RecordSchema {
     static fields: Field[] = [
         Field.create({
             key: "count",
-            label: "Количество",
             type: "number",
             order: 1,
             defaultValue: 1,
@@ -83,7 +76,6 @@ export class CountTplSchema extends RecordSchema {
         }),
         AdvSelectField.create({
             key: "_tpl",
-            label: "Шаблон",
             type: "advancedSelect",
             storeId: "items",
             order: 2,
@@ -104,12 +96,10 @@ export class ItemSlotSchema extends RecordSchema {
     static fields: Field[] = [
         IdField.create({
             key: "_id",
-            label: "ID",
             order: 1,
         }),
         AdvSelectField.create({
             key: "_tpl",
-            label: "Шаблон",
             type: "advancedSelect",
             storeId: "items",
             order: 2,
@@ -118,14 +108,12 @@ export class ItemSlotSchema extends RecordSchema {
         }),
         parentIdField.create({
             key: "parentId",
-            label: "Parent ID",
             type: "advancedSelect",
             storeId: "items",
             order: 3,
         }),
         Field.create({
             key: "slotId",
-            label: "Slot ID",
             type: "select",
             options: slotIdOptions,
             order: 4,
@@ -143,14 +131,12 @@ export class ItemAssort extends RecordSchema {
         AdvSelectField.create({
             key: "_tpl",
             alwaysFillWithDefault: true,
-            label: "Template",
             type: "advancedSelect",
             storeId: "items",
             order: 2,
         }),
         Field.create({
             key: "upd",
-            label: "Upd",
             alwaysFillWithDefault: true,
             type: "object",
             nestedSchema: UpdNestedSchema,
@@ -163,7 +149,6 @@ export class ItemAssort extends RecordSchema {
 
         Field.create({
             key: "barter_scheme",
-            label: "barter_scheme",
             type: "arrayArray",
             alwaysFillWithDefault: true,
             arrayItemSchema: CountTplSchema,
@@ -172,7 +157,6 @@ export class ItemAssort extends RecordSchema {
         }),
         HiddenField.create({
             key: "traderId",
-            label: "traderId",
             alwaysFillWithDefault: true,
             defaultValue: 1,
             order: 8,
@@ -181,7 +165,6 @@ export class ItemAssort extends RecordSchema {
         }),
         Field.create({
             key: "loyal_level_items",
-            label: "loyal_level_items",
             type: "number",
             alwaysFillWithDefault: true,
             defaultValue: 1,
@@ -191,7 +174,6 @@ export class ItemAssort extends RecordSchema {
         }),
         Field.create({
             key: "children",
-            label: "children",
             type: "array",
             alwaysFillWithDefault: true,
             order: 9,
@@ -211,8 +193,14 @@ class arrayListTraderAssort extends Field {
     alwaysFillWithDefault = true;
 	extractWeaponBuildIntoChildren = true;
 
+	onArrayItemAdd(fieldContext: FieldContext, newVal: any): void {
+		newVal["traderId"] = fieldContext.recordSchema.get("trader")
+		assortDataStore.addSchema(newVal, undefined, currentProjectTag)
+	}
+
 	onArrayItemDelete(fieldContext: FieldContext, index: number): void {
-		const id = fieldContext.value[index].get("_id")
+		const data = fieldContext.value[index]
+		const id = data instanceof RecordSchema ? data.get("_id") : data["_id"]
 		const store = assortDataStore.getArray()
 		const findIndex = store.findIndex((el: dataMapRecordType) => el.data.get("_id") === id)
 		if (findIndex)
@@ -234,16 +222,20 @@ class arrayListTraderAssort extends Field {
 }
 
 class TraderAssort extends RecordSchema {
-    getRepresentation(): string {
+	getRepresentation(): string {
+		const traderId = this.get("trader") as string;
+		const dataStore = useDataStore();
+		const trader = dataStore.get("traders", traderId)
+
         return gameLocalization.getText({
-            localeId: `${this.get("trader")} Nickname`,
+			localeId: `${traderId} Nickname`,
+            default: trader instanceof RecordSchema && (trader.get("nickname") as string) || traderId
         });
     }
 
     static fields = [
         AdvSelectField.create({
             key: "trader",
-            label: "trader",
             type: "advancedSelect",
             storeId: "traders",
             alwaysFillWithDefault: true,
@@ -258,7 +250,6 @@ export class TradersAssortSchema extends RecordSchema {
     static fields = [
         Field.create({
             key: "traders",
-            label: "test",
             type: "array",
             arrayItemSchema: TraderAssort,
         }),

@@ -4,8 +4,9 @@ import { availableLocales, gameLocalization, suffixes, type locales } from "@/ty
 import { Path } from "@/utils/pathUtils";
 import { currentProjectTag, modTag, type ProjectArgs } from "../consts/ProjectConsts";
 import { copyRecordSchema } from "@/utils/copyUtils";
-import { deepClone, getValuesByPath, groupBy, toJsonObject } from "@/utils/utils";
+import { arraysEqual, deepClone, getValuesByPath, groupBy, setsEqual, toJsonObject } from "@/utils/utils";
 import { customRef } from "vue";
+import TradersAssort from "./TradersAssort";
 
 export const questDataStore = new dataStore("quests");
 
@@ -52,7 +53,7 @@ class Quests {
                 groupedDirtiesQuests.delete(traderId);
             }
 			await new Path(projectArgs.folderPath, `db/CustomQuests/${traderId}/Quests/quest.json`).saveFile(quests);
-            await this.saveQuestAssorts(quests, new Path(projectArgs.folderPath, `db/CustomQuests/${traderId}/QuestAssort/assort.json`))
+            await this.saveQuestAssorts(quests, String(traderId), new Path(projectArgs.folderPath, `db/CustomQuests/${traderId}/QuestAssort/assort.json`))
         }
 
         if (projectArgs.saveWithOriginalChanges) {
@@ -62,7 +63,7 @@ class Quests {
                     res.set(questId, quest.data);
                 }
                 await new Path(projectArgs.folderPath, `db/CustomQuests/${traderId}/Quests/quest.json`).saveFile(res);
-                await this.saveQuestAssorts(res, new Path(projectArgs.folderPath, `db/CustomQuests/${traderId}/QuestAssort/assort.json`))
+                await this.saveQuestAssorts(res, String(traderId), new Path(projectArgs.folderPath, `db/CustomQuests/${traderId}/QuestAssort/assort.json`))
             }
         }
     }
@@ -75,15 +76,17 @@ class Quests {
             }
             for (const locale of availableLocales) {
                 const localizationsMap: Map<string, string> = new Map();
-                for (const localeId of localizationFields) {
-                    localizationsMap.set(
-                        localeId,
-                        gameLocalization.getText({
-                            localeId: localeId,
-                            locale: locale as locales,
-                            notCheckForDefaultLocalization: true,
-                        })
-                    );
+				for (const localeId of localizationFields) {
+					const translated = gameLocalization.getText({
+                        localeId: localeId,
+                        locale: locale as locales,
+                        notCheckForDefaultLocalization: true,
+                    })
+					if (translated !== "" && translated !== localeId)
+						localizationsMap.set(
+	                        localeId,
+	                        translated
+	                    );
                 }
                 if (localizationsMap.size > 0) {
                     const path = new Path(currentProjectFolder, `db/CustomQuests/${traderId}/Locales/${locale}.json`);
@@ -96,51 +99,84 @@ class Quests {
         }
     }
 
-    async saveQuestAssorts(quests: Map<any, any>, filePath: Path) {
-        const result: {
-            started: Record<string, string>;
-            success: Record<string, string>;
-            fail: Record<string, string>;
-        } = {
-            started: {},
-            success: {},
-            fail: {},
-        };
+	async saveQuestAssorts(quests: Map<any, any>, traderId: string, filePath: Path) {
+		const result: {
+			started: Record<string, string>;
+			success: Record<string, string>;
+			fail: Record<string, string>;
+		} = {
+			started: {},
+			success: {},
+			fail: {},
+		};
 
-        const processRewards = (
-            rewards: any,
-            category: "started" | "success" | "fail",
-            questId: string
-        ): void => {
-            if (!Array.isArray(rewards)) return;
-            for (const reward of rewards) {
-                if (!reward || typeof reward !== "object") continue;
-                if (reward.type !== "AssortmentUnlock") continue;
+		const findMatchingAssortId = (rewardItems: any[]): string | null => {
+			if (!Array.isArray(rewardItems) || rewardItems.length === 0) return null;
 
-                const assortmentId =
-                    reward.target ?? reward.items?.[0]?._id;
-                if (typeof assortmentId === "string" && assortmentId !== "") {
-                    result[category][assortmentId] = questId;
-                }
-            }
-        };
+			const rootItem = rewardItems.find((item) => item && !item.parentId);
+			if (!rootItem || !("children" in rootItem) || typeof rootItem._tpl !== "string") return null;
+			const rootTpl = rootItem._tpl
 
-        for (const [questId, quest] of quests.entries()) {
-            const record = quest instanceof RecordSchema ? quest : (quest as any)?.data;
-            if (!(record instanceof RecordSchema)) continue;
+			const expectedChildren = rootItem["children"].map((c: any) => c._tpl);
 
-            const rewards = record.get("rewards");
-            if (!rewards || typeof rewards !== "object") continue;
+			for (const [assortId, assort] of TradersAssort.cachedAssortsData.value.get(traderId)!.entries()) {
+				if (assort.get("_tpl") !== rootTpl) continue;
 
-            processRewards((rewards as any).Success, "success", String(questId));
-            processRewards((rewards as any).Started, "started", String(questId));
-            processRewards((rewards as any).Fail, "fail", String(questId));
-        }
+				const children = assort.get("children");
+				if (!Array.isArray(children)) continue;
 
-        await filePath.saveFile(result);
-    }
+				const assortChildren = children.map((c: any) => c._tpl);
 
-    async saveProject(projectArgs: ProjectArgs) {
+				if (arraysEqual(expectedChildren, assortChildren)) {
+					return String(assortId);
+				}
+			}
+
+			return null;
+		};
+
+		const processRewards = (
+			rewards: any,
+			category: "started" | "success" | "fail",
+			questId: string
+		): void => {
+			if (!Array.isArray(rewards)) return;
+			for (const reward of rewards) {
+				if (!reward || typeof reward !== "object") continue;
+				if (reward.type !== "AssortmentUnlock") continue;
+
+				const rewardItems = Array.isArray(reward.items) ? reward.items : [];
+				const assortmentId =
+					findMatchingAssortId(rewardItems)
+				 // 	?? reward.target
+					// ?? reward.items?.[0]?._id;
+				if (typeof assortmentId === "string" && assortmentId !== "") {
+					result[category][assortmentId] = questId;
+				}
+			}
+		};
+
+		for (const [questId, quest] of quests.entries()) {
+			const record = quest instanceof RecordSchema ? quest : (quest as any)?.data;
+			if (!(record instanceof RecordSchema)) continue;
+
+			const rewards = record.get("rewards");
+			if (!rewards || typeof rewards !== "object") continue;
+
+			processRewards((rewards as any).Success, "success", String(questId));
+			processRewards((rewards as any).Started, "started", String(questId));
+			processRewards((rewards as any).Fail, "fail", String(questId));
+		}
+
+		await filePath.saveFile(result);
+	}
+
+	async saveProject(projectArgs: ProjectArgs) {
+		for (const filePath of await new Path(projectArgs.folderPath, "db/CustomQuests/*/*").findFolders()) {
+			if (filePath.basename().toLowerCase() !== "images") {
+				await window.electronAPI.removeFolder(filePath.toString())
+			}
+		}
         await Promise.all([
             this.saveProjectQuests(projectArgs),
             this.saveLocales(projectArgs.folderPath),

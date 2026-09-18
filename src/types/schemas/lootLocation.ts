@@ -19,34 +19,32 @@ export class CoordinatesSchema extends RecordSchema {
 
 export class ItemUpdSchema extends RecordSchema {
     static fields: Field[] = [
-        Field.create({ key: "StackObjectsCount", label: "Количество", type: "number", order: 1, defaultValue: 1 }),
+        Field.create({ key: "StackObjectsCount", type: "number", order: 1, defaultValue: 1 }),
     ];
 }
 
 export class ItemSchema extends RecordSchema {
     static fields: Field[] = [
-        Field.create({ key: "_id", label: "ID", type: "text", order: 1 }),
-        Field.create({ key: "_tpl", label: "Шаблон", type: "text", order: 2 }),
-        Field.create({ key: "upd", label: "Обновление", type: "object", nestedSchema: ItemUpdSchema, order: 3 }),
+        Field.create({ key: "_id", type: "text", order: 1 }),
+        Field.create({ key: "_tpl", type: "text", order: 2 }),
+        Field.create({ key: "upd", type: "object", nestedSchema: ItemUpdSchema, order: 3 }),
     ];
 }
 
 export class ComposedKeySchema extends RecordSchema {
-    static fields: Field[] = [Field.create({ key: "key", label: "Ключ", type: "text", order: 1 })];
+    static fields: Field[] = [Field.create({ key: "key", type: "text", order: 1 })];
 }
 
 export class ItemDistributionSchema extends RecordSchema {
     static fields: Field[] = [
         Field.create({
             key: "composedKey",
-            label: "Составной ключ",
             type: "object",
             nestedSchema: ComposedKeySchema,
             order: 1,
         }),
         Field.create({
             key: "relativeProbability",
-            label: "Относительная вероятность",
             type: "number",
             order: 2,
             defaultValue: 1,
@@ -56,10 +54,10 @@ export class ItemDistributionSchema extends RecordSchema {
 
 export class GroupCoordinatesSchema extends RecordSchema {
     static fields: Field[] = [
-        Field.create({ key: "Name", label: "Название", type: "text", order: 1 }),
-        Field.create({ key: "Weight", label: "Вес", type: "number", order: 2, defaultValue: 1 }),
-        Field.create({ key: "Position", label: "Позиция", type: "object", nestedSchema: CoordinatesSchema, order: 3 }),
-        Field.create({ key: "Rotation", label: "Поворот", type: "object", nestedSchema: CoordinatesSchema, order: 4 }),
+        Field.create({ key: "Name", type: "text", order: 1 }),
+        Field.create({ key: "Weight", type: "number", order: 2, defaultValue: 1 }),
+        Field.create({ key: "Position", type: "object", nestedSchema: CoordinatesSchema, order: 3 }),
+        Field.create({ key: "Rotation", type: "object", nestedSchema: CoordinatesSchema, order: 4 }),
     ];
 }
 
@@ -79,21 +77,19 @@ class GroupPositionField extends Field {
 
 export class TemplateSchema extends RecordSchema {
     static fields: Field[] = [
-        IdField.create({ key: "Id", label: "ID", type: "text", order: 1 }),
-        Field.create({ key: "IsContainer", label: "Контейнер", type: "boolean", order: 2, defaultValue: false }),
-        Field.create({ key: "useGravity", label: "Гравитация", type: "boolean", order: 3, defaultValue: true }),
+        IdField.create({ key: "Id", type: "text", order: 1 }),
+        Field.create({ key: "IsContainer", type: "boolean", order: 2, defaultValue: false }),
+        Field.create({ key: "useGravity", type: "boolean", order: 3, defaultValue: true }),
         Field.create({
             key: "randomRotation",
-            label: "Случайный поворот",
             type: "boolean",
             order: 4,
             defaultValue: false,
         }),
-        Field.create({ key: "Position", label: "Позиция", type: "object", nestedSchema: CoordinatesSchema, order: 5 }),
-        Field.create({ key: "Rotation", label: "Поворот", type: "object", nestedSchema: CoordinatesSchema, order: 6 }),
+        Field.create({ key: "Position", type: "object", nestedSchema: CoordinatesSchema, order: 5 }),
+        Field.create({ key: "Rotation", type: "object", nestedSchema: CoordinatesSchema, order: 6 }),
         Field.create({
             key: "IsGroupPosition",
-            label: "Групповая позиция",
             type: "boolean",
             order: 7,
             defaultValue: false,
@@ -101,15 +97,13 @@ export class TemplateSchema extends RecordSchema {
         GroupPositionField.create({}),
         Field.create({
             key: "IsAlwaysSpawn",
-            label: "Всегда спавнится",
             type: "boolean",
             order: 9,
             defaultValue: false,
         }),
-        IdField.create({ key: "Root", label: "Корневой ID", type: "text", order: 10 }),
+        IdField.create({ key: "Root", type: "text", order: 10 }),
         Field.create({
             key: "Items",
-            label: "Предметы",
             type: "array",
             arrayItemSchema: ItemSchema,
             order: 11,
@@ -120,12 +114,11 @@ export class TemplateSchema extends RecordSchema {
 
 export class LootLocationSchema extends RecordSchema {
     static fields: Field[] = [
-        IdField.create({ key: "locationId", label: "ID локации", type: "text", order: 1 }),
-        Field.create({ key: "probability", label: "Вероятность", type: "number", order: 2, defaultValue: 0 }),
-        Field.create({ key: "template", label: "Шаблон", type: "object", nestedSchema: TemplateSchema, order: 3 }),
+        IdField.create({ key: "locationId", type: "text", order: 1 }),
+        Field.create({ key: "probability", type: "number", order: 2, defaultValue: 0 }),
+        Field.create({ key: "template", type: "object", nestedSchema: TemplateSchema, order: 3 }),
         Field.create({
             key: "itemDistribution",
-            label: "Распределение предметов",
             type: "array",
             arrayItemSchema: ItemDistributionSchema,
             order: 4,
@@ -133,7 +126,6 @@ export class LootLocationSchema extends RecordSchema {
         }),
         Field.create({
             key: "__location",
-            label: "Локация",
             type: "select",
             order: 5,
 			options: allLocationsLowerCase,

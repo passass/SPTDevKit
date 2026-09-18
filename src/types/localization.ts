@@ -32,10 +32,20 @@ export interface localizationTextParams {
 export class GameLocalization {
 	locales: Map<string, FileConfig<Record<string, string>>> = new Map();
     defaultLocale: locales = "en";
-    currentLocale: Ref<locales> = ref("ru");
-    dataStore: ReturnType<typeof useDataStore> | null = null;
+    currentLocale: Ref<locales> = ref(this.loadSavedLocale());
+	dataStore: ReturnType<typeof useDataStore> | null = null;
 
-    getObjectLocalization(config: { instance: any; locale?: locales; localeId?: string[]; canBeUI?: boolean }): string {
+ 	private loadSavedLocale(): locales {
+        try {
+            const saved = localStorage.getItem("uiLocale");
+            if (saved && availableLocales.includes(saved)) {
+                return saved as locales;
+            }
+        } catch {}
+        return this.defaultLocale;
+    }
+
+	getObjectLocalization(config: { instance: any; locale?: locales; localeId?: string[]; canBeUI?: boolean }): string {
         if (Array.isArray(config.instance)) {
             if (config.instance.length === 0) return "";
             return config.instance
@@ -78,7 +88,7 @@ export class GameLocalization {
         }
 
         return gameLocalization.getText({
-            localeId: config.localeId ?? [`${itemId} Name`, `${itemId} name`, `${itemId}`, `${itemId} Nickname`],
+            localeId: config.localeId ?? [`${itemId} Name`, `${itemId} name`, itemId, `${itemId} Nickname`],
             locale: config.locale ?? this.currentLocale.value,
             default: def,
         });
@@ -154,3 +164,4 @@ export class GameLocalization {
 }
 
 export const gameLocalization = new GameLocalization();
+export const uitext = (text: string | string[]) => gameLocalization.getUIText({localeId: text})

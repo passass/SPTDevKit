@@ -14,6 +14,7 @@ import { ItemSlotSchema } from "./tradersAssort";
 import { collectDescendants } from "@/utils/treeUtils";
 import { useDataStore } from "@/stores/dataStore";
 import { objectChangeAllIds, type WeaponBuildItem } from "@/stores/profileStore";
+import type { IOptionItem, ISelectItem } from "@/consts/AdvancedSelectInputConsts";
 
 class itemTargetFieldClass extends HiddenField {
     key = "target";
@@ -32,35 +33,34 @@ class TemplateAssort extends Field {
 
     onOptionChange(
         fieldContext: FieldContext,
-        option: {
-            id: string | number;
-            label: string;
-            record?: Record<string, any> | RecordSchema;
-        }
+        option: ISelectItem
     ): any {
         if (!option.record) return;
 
-        const copiedAssort = deepClone(
-            option.record instanceof RecordSchema ? option.record.getData() : option.record
-        );
+        const copiedAssort = deepClone(option.record instanceof RecordSchema ? option.record.getData() : option.record);
         objectChangeAllIds([copiedAssort] as WeaponBuildItem[]);
 
         fieldContext.recordSchema.set("_id", copiedAssort["_id"]);
         fieldContext.recordSchema.set("children", copiedAssort["children"] ?? []);
+
+        return copiedAssort["_tpl"];
     }
 
-    getOptionsItems(fieldContext: FieldContext): Map<string | number, Record<string, any> | RecordSchema | string> {
-        const res: Map<string | number, Record<string, any> | RecordSchema | string> = new Map();
+    getOptionsItems(fieldContext: FieldContext): Map<string | number, IOptionItem | RecordSchema | string> {
+        const res: Map<string | number, IOptionItem | RecordSchema | string> = new Map();
 
         const assortSchema = fieldContext.recordSchema.lastSchemaParent;
         if (!assortSchema) return res;
         const traderId = assortSchema.get("traderId");
         if (!traderId || typeof traderId !== "string") return res;
 
-        console.log("TradersAssort.getTradersAssortForTraderId(traderId)", TradersAssort.getTradersAssortForTraderId(traderId))
         for (const assort of TradersAssort.getTradersAssortForTraderId(traderId)) {
-            // const id = assort.getId()
-            if (assort.has("_tpl")) res.set(assort.get("_tpl") as string, assort);
+            if (assort.has("_id"))
+                res.set(assort.get("_id") as string, {
+                    record: assort,
+                    id: assort.get("_tpl") as string,
+                    shownId: assort.get("_id") as string,
+                });
         }
 
         return res;
@@ -77,9 +77,8 @@ class itemsAssortsSchema extends RecordSchema {
             order: 2,
         }),
 
-        Field.create({
+        HiddenField.create({
             key: "children",
-            label: "children",
             type: "array",
             order: 3,
 
@@ -248,7 +247,6 @@ export class RewardsSchemas extends RecordSchema {
     static fields: Field[] = [
         Field.create({
             key: "Success",
-            label: "Success",
             type: "array",
             order: 1,
             arrayItemSchema: createLazySchemaChoicer("questsSchemas.json", "*.rewards.Success", "SuccessReward", {
@@ -324,7 +322,6 @@ export class RewardsSchemas extends RecordSchema {
         }),
         Field.create({
             key: "Started",
-            label: "Started",
             type: "array",
             order: 2,
             arrayItemSchema: createLazySchemaChoicer("questsSchemas.json", "*.rewards.Started", "StartedReward", {
@@ -333,7 +330,6 @@ export class RewardsSchemas extends RecordSchema {
         }),
         Field.create({
             key: "Fail",
-            label: "Fail",
             type: "array",
             order: 3,
             arrayItemSchema: createLazySchemaChoicer("questsSchemas.json", "*.rewards.Fail", "FailReward", {

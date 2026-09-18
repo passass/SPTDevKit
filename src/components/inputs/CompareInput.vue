@@ -18,7 +18,7 @@
 				type="number"
 				v-model.number="items['value']"
 				class="compare-input__input"
-				placeholder="Значение"
+				:placeholder="uitext('value')"
 			/>
 		</div>
 	</div>
@@ -26,6 +26,7 @@
 
 <script setup lang="ts">
 import { RecordSchema, type SchemaData } from '@/types/fields/fields';
+import { uitext } from '@/types/localization';
 import { onMounted, computed } from 'vue';
 
 

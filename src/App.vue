@@ -59,12 +59,12 @@ onMounted(async () => {
 
 <template>
 	<div v-if="error" class="error-state">
-		<h1>Ошибка загрузки</h1>
+		<h1>Loading Error</h1>
 		<p>{{ error }}</p>
-		<button @click="loadData">Повторить</button>
+		<button @click="loadData">repeat</button>
 	</div>
 	<div v-else-if="isLoading || !dataStore.isAllLoaded()">
-		<h1>Загрузка...</h1>
+		<h1>Loading...</h1>
 	</div>
 	<div v-else>
 		<Main></Main>

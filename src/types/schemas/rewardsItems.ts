@@ -5,30 +5,30 @@ import { slotIdOptions } from "@/consts/GameConsts";
 
 class FireModeNestedSchema extends RecordSchema {
     static fields: Field[] = [
-        Field.create({ key: "FireMode", label: "FireMode", type: "text" }),
+        Field.create({ key: "FireMode", type: "text" }),
     ];
 }
 
 class FoldableNestedSchema extends RecordSchema {
     static fields: Field[] = [
-        Field.create({ key: "Folded", label: "Folded", type: "boolean" }),
+        Field.create({ key: "Folded", type: "boolean" }),
     ];
 }
 
 class RepairableNestedSchema extends RecordSchema {
     static fields: Field[] = [
-        Field.create({ key: "Durability", label: "Durability", type: "number" }),
-        Field.create({ key: "MaxDurability", label: "MaxDurability", type: "number" }),
+        Field.create({ key: "Durability", type: "number" }),
+        Field.create({ key: "MaxDurability", type: "number" }),
     ];
 }
 
 class UpdNestedSchema extends RecordSchema {
     static fields: Field[] = [
-        Field.create({ key: "SpawnedInSession", label: "SpawnedInSession", type: "boolean" }),
-        Field.create({ key: "StackObjectsCount", label: "StackObjectsCount", type: "number", defaultValue: 1 }),
-        Field.create({ key: "FireMode", label: "FireMode", type: "object", nestedSchema: FireModeNestedSchema }),
-        Field.create({ key: "Foldable", label: "Foldable", type: "object", nestedSchema: FoldableNestedSchema }),
-        Field.create({ key: "Repairable", label: "Repairable", type: "object", nestedSchema: RepairableNestedSchema }),
+        Field.create({ key: "SpawnedInSession", type: "boolean" }),
+        Field.create({ key: "StackObjectsCount", type: "number", defaultValue: 1 }),
+        Field.create({ key: "FireMode", type: "object", nestedSchema: FireModeNestedSchema }),
+        Field.create({ key: "Foldable", type: "object", nestedSchema: FoldableNestedSchema }),
+        Field.create({ key: "Repairable", type: "object", nestedSchema: RepairableNestedSchema }),
     ];
 }
 

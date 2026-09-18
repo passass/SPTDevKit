@@ -3,12 +3,12 @@
     <div class="weapon-build-wrapper">
         <div class="weapon-build-label">
             <span class="label-icon">🛠️</span>
-            <span>Загрузить пресет оружия</span>
+            <span>{{gameLocalization.getUIText({localeId: "choiceWeaponBuild"})}}</span>
         </div>
         <div class="weapon-build-controls">
             <div class="select-wrapper">
                 <select ref="selectRef" class="weapon-build-select">
-                    <option value="" disabled selected>Выберите сборку...</option>
+                    <option value="" disabled selected>{{gameLocalization.getUIText({localeId: "choiceWeaponBuild"})}}...</option>
                     <option v-for="build in builds" :key="build.Name" :value="build.Name">
                         {{
                             build.needLocalization
@@ -21,7 +21,7 @@
             </div>
             <button @click="handleLoad" class="load-button">
                 <span class="btn-icon">⬇</span>
-                <span>Загрузить</span>
+                <span>{{gameLocalization.getUIText({localeId: "load"})}}</span>
             </button>
         </div>
     </div>

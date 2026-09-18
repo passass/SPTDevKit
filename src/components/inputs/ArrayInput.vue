@@ -6,8 +6,8 @@
                 type="button"
                 class="array-input__nav-btn"
                 @click="prevItem"
-                :disabled="selectedIndex === null || selectedIndex <= 0"
-                title="Предыдущий"
+                :disabled="selectedIndex === null || items.length <= 1"
+                :title="uitext('previous')"
             >
                 ◀
             </button>
@@ -18,15 +18,35 @@
                 type="button"
                 class="array-input__nav-btn"
                 @click="nextItem"
-                :disabled="selectedIndex === null || selectedIndex >= items.length - 1"
-                title="Следующий"
+                :disabled="selectedIndex === null || items.length <= 1"
+                :title="uitext('next')"
             >
                 ▶
             </button>
 
-            <button type="button" class="array-input__btn" @click="addItem" title="Добавить элемент">+</button>
+            <button
+                type="button"
+                class="array-input__btn"
+                @click="moveUp"
+                :disabled="selectedIndex === null || selectedIndex >= items.length - 1"
+                :title="uitext('moveUp')"
+            >
+                ↑
+            </button>
 
-            <button class="array-input__btn" @click="deleteItem" title="Удалить элемент">-</button>
+            <button
+                type="button"
+                class="array-input__btn"
+                @click="moveDown"
+                :disabled="selectedIndex === null || selectedIndex <= 0"
+                :title="uitext('moveDown')"
+            >
+                ↓
+            </button>
+
+            <button type="button" class="array-input__btn" @click="addItem" :title="uitext('add')">+</button>
+
+            <button class="array-input__btn" @click="deleteItem" :title="uitext('delete')">-</button>
         </div>
 
         <!-- Режим optionsArray: select -->
@@ -55,7 +75,7 @@
                         <AdvancedSelectInput v-model="currentSubArray[subIndex]"  :fieldContext="fieldContext" />
                         <button class="array-input__sub-remove" @click="removeSubItem(subIndex)">✕</button>
                     </div>
-                    <button class="array-input__sub-add" @click="addSubItem">+ Добавить</button>
+                    <button class="array-input__sub-add" @click="addSubItem">+ {{uitext('add')}}</button>
                 </div>
             </template>
         </div>
@@ -78,7 +98,7 @@
                 <input
                     type="text"
                     v-model="items[selectedIndex]"
-                    placeholder="Введите значение"
+                    :placeholder="uitext('enterValue')"
                     class="array-input__field"
                 />
             </template>
@@ -91,12 +111,12 @@
                 @click="handleNavigate"
                 class="array-input__nav-object-btn"
             >
-                {{ getRepresentation(selectedItem) || "Выбрать объект" }} →
+                {{ getRepresentation(selectedItem) || uitext('selectItem') }} →
             </button>
             <div v-else-if="selectedItem !== null" class="array-input__primitive">
                 {{ String(selectedItem) }}
             </div>
-            <div v-else class="array-input__empty">Нет элементов</div>
+            <div v-else class="array-input__empty">{{uitext('noElements')}}</div>
         </div>
     </div>
 </template>
@@ -110,8 +130,9 @@ import { getStaticField } from "@/utils/classUtils";
 import { Navigator } from "@/utils/navigation";
 import OptionsInput from "./OptionsInput.vue";
 import { type FieldContext } from "@/types/fields/fieldsConsts";
-import { gameLocalization } from "@/types/localization";
+import { gameLocalization, uitext } from "@/types/localization";
 import { isInDestructureAssignment } from "vue/compiler-sfc";
+import { itemsDataStore } from "@/project/Items";
 
 type InputType = SchemaValue[];
 const frameNavigator = inject<Navigator>("frameNavigator");
@@ -140,6 +161,30 @@ const items = computed({
         emit("update:modelValue", val);
     },
 });
+
+function moveUp() {
+	const idx = selectedIndex.value;
+	if (idx === null || idx >= items.value.length - 1) return;
+    const arr = items.value;
+
+    const [moved] = arr.splice(idx, 1);
+    arr.splice(idx + 1, 0, moved);
+
+    selectedIndex.value = idx + 1;
+    emit("update:modelValue", arr);
+}
+
+function moveDown() {
+	const idx = selectedIndex.value;
+	if (idx === null || idx <= 0) return;
+    const arr = items.value;
+
+    const [moved] = arr.splice(idx, 1);
+	arr.splice(idx - 1, 0, moved);
+
+    selectedIndex.value = idx - 1;
+    emit("update:modelValue", arr);
+}
 
 // Определяем, является ли массив массивом строк
 const isStringArray = computed(() => {
@@ -189,13 +234,19 @@ const currentSubArray = computed<any[] | null>(() => {
 });
 
 function nextItem() {
-    if (selectedIndex.value === null || selectedIndex.value >= items.value.length - 1) return;
-    selectedIndex.value++;
+	if (selectedIndex.value === null) return;
+	if (selectedIndex.value >= items.value.length - 1)
+		selectedIndex.value = 0
+	else
+    	selectedIndex.value++;
 }
 
 function prevItem() {
-    if (selectedIndex.value === null || selectedIndex.value <= 0) return;
-    selectedIndex.value--;
+	if (selectedIndex.value === null) return;
+	if (selectedIndex.value <= 0)
+		selectedIndex.value = items.value.length - 1
+	else
+    	selectedIndex.value--;
 }
 
 function deleteItem() {

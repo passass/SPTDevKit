@@ -9,6 +9,46 @@ export function isElectron() {
     return window && window.electronAPI !== undefined;
 }
 
+export function setsEqual<T>(
+    a: Iterable<T> | undefined | null,
+    b: Iterable<T> | undefined | null
+): boolean {
+    if (a === b) return true;
+    if (!a || !b) return false;
+
+    const setA = a instanceof Set ? a : new Set(a);
+    const setB = b instanceof Set ? b : new Set(b);
+
+    if (setA.size !== setB.size) return false;
+
+    for (const item of setA) {
+        if (!setB.has(item)) return false;
+    }
+
+    return true;
+}
+
+export function arraysEqual<T>(a: T[] | undefined | null, b: T[] | undefined | null): boolean {
+    if (a === b) return true;
+    if (!Array.isArray(a) || !Array.isArray(b)) return false;
+    if (a.length !== b.length) return false;
+
+    const counts = new Map<T, number>();
+
+    for (const item of a) {
+        counts.set(item, (counts.get(item) ?? 0) + 1);
+    }
+    for (const item of b) {
+        counts.set(item, (counts.get(item) ?? 0) - 1);
+    }
+
+    for (const count of counts.values()) {
+        if (count !== 0) return false;
+    }
+
+    return true;
+}
+
 type PathFilter =
     | { kind: "eq"; key: string; value: string }
     | { kind: "notExists"; key: string };

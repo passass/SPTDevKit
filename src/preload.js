@@ -21,6 +21,13 @@ contextBridge.exposeInMainWorld("electronAPI", {
 	readJson: (filePath) => ipcRenderer.invoke("read-json", filePath),
 	readLocalJson: (filename) => ipcRenderer.invoke("read-local-json", filename),
 	readFile: (filePath) => ipcRenderer.invoke("read-file", filePath),
+
+	removeFolder: (filePath) => ipcRenderer.invoke("delete-folder", filePath),
+	selectFile: (args) => ipcRenderer.invoke('select-file', args),
+
+	copyFile: (sourcePath, destinationPath) =>
+    	ipcRenderer.invoke('copy-file', { sourcePath, destinationPath }),
+
 	writeJson: (filePath, data) => ipcRenderer.invoke("write-json", { filePath, data }),
 	writeLocalJson: (filename, data) => ipcRenderer.invoke("write-local-json", { filename, data }),
 	send: (channel, data) => {

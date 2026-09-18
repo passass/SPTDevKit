@@ -43,7 +43,13 @@ class Items {
 	}
 
 	async saveProject(projectArgs: ProjectArgs) {
-		const res = new Map<string | number, dataMapRecordType>();
+		await Promise.all([
+			window.electronAPI.removeFolder(new Path(projectArgs.folderPath, "db/CustomLocales").toString()),
+			window.electronAPI.removeFolder(new Path(projectArgs.folderPath, "db/CustomLootspawns").toString()),
+			window.electronAPI.removeFolder(new Path(projectArgs.folderPath, "db/CustomItems").toString()),
+		])
+
+        const res = new Map<string | number, dataMapRecordType>();
         for (const [itemId, item] of itemsDataStore.getByTagInStore(currentProjectTag).entries()) {
             res.set(itemId, item.data);
 		}

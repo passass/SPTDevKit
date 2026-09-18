@@ -16,6 +16,7 @@ import { type FieldContext } from "./fieldsConsts";
 import type { Navigator } from "@/utils/navigation";
 import ArrayArrayInput from "@/components/inputs/ArrayArrayInput.vue";
 import ArrayListInput from "@/components/inputs/ArrayListInput.vue";
+import SelectImageInput from "@/components/inputs/SelectImageInput.vue";
 
 interface RenderRule {
     condition: (field: Field, recordSchema: RecordSchema) => boolean;
@@ -281,6 +282,10 @@ const extraRenderRules: RenderRule[] = [
             </>
         ),
     },
+    {
+		condition: (field: Field, recordSchema: RecordSchema) => field.key === "image",
+        componentTemplate: SelectImageInput,
+    },
 ];
 
 export interface fieldRenderParams {
@@ -304,7 +309,7 @@ export function fieldRender({
 }: fieldRenderParams): Component | undefined {
     for (const renderRule of exactRenderRules ?? renderRules) {
         if (renderRule.condition(field, recordSchema)) {
-            if (renderRule.componentTemplate) {
+			if (renderRule.componentTemplate) {
 				const fieldContext: FieldContext = {
 					field,
 					value: recordSchema.get(field),
@@ -343,6 +348,11 @@ export function fieldRender({
                     navigateHandler: handleNavigate,
                 };
 
+				if (field.extraEmits) {
+					for (const [key, value] of Object.entries(field.extraEmits)) {
+						eventHandlers[key] = (...args: any[]) => value(fieldContext, ...args)
+					}
+                }
                 if (renderRule.hasOnInputEmit) eventHandlers.onInput = OnInput;
 				if (renderRule.hasOnChangeEmit) eventHandlers.onChange = OnChange;
 

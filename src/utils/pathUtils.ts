@@ -86,6 +86,10 @@ export class Path {
 		return lastDot > 0 ? basename.slice(0, lastDot) : basename;
 	}
 
+	withStem(newStem: string): Path {
+		return this.dirname().join(`${newStem}${this.extname()}`);
+	}
+
 	// Получить строку с / (Unix-style)
 	toString(): string {
 		return this.filePath;

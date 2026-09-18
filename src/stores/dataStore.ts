@@ -4,12 +4,13 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import { useFileDataStore } from "./fileStore";
 import { castToRecordSchema, idsFields, RecordSchema, type SchemaData, type SchemaDataObject } from "@/types/fields/fields";
-import { getValueByPath } from "@/utils/utils";
+import { deepClone, getValueByPath } from "@/utils/utils";
 import { gameLocalization, type locales } from "@/types/localization";
 import { allElementsInArray } from "@/utils/utils";
 import type { SchemaChoicer } from "@/types/fields/fieldsSchemaChoicer";
 import { vanillaTag } from "@/consts/ProjectConsts";
 import type { onFileLoadContext } from "@/consts/DataStoreConsts";
+import { IdField } from "@/types/fields/fieldsClasses";
 
 export interface DataStoreConfigFiles {
     filename: string;
@@ -109,7 +110,7 @@ export const useDataStore = defineStore("dataStore", () => {
 
 			for (const file of files) {
 				const filename = file.filename;
-				const tags: string[] = getValueByPath(file, "tags", []);
+				const tags: string[] = deepClone(getValueByPath(file, "tags", []));
 
 				const fileData = await fileStore.read(filename);
 				const fileContent = fileData.data ?? fileData;
@@ -156,11 +157,16 @@ export const useDataStore = defineStore("dataStore", () => {
 
                     for (const [id, itemData] of entries) {
                         let value: any;
-                        if (schemaType && itemData && typeof itemData === "object") {
+						if (schemaType && itemData && typeof itemData === "object") {
+							if (RecordSchema.isPrototypeOf(schemaType)) {
+								const idField = (schemaType as typeof RecordSchema).fields.find((el) =>
+									el instanceof IdField
+								)
+								if (!isArray && itemData && idField && !(idField.key in itemData)) {
+	                                itemData[idField.key] = id
+	                            }
+							}
 							value = schemaType.from(itemData);
-							if (!isArray && !value.getId()) {
-                                value.set("id", id)
-                            }
                             value.storeId = key;
                         } else {
                             value = itemData;

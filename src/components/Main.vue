@@ -56,6 +56,12 @@ function createTab(content: object, dataStoreId: string): Tab {
         // badge: computed(() => dataStore.getMap(dataStoreId).size),
         get badge() {
             return dataStore.getMap(dataStoreId)?.size ?? 0;
+		},
+		get label() {
+            return gameLocalization.getUIText({ localeId: dataStoreId });
+        },
+        get title() {
+            return gameLocalization.getUIText({ localeId: dataStoreId });
         },
         schemaType: dataStore.getSchemaType(dataStoreId),
         component: getRecordEditorComponent(content, dataStoreId),
@@ -69,51 +75,51 @@ const listTabsRef = ref<Component | undefined>();
 const tabsContent = ref<Tab[]>([
     createTab(
         {
-            label: "Квесты",
             icon: "📋",
-            title: "Управление квестами",
         },
         "quests"
     ),
     createTab(
         {
-            label: "Предметы",
             icon: "📦",
-            title: "Редактор предметов",
         },
         "items"
     ),
     createTab(
         {
-            label: "Торговцы",
             icon: "🏪",
-            title: "Торговцы",
         },
         "traders"
     ),
     createTab(
         {
-			label: "Зоны Квестов",
             icon: "🗺️",
-            title: "Зоны Квестов",
         },
         "questsZones"
     ),
     {
-        id: "tradersAssort",
-        label: "Ассортимент торговцев",
-		icon: "",
+		id: "tradersAssort",
+		get label() {
+            return gameLocalization.getUIText({ localeId: "tradersAssort" });
+        },
+        get title() {
+            return gameLocalization.getUIText({ localeId: "tradersAssort" });
+        },
+		icon: "🏪",
 		data: TradersAssort.getTradersAssort(),
 
-        title: "Ассортимент торговцев",
         component: !isElectron() ? <h1>Electron required</h1> : TradersAssortInput,
 	},
     {
         id: "settingsComponent",
-        label: "Настройки",
+        get label() {
+            return gameLocalization.getUIText({ localeId: "settings" });
+        },
+        get title() {
+            return gameLocalization.getUIText({ localeId: "settings" });
+        },
         icon: "⚙️",
 
-        title: "Настройки приложения",
         component: !isElectron() ? <h1>Electron required</h1> : SettingsComponent,
     },
 ]);
@@ -135,8 +141,12 @@ function handleUpdate(data: any) {
 // ListTabsFrame ожидает объект Tab, поэтому создаем фиктивную вкладку
 const wrapperTab = ref<Tab>({
     id: "main-tabs",
-    label: "Главная",
-    title: "📊 Управление данными",
+    get label() {
+        return gameLocalization.getUIText({ localeId: "dataManage" });
+    },
+    get title() {
+        return gameLocalization.getUIText({ localeId: "dataManage" });
+    },
     // Компонент будет рендерить ListTabs
     component: () => <ListTabs tabs={tabsContent.value} />,
 });

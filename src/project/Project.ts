@@ -7,7 +7,7 @@ import { deepClone, isElectron } from "@/utils/utils";
 import { useProfilesStore } from "@/stores/profileStore";
 import Items from "./Items";
 import { lootSpawns } from "@/project/LootSpawns";
-import { currentProjectTag, modTag, type ProjectArgs } from "../consts/ProjectConsts";
+import { currentProjectTag, modTag, vanillaTag, type ProjectArgs } from "../consts/ProjectConsts";
 import Locales from "./Locales";
 import RecentProjects from "./RecentProjects";
 import QuestZones from "./QuestZones";
@@ -108,6 +108,20 @@ class Project {
 		const projectArgs: ProjectArgs = {
 			folderPath: this.currentProjectFolder,
 			saveWithOriginalChanges: saveWithOriginalChanges
+		}
+		const dataStore = useDataStore()
+		for (const storeId of dataStore.getKeys()) {
+			if (!dataStore.isArray(storeId))
+				for (const [id, record] of dataStore.getMap(storeId).entries()) {
+					if (record.tags?.includes(vanillaTag) && record.dirty) {
+						const index = record.tags.findIndex((el) => el === vanillaTag)
+						if (index >= 0) {
+							const newTags = deepClone(record.tags)
+							newTags[index] = currentProjectTag
+							record.tags = newTags
+						}
+					}
+				}
 		}
 		for (const projectObject of ProjectObjects) {
 			if ("saveProject" in projectObject && typeof projectObject.saveProject === "function")

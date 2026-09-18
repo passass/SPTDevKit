@@ -10,53 +10,65 @@
                 @click="prevGroup"
                 :disabled="groupIndex === null || groupIndex <= 0"
                 title="Предыдущая группа"
-            >◀</button>
+            >
+                ◀
+            </button>
             <span class="array-array-input__counter">{{ displayGroupIndex }} / {{ groups.length }}</span>
             <button
                 type="button"
                 class="array-array-input__nav-btn"
                 @click="nextGroup"
                 :disabled="groupIndex === null || groupIndex >= groups.length - 1"
-                title="Следующая группа"
-            >▶</button>
-            <button type="button" class="array-array-input__btn" @click="addGroup" title="Добавить группу">+</button>
-            <button type="button" class="array-array-input__btn" @click="deleteGroup" title="Удалить группу">-</button>
+                :title="uitext('next')"
+            >
+                ▶
+            </button>
+            <button type="button" class="array-array-input__btn" @click="addGroup" :title="uitext('add')">+</button>
+            <button type="button" class="array-array-input__btn" @click="deleteGroup" :title="uitext('delete')">
+                -
+            </button>
         </div>
 
         <!-- ===== ВНУТРЕННИЙ МАССИВ ===== -->
         <div v-if="currentGroup" class="array-array-input__sub-group">
-            <span class="array-array-input__group-label">Элемент</span>
+            <span class="array-array-input__group-label">{{ uitext("element") }}</span>
             <button
                 type="button"
                 class="array-array-input__nav-btn"
                 @click="prevItem"
                 :disabled="itemIndex === null || itemIndex <= 0"
-                title="Предыдущий элемент"
-            >◀</button>
+                :title="uitext('previous')"
+            >
+                ◀
+            </button>
             <span class="array-array-input__counter">{{ displayItemIndex }} / {{ currentGroup.length }}</span>
             <button
                 type="button"
                 class="array-array-input__nav-btn"
                 @click="nextItem"
                 :disabled="itemIndex === null || itemIndex >= currentGroup.length - 1"
-                title="Следующий элемент"
-            >▶</button>
-            <button type="button" class="array-array-input__btn" @click="addItem" title="Добавить элемент">+</button>
-            <button type="button" class="array-array-input__btn" @click="deleteItem" title="Удалить элемент">-</button>
+                :title="uitext('next')"
+            >
+                ▶
+            </button>
+            <button type="button" class="array-array-input__btn" @click="addItem" :title="uitext('add')">+</button>
+            <button type="button" class="array-array-input__btn" @click="deleteItem" :title="uitext('delete')">
+                -
+            </button>
         </div>
 
         <!-- ===== РЕДАКТОР ЭЛЕМЕНТА ===== -->
         <div class="array-array-input__editor">
             <template v-if="currentItem && typeof currentItem === 'object'">
                 <button @click="handleNavigate" class="array-array-input__nav-object-btn">
-                    {{ previewCurrentItem || "Редактировать объект" }} →
+                    {{ previewCurrentItem || uitext("edit") }} →
                 </button>
                 <div class="array-array-input__preview">{{ previewCurrentItem }}</div>
             </template>
             <div v-else-if="currentItem !== null && currentItem !== undefined" class="array-array-input__primitive">
                 {{ String(currentItem) }}
             </div>
-            <div v-else class="array-array-input__empty">Нет элементов</div>
+            <div v-else class="array-array-input__empty">{{ uitext("noElements") }}</div>
         </div>
     </div>
 </template>
@@ -67,7 +79,7 @@ import { RecordSchema, type Field } from "@/types/fields/fields";
 import { getStaticField } from "@/utils/classUtils";
 import { Navigator } from "@/utils/navigation";
 import { SchemaChoicer, type SchemaChoice } from "@/types/fields/fieldsSchemaChoicer";
-import { gameLocalization } from "@/types/localization";
+import { gameLocalization, uitext } from "@/types/localization";
 
 const frameNavigator = inject<Navigator>("frameNavigator");
 
@@ -88,9 +100,7 @@ const groups = computed<Array<Array<any>>>({
     set: (val) => emit("update:modelValue", val),
 });
 
-const groupIndex = ref<number | null>(
-    props.selectedIndex ?? (groups.value.length > 0 ? 0 : null)
-);
+const groupIndex = ref<number | null>(props.selectedIndex ?? (groups.value.length > 0 ? 0 : null));
 const itemIndex = ref<number | null>(null);
 
 const currentGroup = computed<Array<any> | null>(() => {
@@ -111,8 +121,8 @@ const previewCurrentItem = computed(() => getRepresentation(currentItem.value));
 function getRepresentation(item: any): string {
     if (!item || typeof item !== "object") return "";
 
-	if ("_tpl" in item) {
-    	return gameLocalization.getText({ localeId: [`${item._tpl} ShortName`, item._tpl], default: "" })
+    if ("_tpl" in item) {
+        return gameLocalization.getText({ localeId: [`${item._tpl} ShortName`, item._tpl], default: "" });
     }
 
     return "";
@@ -183,7 +193,11 @@ function deleteItem() {
     if (!currentGroup.value || itemIndex.value === null) return;
     if (itemIndex.value < 0 || itemIndex.value >= currentGroup.value.length) return;
 
-    if (props.field.onArrayItemDelete) props.field.onArrayItemDelete({ field: props.field, value: currentGroup.value, recordSchema: null as any, data: {} }, itemIndex.value);
+    if (props.field.onArrayItemDelete)
+        props.field.onArrayItemDelete(
+            { field: props.field, value: currentGroup.value, recordSchema: null as any, data: {} },
+            itemIndex.value
+        );
 
     currentGroup.value.splice(itemIndex.value, 1);
     if (currentGroup.value.length === 0) {
@@ -202,11 +216,14 @@ function createDefaultItem(): any {
         if (SchemaChoicer.isPrototypeOf(itemSchema)) {
             const choiced = (itemSchema as typeof SchemaChoicer).schemas?.[0];
             if (choiced) {
-                return new choiced.schema({}, {
-                    schemaChooser: itemSchema as typeof SchemaChoicer,
-                    choosedSchema: choiced,
-                    isCreating: true,
-                }).toJSON();
+                return new choiced.schema(
+                    {},
+                    {
+                        schemaChooser: itemSchema as typeof SchemaChoicer,
+                        choosedSchema: choiced,
+                        isCreating: true,
+                    }
+                ).toJSON();
             }
         } else if (RecordSchema.isPrototypeOf(itemSchema)) {
             return new (itemSchema as typeof RecordSchema)({}, { isCreating: true }).toJSON();
@@ -224,7 +241,10 @@ function createDefaultItem(): any {
 function handleNavigate() {
     if (groupIndex.value === null || itemIndex.value === null) return;
     if (props.field.onArrayNavigate) {
-        props.field.onArrayNavigate({ field: props.field, value: groups.value, recordSchema: null as any, data: {} }, groupIndex.value);
+        props.field.onArrayNavigate(
+            { field: props.field, value: groups.value, recordSchema: null as any, data: {} },
+            groupIndex.value
+        );
         return;
     }
     const nav = props.navigateHandler ?? frameNavigator?.navigate;

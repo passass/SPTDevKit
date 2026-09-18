@@ -2,11 +2,12 @@ import { ItemAssort, TradersAssortSchema } from "@/types/schemas/tradersAssort";
 import { currentProjectTag, type ProjectArgs } from "@/consts/ProjectConsts";
 import { dataStore, type dataMapRecordType } from "@/stores/dataStore";
 import { RecordSchema } from "@/types/fields/fields";
-import { Path } from "@/utils/pathUtils";
+import { Path, PathArray } from "@/utils/pathUtils";
 import type { onFileLoadContext } from "@/consts/DataStoreConsts";
 import { collectDescendants } from "@/utils/treeUtils";
 import { computed, ref, type Ref } from "vue";
 import { groupBy } from "@/utils/utils";
+import { useFileDataStore } from "@/stores/fileStore";
 
 export const assortDataStore = new dataStore("TraderAssort");
 
@@ -17,7 +18,9 @@ type ITraderAssort = {
 };
 
 const tradersMongoIdToUUID: Record<string, string> = {
-    jaeger: "5c0647fdd443bc2504c2d371",
+	jaeger: "5c0647fdd443bc2504c2d371",
+    prapor: "54cb50c76803fa8b248b4571",
+    therapist: "54cb57776803fa99248b456e",
 };
 
 class TradersAssort {
@@ -28,8 +31,8 @@ class TradersAssort {
         if (content === null || typeof content !== "object" || !("items" in content)) return res;
 
         let traderId: string;
-        if (_traderId in tradersMongoIdToUUID) {
-            traderId = tradersMongoIdToUUID[_traderId];
+        if (_traderId.toLowerCase() in tradersMongoIdToUUID) {
+            traderId = tradersMongoIdToUUID[_traderId.toLowerCase()];
         } else {
             traderId = _traderId;
         }
@@ -53,7 +56,7 @@ class TradersAssort {
                 traderId: traderId,
                 loyal_level_items: content.loyal_level_items[item._id],
                 barter_scheme: content.barter_scheme[item._id],
-            });
+            }) as ItemAssort;
             this.cachedAssortsData.value.get(traderId)!.set(item._id, schema);
             res.push(schema);
         }
@@ -117,7 +120,24 @@ class TradersAssort {
         for (const filePath of await new Path(projectArgs.folderPath, "db/CustomAssortSchemes/*.json").findFiles())
             assortDataStore.addFileToStore({ filename: filePath.toString(), tags: projectArgs.tags ?? [] });
 
-        if (!projectArgs.notLoadImmediately) await assortDataStore.load();
+        const fileStore = useFileDataStore()
+        await new PathArray(["data/assort.json", "db/assort.json"], projectArgs.folderPath).forEach(async (filePath) => {
+        	const baseFilePath = filePath.withStem("base")
+			const fileConfig = await fileStore.read(baseFilePath.toString())
+			const fileContent = fileConfig.data
+			if (!fileContent || typeof fileContent !== "object" || !("_id" in fileContent)) return;
+
+			const traderId = fileContent["_id"]
+
+			assortDataStore.addFileToStore({
+				filename: filePath.toString(), tags: [
+					`trader_${traderId}`,
+					...(projectArgs.tags ?? [])
+				]
+			});
+		});
+
+		if (!projectArgs.notLoadImmediately) await assortDataStore.load();
     }
 
     async asyncInit() {
