@@ -25,6 +25,8 @@ function createWindow() {
 	mainWindow = new BrowserWindow({
         width: 1200,
 		height: 800,
+		title: "EFT SPT DevKit",
+		icon: path.join(ROOT_DIR, "build", "icon.png"),
 
         webPreferences: {
             nodeIntegration: false,
@@ -34,7 +36,9 @@ function createWindow() {
         },
     })
 
-	// Menu.setApplicationMenu(null)
+	if (!isDev) {
+		Menu.setApplicationMenu(null)
+	}
 	if (process.env.WEBPACK_DEV_SERVER_URL) {
 		mainWindow.loadURL(process.env.WEBPACK_DEV_SERVER_URL);
 		mainWindow.webContents.openDevTools();

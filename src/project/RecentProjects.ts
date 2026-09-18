@@ -13,10 +13,10 @@ export class RecentProjects {
 	}
 
 	addRecentProject(folderPath: string) {
-		if (!folderPath || this.getRecentProjects().includes(folderPath)) return;
-		const existing = this.getRecentProjects().filter((p) => p !== folderPath);
-		const updated = [folderPath, ...existing].slice(0, maxRecentProjects);
-		localStorage.setItem(recentProjectsStorageKey, JSON.stringify(updated));
+	    if (!folderPath) return;
+	    const existing = this.getRecentProjects().filter((p) => p !== folderPath);
+	    const updated = [folderPath, ...existing].slice(0, maxRecentProjects);
+	    localStorage.setItem(recentProjectsStorageKey, JSON.stringify(updated));
 	}
 
 	removeRecentProject(folderPath: string) {

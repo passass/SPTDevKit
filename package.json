@@ -1,5 +1,6 @@
 {
 	"name": "eftsptdevkit",
+	"productName": "SPT DevKit",
 	"version": "1.0.0",
 	"private": true,
 	"scripts": {
@@ -59,6 +60,9 @@
 				"to": "data/"
 			}
 		],
+		"win": {
+	      "icon": "build/favicon.ico"
+	    },
 		"electronDownload": {
 			"mirror": "https://npmmirror.com/mirrors/electron/"
 		}
