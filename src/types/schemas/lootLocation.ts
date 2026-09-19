@@ -8,6 +8,7 @@ import { lootSpawns } from "@/project/LootSpawns";
 import { copyRecordSchema } from "@/utils/copyUtils";
 import { currentProjectTag } from "@/consts/ProjectConsts";
 import { allLocationsLowerCase } from "@/consts/GameConsts";
+import { generateUUID24chars } from "@/utils/uuidUtils";
 
 export class CoordinatesSchema extends RecordSchema {
     static fields: Field[] = [
@@ -148,20 +149,31 @@ export class LootSpawnsField extends Field {
         lootSpawns.removeSpawnPoint(value instanceof RecordSchema ? value.getData() : value);
     }
 
-    onArrayItemAdd(fieldContext: FieldContext, newVal: any): void {
-        const location = newVal["__location"];
-        setValueByPath(newVal, "template.Items", [
-            {
-                _id: getValueByPath(newVal, "template.Root"),
-                _tpl: fieldContext.recordSchema.getId(),
-                upd: {
-                    StackObjectsCount: 1,
-                },
-            },
-        ]);
-        if (location) {
-            lootSpawns.addSpawnPoint(newVal);
+	onArrayItemAdd(fieldContext: FieldContext, newVal: any): void {
+		if (typeof newVal["__location"] !== "string" || newVal["__location"] === "") {
+            newVal["__location"] = allLocationsLowerCase[0];
         }
+
+        if (!newVal["template"] || typeof newVal["template"] !== "object") {
+            newVal["template"] = {};
+        }
+
+        const template = newVal["template"];
+        const itemId = fieldContext.recordSchema.getId();
+
+        const rootId = template["Root"] ?? generateUUID24chars();
+        template["Root"] = rootId;
+        template["Id"] = template["Id"] ?? generateUUID24chars();
+
+        template["Items"] = [
+            {
+                _id: rootId,
+                _tpl: itemId,
+                upd: { StackObjectsCount: 1 },
+            },
+        ];
+
+        lootSpawns.addSpawnPoint(newVal);
     }
 
     onArrayNavigate(fieldContext: FieldContext, index: number) {
