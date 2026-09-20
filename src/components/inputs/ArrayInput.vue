@@ -300,8 +300,8 @@ function addItem() {
                         {},
                         {
                             schemaChooser: (props.field.arrayItemSchema as typeof SchemaChoicer),
-                            choosedSchema: choosedSchema,
-                            //fillWithDefault: true,
+							choosedSchema: choosedSchema,
+                            isCreating: true,
                         }
                     );
                 }
@@ -309,7 +309,7 @@ function addItem() {
                 resultSchema = new arrayItemSchema(
                     {},
                     {
-                        //fillWithDefault: true,
+                    	isCreating: true,
                     }
                 ) as RecordSchema;
             }
@@ -321,7 +321,7 @@ function addItem() {
                 resultSchema = new nestedSchema(
                     {},
                     {
-                        fillWithDefault: true,
+                    	isCreating: true,
                     }
                 );
             }

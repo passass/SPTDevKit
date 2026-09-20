@@ -122,6 +122,7 @@ import { currentProjectTag, modTag, vanillaTag } from "@/consts/ProjectConsts";
 import { generateUUID24chars } from "@/utils/uuidUtils";
 import { savedNavigatorStates, SavedNavigatorState, clearSavedNavigatorState } from "@/utils/navigation";
 import { gameLocalization, uitext } from "@/types/localization";
+import { RecordSchema } from "@/types/fields/fields";
 
 export default defineComponent({
 	name: "ListTabs",
@@ -375,7 +376,8 @@ export default defineComponent({
 			frameNavigator,
 			scrollerRef,
 			getLocalizedSearch,
-            uitext
+			uitext,
+            RecordSchema
         };
     },
 });

@@ -17,6 +17,31 @@ import { createLazyRecordSchema } from "@/utils/lazySchemaLoader";
 import { availableLocales, gameLocalization, type locales } from "../localization";
 import { capitalize } from "vue";
 import { LootSpawnsField } from "./lootLocation";
+import type { IOptionItem } from "@/consts/AdvancedSelectInputConsts";
+import type { FieldContext } from "../fields/fieldsConsts";
+import { buffsDataStore } from "@/project/Buffs";
+
+class StimBuffs extends AdvSelectField {
+    key = "StimulatorBuffs";
+    type: FieldType = "advancedSelect";
+	storeId = "buffs";
+	order = 5;
+
+    getOptionsItems(fieldContext: FieldContext): Map<string | number, IOptionItem | RecordSchema | string> {
+        const res = new Map();
+
+        for (const buff of buffsDataStore.getArray()) {
+			if (!(buff.data instanceof RecordSchema)) continue;
+            console.log(buff.data, buff.data.getRepresentation, buff.data.getRepresentation && buff.data.getRepresentation())
+            res.set(
+                buff.data.get("id"),
+                buff.data
+            );
+        }
+
+        return res;
+    }
+}
 
 export class LocaleEntrySchema extends RecordSchema {
     static fields: Field[] = [
@@ -154,7 +179,11 @@ export class itemsSchema extends RecordSchema {
             extraKeys: ["_props"],
             type: "object",
             order: 3,
-            nestedSchema: createLazyRecordSchema("itemsOverrideProperties.json", "overrideProperties"),
+            nestedSchema: createLazyRecordSchema("itemsOverrideProperties.json", "overrideProperties", {
+                onSchemaLoad: (schemaNode) => {
+                    (schemaNode.schema as typeof RecordSchema).replaceFieldWith(StimBuffs.create({}));
+                },
+            }),
         }),
 
         HiddenField.create({

@@ -9,7 +9,7 @@ import Items from "@/project/Items";
 import { generateUUID24chars } from "@/utils/uuidUtils";
 import type { SchemaNode } from "@/utils/schemaGenerator";
 import TradersAssort, { assortDataStore } from "@/project/TradersAssort";
-import { slotIdOptions } from "@/consts/GameConsts";
+import { skills, slotIdOptions } from "@/consts/GameConsts";
 import { ItemSlotSchema } from "./tradersAssort";
 import { collectDescendants } from "@/utils/treeUtils";
 import { useDataStore } from "@/stores/dataStore";
@@ -200,6 +200,12 @@ class DynamicLocale extends UnneccesaryField {
     order = 200;
     alwaysFillWithDefault = true;
 }
+class SkillField extends Field {
+	key = "target";
+	type: FieldType = "select";
+	options = skills;
+	alwaysFillWithDefault = true;
+}
 
 function commonFunctionForRewards(schemaNode: SchemaNode) {
     const choicer: typeof SchemaChoicer | typeof RecordSchema = schemaNode.schema;
@@ -242,7 +248,6 @@ function commonFunctionForRewards(schemaNode: SchemaNode) {
             assortmentUnlockSchema.schema.replaceFieldWith(itemTargetFieldClass.create({}));
         }
 
-        console.log("choicer.schemas", choicer.schemas)
 		const itemSchema = choicer.schemas.find((el) => el.name === "Item");
 		if (itemSchema) {
 			itemSchema.schema.replaceFieldWith(itemTargetFieldClass.create({}));
@@ -252,9 +257,13 @@ function commonFunctionForRewards(schemaNode: SchemaNode) {
                 ?.arrayItemSchema as typeof RecordSchema;
 			if (itemsRewardSchema) {
                 itemsRewardSchema.replaceFieldWith(parentIdField.create({}));
-                console.log("change field", itemsRewardSchema.fields[itemsRewardSchema.fields.findIndex((el: Field) => el.key === "parentId")])
             }
-        }
+		}
+
+		const skillSchema = choicer.schemas.find((el) => el.name === "Skill");
+		if (skillSchema) {
+			skillSchema.schema.replaceFieldWith(SkillField.create({}))
+		}
     }
 }
 

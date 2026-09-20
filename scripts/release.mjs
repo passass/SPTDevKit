@@ -20,6 +20,15 @@ function loadEnv(path = ".env") {
     }
 }
 
+function tagExists(tag) {
+    try {
+        execSync(`git rev-parse -q --verify refs/tags/${tag}`, { stdio: "ignore" });
+        return true;
+    } catch {
+        return false;
+    }
+}
+
 loadEnv();
 
 const rl = createInterface({ input, output });
@@ -43,15 +52,18 @@ function writeVersion(newVersion) {
 async function main() {
     const token = process.env.GH_TOKEN;
     if (!token) {
-        console.error("❌ Не задан GH_TOKEN.\n" +
-            "   Создай файл .env в корне проекта со строкой:\n" +
-            "   GH_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx\n" +
-            "   (токен со scope 'repo' создаётся на https://github.com/settings/tokens)");
+        console.error(
+            "❌ Не задан GH_TOKEN.\n" +
+                "   Создай файл .env в корне проекта со строкой:\n" +
+                "   GH_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx\n" +
+                "   (токен со scope 'repo' создаётся на https://github.com/settings/tokens)"
+        );
         process.exit(1);
     }
 
     const current = readVersion();
-    const version = (await rl.question(`Текущая версия: ${current}. Новая версия (Enter — оставить): `)).trim() || current;
+    const version =
+        (await rl.question(`Текущая версия: ${current}. Новая версия (Enter — оставить): `)).trim() || current;
     const releaseName = (await rl.question(`Название релиза (Enter — "${version}"): `)).trim() || `${version}`;
     const releaseNotes = (await rl.question("Описание релиза: ")).trim();
 
@@ -64,11 +76,18 @@ async function main() {
     }
 
     const tag = `${version}`;
-    run(`git tag ${tag}`);
+
+    if (!tagExists(tag)) {
+        run(`git tag ${tag}`);
+    }
+
     run(`git push`);
     run(`git push origin ${tag}`);
     writeFileSync("RELEASE_NOTES.md", releaseNotes, "utf-8");
-    run(`npx electron-builder --publish always`, {
+
+    run(`npm run build`); // vite build (default)
+    run(`vite build --mode electron`); // сборка рендерера для electron
+    run(`npx electron-builder --win portable --x64 --publish always`, {
         GH_TOKEN: token,
     });
 

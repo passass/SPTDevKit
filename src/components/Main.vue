@@ -22,8 +22,8 @@ function getRecordEditorComponent(content: object, dataStoreId: string): Compone
 
         for (const [itemId, itemData] of fileData.entries()) {
 			const localizedName: string =
-				itemData.data instanceof RecordSchema && itemData.data.getSchemaLabel
-				? itemData.data.getSchemaLabel()
+				itemData.data instanceof RecordSchema && itemData.data.getRepresentation
+				? itemData.data.getRepresentation()
 				: gameLocalization.getObjectLocalization({
                     instance: itemData.data,
             	});
@@ -96,6 +96,12 @@ const tabsContent = ref<Tab[]>([
             icon: "🗺️",
         },
         "questsZones"
+    ),
+    createTab(
+        {
+            icon: "💉",
+        },
+        "buffs"
     ),
     {
 		id: "tradersAssort",

@@ -268,8 +268,6 @@ export const useDataStore = defineStore("dataStore", () => {
 
 	function getArray(storeId: string): dataMapRecordType[] {
 		const store = dataMap.value.get(storeId);
-		if (!Array.isArray(store))
-			throw new Error(`Store "${storeId}" not found`);
 		if (!Array.isArray(store)) {
 			return Array.from((store as Map<string | number, dataMapRecordType>).values())
 		}

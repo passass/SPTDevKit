@@ -114,7 +114,7 @@ const items = computed(() => {
     const itemMap: Map<string | number, Record<string, any> | RecordSchema | string> =
         props.itemsOverride ??
         (props.fieldContext
-            ? dataStore.getMap((props.fieldContext.field as AdvSelectField)?.storeId ?? "items")
+            ? dataStore.getMap(props.fieldContext?.field?.storeId ?? "items")
             : new Map());
 
     for (const [id, record] of itemMap.entries()) {

@@ -12,7 +12,7 @@ import { type SchemaData } from "@/types/fields/fields";
 import { createSchemaChoiceForCondition } from "@/types/fields/fieldsSchemaChoicer";
 import { allElementsInArray } from "@/utils/utils";
 import { IdField } from "../fields/fieldsClasses";
-import { DogTagIds, DogTagIdsOptions } from "@/consts/GameConsts";
+import { DogTagIds, DogTagIdsOptions, skills } from "@/consts/GameConsts";
 import { type SchemaNode } from "@/utils/schemaGenerator";
 import { SchemaChoicer } from "@/types/fields/fieldsSchemaChoicer";
 import type { FieldContext } from "../fields/fieldsConsts";
@@ -38,12 +38,16 @@ class LeaveItemAtLocationPlantTime extends Field {
     alwaysFillWithDefault = true;
     defaultValue = 5;
 }
+class SkillField extends Field {
+	key = "target";
+	type: FieldType = "select";
+	options = skills;
+	alwaysFillWithDefault = true;
+}
 
 function commonFunctionForConditions(schemaNode: SchemaNode) {
     const choicer: typeof SchemaChoicer | typeof RecordSchema = schemaNode.schema;
     if (SchemaChoicer.isPrototypeOf(choicer) && "schemas" in choicer && Array.isArray(choicer.schemas)) {
-        choicer;
-
         for (const schema of choicer.schemas) {
             schema.schema.replaceFieldWith(LeaveItemAtLocationPlantTime.create({}));
             schema.schema.replaceFieldWith(
@@ -55,8 +59,13 @@ function commonFunctionForConditions(schemaNode: SchemaNode) {
             );
 
             schema.schema.replaceFieldWith(DynamicLocale.create({}));
-        }
-    }
+		}
+
+		const skillSchema = choicer.schemas.find((el) => el.name === "Skill");
+		if (skillSchema) {
+			skillSchema.schema.replaceFieldWith(SkillField.create({}))
+		}
+	}
 }
 
 class DogTagField extends Field {

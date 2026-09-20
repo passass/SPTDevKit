@@ -12,6 +12,7 @@ import Locales from "./Locales";
 import RecentProjects from "./RecentProjects";
 import QuestZones from "./QuestZones";
 import TradersAssort from "./TradersAssort";
+import Buffs from "./Buffs";
 
 const ProjectObjects = [
 	Quests,
@@ -21,6 +22,7 @@ const ProjectObjects = [
 	lootSpawns,
 	QuestZones,
 	TradersAssort,
+	Buffs
 ]
 
 class Project {

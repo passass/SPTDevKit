@@ -72,7 +72,7 @@ class Items {
 		]);
 	}
 
-	async asyncInit() {
+	init() {
 		const dataStore = useDataStore();
 		dataStore.register("items", {
 			file: [

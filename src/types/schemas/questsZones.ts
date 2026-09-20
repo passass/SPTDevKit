@@ -25,7 +25,7 @@ class ZoneName extends HiddenField {
 }
 
 export class ZoneSchema extends RecordSchema {
-	getSchemaLabel(): string {
+	getRepresentation(): string {
 		const name = this.get("ZoneId");
 		return (typeof name === "string" && name !== "") ? name : "Zone";
 	}

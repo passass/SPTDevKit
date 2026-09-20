@@ -171,10 +171,7 @@ export function createLazySchemaChoicer(
     return LazySchemaChoicer;
 }
 
-export function createLazyRecordSchema(filePath: string, className: string): typeof RecordSchema {
-    // , newAdditionalFields: lazyParams = {}
-    // additionalFields.set(filePath, additionalFields.get(filePath) ?? new Map());
-    //    additionalFields.get(filePath)?.set(path, newAdditionalFields);
+export function createLazyRecordSchema(filePath: string, className: string, newAdditionalFields: lazyParams = {}): typeof RecordSchema {
     let cachedSchema: any = null;
     let isLoaded = false;
 
@@ -183,11 +180,9 @@ export function createLazyRecordSchema(filePath: string, className: string): typ
             if (!isLoaded) {
                 throw new Error(`Schema "${className}" not loaded yet. Call ${className}.load() first.`);
             }
-
             if (!cachedSchema) {
                 return [];
             }
-
             return cachedSchema.fields || [];
         }
 
@@ -195,15 +190,23 @@ export function createLazyRecordSchema(filePath: string, className: string): typ
             if (isLoaded) {
                 return;
             }
-
             try {
                 const tree = await loadTree(filePath);
                 const node = tree.children[0];
-
                 if (node && node.schema) {
                     cachedSchema = node.schema;
 
-                    // Копируем поля
+                    if (newAdditionalFields.fields) {
+                        for (const field of newAdditionalFields.fields) {
+                            if (RecordSchema.isPrototypeOf(cachedSchema) && "fields" in cachedSchema) {
+                                cachedSchema.fields.push(field);
+                            }
+                        }
+                    }
+                    if (newAdditionalFields.onSchemaLoad) {
+                        newAdditionalFields.onSchemaLoad(node);
+                    }
+
                     if (cachedSchema.fields) {
                         Object.defineProperty(LazyRecordSchema, "fields", {
                             get: () => cachedSchema.fields || [],
@@ -211,7 +214,6 @@ export function createLazyRecordSchema(filePath: string, className: string): typ
                             configurable: true,
                         });
                     }
-
                     isLoaded = true;
                 } else {
                     throw new Error(`Schema not found for path: ${className}`);
