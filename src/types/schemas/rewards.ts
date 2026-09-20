@@ -242,7 +242,7 @@ function commonFunctionForRewards(schemaNode: SchemaNode) {
             assortmentUnlockSchema.schema.replaceFieldWith(itemTargetFieldClass.create({}));
         }
 
-
+        console.log("choicer.schemas", choicer.schemas)
 		const itemSchema = choicer.schemas.find((el) => el.name === "Item");
 		if (itemSchema) {
 			itemSchema.schema.replaceFieldWith(itemTargetFieldClass.create({}));
@@ -252,6 +252,7 @@ function commonFunctionForRewards(schemaNode: SchemaNode) {
                 ?.arrayItemSchema as typeof RecordSchema;
 			if (itemsRewardSchema) {
                 itemsRewardSchema.replaceFieldWith(parentIdField.create({}));
+                console.log("change field", itemsRewardSchema.fields[itemsRewardSchema.fields.findIndex((el: Field) => el.key === "parentId")])
             }
         }
     }
@@ -264,7 +265,6 @@ export class RewardsSchemas extends RecordSchema {
             arrayItemSchema: createLazySchemaChoicer("questsSchemas.json", "*.rewards.Success", "SuccessReward", {
                 onSchemaLoad: (schemaNode) => {
                     const choicer: typeof SchemaChoicer | typeof RecordSchema = schemaNode.schema;
-                    commonFunctionForRewards(schemaNode);
                     if (
                         SchemaChoicer.isPrototypeOf(choicer) &&
                         "schemas" in choicer &&
@@ -321,6 +321,7 @@ export class RewardsSchemas extends RecordSchema {
                             );
                         }
                     }
+                    commonFunctionForRewards(schemaNode);
                 },
             }),
         }),

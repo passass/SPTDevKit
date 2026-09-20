@@ -70,39 +70,36 @@ const selectedIndex = ref(-1);
 
 const items = computed(() => {
     const result: Array<ISelectItem> = [];
-    if (!props.fieldContext) return result;
+    if (!props.fieldContext && props.itemsOverride === undefined) return result;
 
-    if (props.fieldContext.field.getOptionsItems) {
+    if (props.fieldContext?.field?.getOptionsItems) {
         const items = props.fieldContext.field.getOptionsItems(props.fieldContext);
 
         for (const [_id, item] of items) {
-			let record;
-			let id;
-			let shownId;
+            let record;
+            let id;
+            let shownId;
 
-			if (typeof item === "object" && !(item instanceof RecordSchema)) {
-				record = item.record
-				id = item.id
-				shownId = item.shownId
-			} else {
-				record = item
-				id = _id
-				shownId = _id
-			}
+            if (typeof item === "object" && !(item instanceof RecordSchema)) {
+                record = item.record;
+                id = item.id;
+                shownId = item.shownId;
+            } else {
+                record = item;
+                id = _id;
+                shownId = _id;
+            }
 
-			let name;
-			if (record instanceof RecordSchema) {
-				if (record.getRepresentation)
-					name = record.getRepresentation();
-				else
-					name = gameLocalization.getObjectLocalization({ instance: item });
-			}
-			else if (typeof record === "string") name = gameLocalization.getText({ localeId: [`${record} Name`, record] });
-			else name = String(record)
-
+            let name;
+            if (record instanceof RecordSchema) {
+                if (record.getRepresentation) name = record.getRepresentation();
+                else name = gameLocalization.getObjectLocalization({ instance: item });
+            } else if (typeof record === "string")
+                name = gameLocalization.getText({ localeId: [`${record} Name`, record] });
+            else name = String(record);
 
             const resultObject: ISelectItem = {
-				id,
+                id,
                 shownId,
                 label: name ?? id,
             };
@@ -116,7 +113,9 @@ const items = computed(() => {
 
     const itemMap: Map<string | number, Record<string, any> | RecordSchema | string> =
         props.itemsOverride ??
-        dataStore.getMap((props.fieldContext.field as AdvSelectField)?.storeId ?? "items");
+        (props.fieldContext
+            ? dataStore.getMap((props.fieldContext.field as AdvSelectField)?.storeId ?? "items")
+            : new Map());
 
     for (const [id, record] of itemMap.entries()) {
         let data: any = record;
@@ -125,11 +124,9 @@ const items = computed(() => {
         let name;
         if (record instanceof RecordSchema && record.getRepresentation) name = record.getRepresentation();
         else if (typeof data === "string") name = gameLocalization.getText({ localeId: [`${data} Name`, data] });
-		else {
-			name = gameLocalization.getObjectLocalization({ instance: data });
-		}
-
-
+        else {
+            name = gameLocalization.getObjectLocalization({ instance: data });
+        }
 
         const resultObject: ISelectItem = {
             id,

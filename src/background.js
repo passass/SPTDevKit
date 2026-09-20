@@ -231,6 +231,35 @@ ipcMain.handle('copy-file', async (event, { sourcePath, destinationPath }) => {
     }
 });
 
+// рекурсивное копирование папки
+ipcMain.handle('copy-dir', async (event, { sourcePath, destinationPath }) => {
+    try {
+        try {
+            await fs.access(sourcePath);
+        } catch {
+            return { success: false, error: `Source not found: ${sourcePath}`, sourcePath };
+        }
+
+        const stat = await fs.stat(sourcePath);
+        if (!stat.isDirectory()) {
+            return { success: false, error: `Not a directory: ${sourcePath}`, sourcePath };
+        }
+
+        await fs.mkdir(path.dirname(destinationPath), { recursive: true });
+
+        await fs.cp(sourcePath, destinationPath, {
+            recursive: true,
+            force: true,
+            errorOnExist: false,
+            preserveTimestamps: true,
+        });
+
+        return { success: true, sourcePath, destinationPath };
+    } catch (error) {
+        return { success: false, error: error.message, sourcePath, destinationPath };
+    }
+});
+
 ipcMain.handle('select-folder', async () => {
     const result = await dialog.showOpenDialog({
         properties: ['openDirectory'],

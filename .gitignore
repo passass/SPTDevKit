@@ -20,6 +20,9 @@ dist-electron/*
 dist-ssr
 coverage
 *.local
+.env
+.env.local
+RELEASE_NOTES.md
 
 # Editor directories and files
 .vscode/*

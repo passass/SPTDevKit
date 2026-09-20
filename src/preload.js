@@ -27,6 +27,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
 	copyFile: (sourcePath, destinationPath) =>
     	ipcRenderer.invoke('copy-file', { sourcePath, destinationPath }),
+    copyDir: (sourcePath, destinationPath) =>
+        ipcRenderer.invoke('copy-dir', { sourcePath, destinationPath }),
 
 	writeJson: (filePath, data) => ipcRenderer.invoke("write-json", { filePath, data }),
 	writeLocalJson: (filename, data) => ipcRenderer.invoke("write-local-json", { filename, data }),

@@ -150,7 +150,6 @@ class DogTagCondition extends RecordSchema {
 export class ItemsListField extends Field {
     type: FieldType = "arrayList";
 	getRepresentation(fieldContext: FieldContext, item: any): string | undefined {
-		console.log("item", item)
         const schemaName = (fieldContext.field.arrayItemSchema as typeof SchemaChoicer).from(item)?.choosedSchema?.name;
         if (typeof schemaName !== "string") return undefined;
         const items = item["items"];

@@ -3,25 +3,15 @@
     <div class="weapon-build-wrapper">
         <div class="weapon-build-label">
             <span class="label-icon">🛠️</span>
-            <span>{{gameLocalization.getUIText({localeId: "choiceWeaponBuild"})}}</span>
+            <span>{{ gameLocalization.getUIText({ localeId: "choiceWeaponBuild" }) }}</span>
         </div>
         <div class="weapon-build-controls">
             <div class="select-wrapper">
-                <select ref="selectRef" class="weapon-build-select">
-                    <option value="" disabled selected>{{gameLocalization.getUIText({localeId: "choiceWeaponBuild"})}}...</option>
-                    <option v-for="build in builds" :key="build.Name" :value="build.Name">
-                        {{
-                            build.needLocalization
-                                ? gameLocalization.getText({ localeId: [`${build.Name} ShortName`] }) + " " +
-                                  gameLocalization.getText({ localeId: "Stock build" })
-                                : build.Name
-                        }}
-                    </option>
-                </select>
+                <AdvancedSelectInput v-model="selectedBuild" :itemsOverride="buildsMap" />
             </div>
             <button @click="handleLoad" class="load-button">
                 <span class="btn-icon">⬇</span>
-                <span>{{gameLocalization.getUIText({localeId: "load"})}}</span>
+                <span>{{ gameLocalization.getUIText({ localeId: "load" }) }}</span>
             </button>
         </div>
     </div>
@@ -29,8 +19,9 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { useProfilesStore } from "@/stores/profileStore";
-import { type SchemaValue, type SchemaData } from "@/types/fields/fields";
+import { useProfilesStore, type WeaponBuildItem } from "@/stores/profileStore";
+import { type SchemaValue, type SchemaData, RecordSchema } from "@/types/fields/fields";
+import AdvancedSelectInput from "./AdvancedSelectInput.vue";
 import { type Field } from "@/types/fields/fields";
 import { gameLocalization } from "@/types/localization";
 import { deepClone } from "@/utils/utils";
@@ -42,32 +33,70 @@ const profilesStore = useProfilesStore();
 const dataStore = useDataStore();
 const props = defineProps<{
     data: SchemaData;
-	field: Field;
-	fieldContext: FieldContext;
+    field: Field;
+    fieldContext: FieldContext;
+    onBuildLoaded?: (weaponBuild: {
+        name: string;
+        items: WeaponBuildItem[];
+        parent: WeaponBuildItem;
+    }) => boolean | void;
 }>();
 
 const selectRef = ref<HTMLSelectElement | null>(null);
+
+const selectedBuild = ref<string | null>(null);
 const builds = computed(() => profilesStore.getWeaponBuilds());
 
-function handleLoad(event: Event) {
-    if (!selectRef.value) return;
-    const target = selectRef.value;
-	const value = target.value;
-	const itemsArray = props.data[props.field.key]
-	if (!value || !itemsArray || !Array.isArray(itemsArray)) return;
+const buildsMap = computed<Map<string, RecordSchema>>(() => {
+    const result = new Map<string, RecordSchema>();
+    for (const build of builds.value) {
+        const label = build.needLocalization
+            ? gameLocalization.getText({ localeId: [`${build.Name} ShortName`] }) +
+              " " +
+              gameLocalization.getText({ localeId: "Stock build" })
+            : build.Name;
 
-	if (props.field.extractWeaponBuildIntoChildren) {
-		const res: any = deepClone(profilesStore.getWeaponBuildItems(value))
-		const parent = res[0]
-		parent.children = res.slice(1)
-		itemsArray.push(parent)
-
-		if (props.field.onExtractWeaponBuildIntoChildren) {
-			props.field.onExtractWeaponBuildIntoChildren(props.fieldContext, parent)
-		}
-	} else {
-		props.data[props.field.key] = profilesStore.getWeaponBuildItems(value) as unknown as SchemaValue;
+        const fakeRecord = new RecordSchema({});
+        fakeRecord.getRepresentation = () => label;
+        result.set(build.Name, fakeRecord);
     }
+    return result;
+});
+
+function handleLoad() {
+    const value = selectedBuild.value;
+    if (!value) return;
+    const itemsArray = props.data[props.field.key];
+    if (!itemsArray || !Array.isArray(itemsArray)) return;
+
+    if (props.field.extractWeaponBuildIntoChildren) {
+        const res: any = deepClone(profilesStore.getWeaponBuildItems(value));
+        const parent = res[0];
+        parent.children = res.slice(1);
+
+        if (props.onBuildLoaded?.({ name: value, items: res, parent }) === true) {
+            selectedBuild.value = null;
+            return;
+        }
+
+        itemsArray.push(parent);
+
+        if (props.field.onExtractWeaponBuildIntoChildren) {
+            props.field.onExtractWeaponBuildIntoChildren(props.fieldContext, parent);
+        }
+    } else {
+        const items = profilesStore.getWeaponBuildItems(value);
+        const parent = items[0];
+
+        if (props.onBuildLoaded?.({ name: value, items, parent }) === true) {
+            selectedBuild.value = null;
+            return;
+        }
+
+        props.data[props.field.key] = items as unknown as SchemaValue;
+    }
+
+    selectedBuild.value = null;
 }
 </script>
 

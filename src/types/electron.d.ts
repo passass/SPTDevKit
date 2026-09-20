@@ -59,6 +59,12 @@ export interface ElectronAPI {
         success: boolean;
         path?: string;
         error?: string;
+	}>;
+    copyDir: (sourcePath: string, destinationPath: string) => Promise<{
+        success: boolean;
+        sourcePath?: string;
+        destinationPath?: string;
+        error?: string;
     }>;
 
     pathUtils: {

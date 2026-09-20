@@ -29,6 +29,7 @@ export class IdField extends Field {
 
 export class parentIdField extends AdvSelectField {
 	key: string = "parentId";
+	label = "asd";
 	type: FieldType = "advancedSelect";
 	getOptionsItems(fieldContext: FieldContext) {
 		const res = new Map();

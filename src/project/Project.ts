@@ -100,10 +100,35 @@ class Project {
         if (savedEftPath) {
             await this.loadEFT(new Path(savedEftPath));
         }
-    }
+	}
+
+	async backupDb() {
+		if (!this.currentProjectFolder) return null;
+
+		const dbPath = new Path(this.currentProjectFolder, "db");
+		if (!(await dbPath.exists())) return null;
+
+		const timestamp = new Date()
+			.toISOString()
+			.replace(/[:.]/g, "-")
+			.replace("T", "_")
+			.slice(0, 19); // YYYY-MM-DD_HH-mm-ss
+
+		const backupPath = new Path(
+			this.currentProjectFolder,
+			"_backups",
+			`db_${timestamp}`
+		);
+
+		const res = await window.electronAPI.copyDir(
+			dbPath.toString(),
+			backupPath.toString()
+		);
+	}
 
 	async saveProject(saveWithOriginalChanges?: boolean) {
 		if (!this.currentProjectFolder) return;
+		await this.backupDb();
 		const promises = [];
 		const projectArgs: ProjectArgs = {
 			folderPath: this.currentProjectFolder,

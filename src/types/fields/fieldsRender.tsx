@@ -58,29 +58,31 @@ function isCompareInput(field: Field): boolean {
     );
 }
 
-function getRewardDisplay(items: WeaponBuildItem[]): string {
-    const rootItems = items.filter((item) => !item.parentId);
-    if (rootItems.length === 0) return "";
-    const grouped: Record<string, { tpl: string; count: number }> = {};
-    for (const item of rootItems) {
-        const tpl = item._tpl;
-        if (!grouped[tpl]) grouped[tpl] = { tpl, count: 0 };
-        grouped[tpl].count += Number(item?.upd?.StackObjectsCount ?? 1);;
-    }
-    const parts: string[] = [];
-    for (const [tpl, data] of Object.entries(grouped)) {
-        const name = gameLocalization.getObjectLocalization({ instance: { _id: tpl } });
-        const count = data.count;
-        const display = count > 1 ? `${name} x ${count}` : name;
-        parts.push(display);
-    }
-    return parts.join(", ");
+function loadWeaponBuildInCounter(
+    fieldContext: FieldContext,
+    weaponBuild: { name: string; items: WeaponBuildItem[]; parent: WeaponBuildItem }
+) {
+	const children = weaponBuild.items
+		.filter((el) => el.parentId)
+		.map((el) => [el._tpl]);
+	fieldContext.recordSchema.set("weapon", [weaponBuild.parent._tpl])
+	fieldContext.recordSchema.set("weaponModsInclusive", children)
+	console.log(children)
+    return true
 }
 
 // Обертки для изоляции реактивности значений полей от внешнего computed(vnodes)
 const FieldTemplateWrapper = defineComponent({
     name: "FieldTemplateWrapper",
-    props: ["recordSchema", "field", "fieldContext", "componentTemplate", "componentTemplateProps", "eventHandlers", "extraProps"],
+    props: [
+        "recordSchema",
+        "field",
+        "fieldContext",
+        "componentTemplate",
+        "componentTemplateProps",
+        "eventHandlers",
+        "extraProps",
+    ],
     setup(props, { expose }) {
         const innerRef = ref<any>(null);
 
@@ -93,15 +95,15 @@ const FieldTemplateWrapper = defineComponent({
             },
         });
 
-		return () => {
-			let initValue = props.recordSchema.get(props.field);
+        return () => {
+            let initValue = props.recordSchema.get(props.field);
 
-			if (initValue === undefined) {
+            if (initValue === undefined) {
                 initValue = resolveDefaultValue(props.field, props.recordSchema.getData());
                 props.fieldContext.value = initValue;
-			}
+            }
 
-			return h(props.componentTemplate as any, {
+            return h(props.componentTemplate as any, {
                 ref: innerRef,
                 key: props.field.key,
                 field: props.field,
@@ -112,10 +114,10 @@ const FieldTemplateWrapper = defineComponent({
                 modelValue: initValue,
                 value: initValue,
                 checked: initValue,
-				"v-model": initValue,
+                "v-model": initValue,
 
-				fieldContext: props.fieldContext,
-				...(props.extraProps ?? {}),
+                fieldContext: props.fieldContext,
+                ...(props.extraProps ?? {}),
                 ...(props.eventHandlers ?? {}),
                 ...(props.componentTemplateProps ?? {}),
             });
@@ -141,32 +143,31 @@ const CreateObjectButton = defineComponent({
     name: "CreateObjectButton",
     props: ["recordSchema", "field"],
     setup(props) {
-        return ;
+        return;
     },
 });
 
 // Rule - insert before isArray() rule
 
-
 const renderRules: RenderRule[] = [
     {
         condition: (field: Field) => field.type === "localization",
         componentTemplate: LocalizationInput,
-	},
-	{
-	    condition: (field: Field) => field.type === "arrayArray",
-	    componentTemplate: ArrayArrayInput,
-	},
-	{
-	    condition: (field: Field) => field.type === "arrayList",
-	    componentTemplate: ArrayListInput,
-	},
+    },
     {
-	    condition: (field: Field, recordSchema: RecordSchema) => {
-	        if (!(field.isArray() || field.type === "object") || field.virtual) return false;
-	        return recordSchema.get(field) === undefined;
-	    },
-	    component: (fieldContext: FieldContext) => (
+        condition: (field: Field) => field.type === "arrayArray",
+        componentTemplate: ArrayArrayInput,
+    },
+    {
+        condition: (field: Field) => field.type === "arrayList",
+        componentTemplate: ArrayListInput,
+    },
+    {
+        condition: (field: Field, recordSchema: RecordSchema) => {
+            if (!(field.isArray() || field.type === "object") || field.virtual) return false;
+            return recordSchema.get(field) === undefined;
+        },
+        component: (fieldContext: FieldContext) => (
             <div
                 class="object-summary"
                 onClick={() => {
@@ -186,7 +187,7 @@ const renderRules: RenderRule[] = [
                 Создать
             </div>
         ),
-	},
+    },
     {
         condition: (field: Field) => field.type === "advancedSelect",
         componentTemplate: AdvancedSelectInput,
@@ -247,10 +248,10 @@ const renderRules: RenderRule[] = [
     },
     {
         condition: (field: Field, recordSchema: RecordSchema) => {
-        	if (!field.nestedSchema) return false;
-			const isAllPrimitives = (field.nestedSchema as typeof RecordSchema)
-                .fields
-                .every((f) => f.type !== "object" && !f.isArray() && !f.nestedSchema && !f.arrayItemSchema);
+            if (!field.nestedSchema) return false;
+            const isAllPrimitives = (field.nestedSchema as typeof RecordSchema).fields.every(
+                (f) => f.type !== "object" && !f.isArray() && !f.nestedSchema && !f.arrayItemSchema
+            );
             return field.type === "object" && isAllPrimitives;
         },
         componentTemplate: CompactObjectInput,
@@ -258,22 +259,29 @@ const renderRules: RenderRule[] = [
     {
         condition: (field: Field) => field.type === "object",
         component: (fieldContext: FieldContext) => (
-			<div class="object-summary" onClick={() => fieldContext.navigate?.(fieldContext.field.key)}>{
-				fieldContext.recordSchema.getCastedData(fieldContext.field) ? getObjectSummary(fieldContext.recordSchema.getCastedData(fieldContext.field)) : ""
-			}</div>
+            <div class="object-summary" onClick={() => fieldContext.navigate?.(fieldContext.field.key)}>
+                {fieldContext.recordSchema.getCastedData(fieldContext.field)
+                    ? getObjectSummary(fieldContext.recordSchema.getCastedData(fieldContext.field))
+                    : ""}
+            </div>
         ),
-	},
+    },
 ];
 
 const extraRenderRules: RenderRule[] = [
     {
-		condition: (field: Field, recordSchema: RecordSchema) => field.key === "items" && field.isArray() && (
-			recordSchema.get("type") !== "AssortmentUnlock"
-        ),
+        condition: (field: Field, recordSchema: RecordSchema) =>
+            field.key === "items" && field.isArray() && recordSchema.get("type") !== "AssortmentUnlock",
         component: (fieldContext: FieldContext) => (
             <>
-                <LoadWeaponBuildInput field={fieldContext.field} fieldContext={fieldContext} data={fieldContext.recordSchema.getData()} />
-                {(fieldContext.recordSchema.get(fieldContext.field.key) as unknown as WeaponBuildItem[])?.filter((item: WeaponBuildItem) => !item.parentId).length > 0 && (
+                <LoadWeaponBuildInput
+                    field={fieldContext.field}
+                    fieldContext={fieldContext}
+                    data={fieldContext.recordSchema.getData()}
+                />
+                {(fieldContext.recordSchema.get(fieldContext.field.key) as unknown as WeaponBuildItem[])?.filter(
+                    (item: WeaponBuildItem) => !item.parentId
+                ).length > 0 && (
                     <div class="weapon-build-reward">
                         {/*<span class="weapon-build-reward__label">Предметы:</span>*/}
                         {/*<span class="weapon-build-reward__value">{getRewardDisplay(fieldContext.recordSchema.get(fieldContext.field) as unknown as WeaponBuildItem[])}</span>*/}
@@ -283,8 +291,21 @@ const extraRenderRules: RenderRule[] = [
         ),
     },
     {
-		condition: (field: Field, recordSchema: RecordSchema) => field.key === "image",
+        condition: (field: Field, recordSchema: RecordSchema) => field.key === "image",
         componentTemplate: SelectImageInput,
+    },
+    {
+        condition: (field: Field, recordSchema: RecordSchema) => field.key === "weapon",
+        component: (fieldContext: FieldContext) => (
+            <div>
+                <LoadWeaponBuildInput
+					field={fieldContext.field}
+                    onBuildLoaded={(weaponBuild) => loadWeaponBuildInCounter(fieldContext, weaponBuild)}
+                    fieldContext={fieldContext}
+                    data={fieldContext.recordSchema.getData()}
+                />
+            </div>
+        ),
     },
 ];
 
@@ -301,22 +322,22 @@ export function extraFieldRender({ recordSchema, field }: fieldRenderParams) {
 }
 
 export function fieldRender({
-	recordSchema,
-	field,
-	exactRenderRules,
-	handleNavigate,
-	extraProps,
+    recordSchema,
+    field,
+    exactRenderRules,
+    handleNavigate,
+    extraProps,
 }: fieldRenderParams): Component | undefined {
     for (const renderRule of exactRenderRules ?? renderRules) {
         if (renderRule.condition(field, recordSchema)) {
-			if (renderRule.componentTemplate) {
-				const fieldContext: FieldContext = {
-					field,
-					value: recordSchema.get(field),
-					recordSchema,
-					data: recordSchema.getData(),
-					navigate: handleNavigate ?? (() => false),
-				};
+            if (renderRule.componentTemplate) {
+                const fieldContext: FieldContext = {
+                    field,
+                    value: recordSchema.get(field),
+                    recordSchema,
+                    data: recordSchema.getData(),
+                    navigate: handleNavigate ?? (() => false),
+                };
 
                 const OnInput = (e: Event): void => {
                     if (field.virtual) return;
@@ -331,14 +352,14 @@ export function fieldRender({
                         recordSchema.set(field, target.value);
                     }
                 };
-				const OnModelValueInput = (val: any): void => {
-					if (field.onUpdateModelValue) {
-						const res = field.onUpdateModelValue(fieldContext, val);
-						if (res !== undefined) {
-							recordSchema.set(field, res)
-							return
-						}
-					}
+                const OnModelValueInput = (val: any): void => {
+                    if (field.onUpdateModelValue) {
+                        const res = field.onUpdateModelValue(fieldContext, val);
+                        if (res !== undefined) {
+                            recordSchema.set(field, res);
+                            return;
+                        }
+                    }
                     if (!field.virtual) recordSchema.set(field, val);
                 };
 
@@ -348,17 +369,17 @@ export function fieldRender({
                     navigateHandler: handleNavigate,
                 };
 
-				if (field.extraEmits) {
-					for (const [key, value] of Object.entries(field.extraEmits)) {
-						eventHandlers[key] = (...args: any[]) => value(fieldContext, ...args)
-					}
+                if (field.extraEmits) {
+                    for (const [key, value] of Object.entries(field.extraEmits)) {
+                        eventHandlers[key] = (...args: any[]) => value(fieldContext, ...args);
+                    }
                 }
                 if (renderRule.hasOnInputEmit) eventHandlers.onInput = OnInput;
-				if (renderRule.hasOnChangeEmit) eventHandlers.onChange = OnChange;
+                if (renderRule.hasOnChangeEmit) eventHandlers.onChange = OnChange;
 
-				return h(FieldTemplateWrapper, {
+                return h(FieldTemplateWrapper, {
                     recordSchema,
-					field,
+                    field,
                     fieldContext,
                     componentTemplate: renderRule.componentTemplate,
                     componentTemplateProps: renderRule.componentTemplateProps,
@@ -369,12 +390,12 @@ export function fieldRender({
             if (renderRule.component) {
                 return h(FieldComponentWrapper, {
                     fieldContext: {
-						field,
-						value: recordSchema.get(field),
-						recordSchema,
-						data: recordSchema.getData(),
-						navigate: handleNavigate,
-					},
+                        field,
+                        value: recordSchema.get(field),
+                        recordSchema,
+                        data: recordSchema.getData(),
+                        navigate: handleNavigate,
+                    },
                     componentFunc: renderRule.component,
                 });
             }

@@ -1,0 +1,43 @@
+appId: com.passass.eftsptdevkit
+productName: EFT SPT DevKit
+directories:
+  output: dist
+  buildResources: build
+
+files:
+  - "dist-electron/**/*"
+  - "package.json"
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+    - target: portable
+      arch: [x64]
+  icon: build/icon.ico
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: false
+  artifactName: "${productName} Setup ${version}.${ext}"
+
+portable:
+  artifactName: "${productName} ${version}.${ext}"
+
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Utility
+  icon: build/favicon.ico
+
+mac:
+  target:
+    - dmg
+    - zip
+  icon: build/favicon.ico
+
+publish:
+  provider: github
+  releaseType: release
