@@ -1,73 +1,73 @@
 {
-    "name": "eftsptdevkit",
-    "productName": "SPT DevKit",
-    "version": "1.0.3",
-    "private": true,
-    "scripts": {
-        "start": "node scripts/start.js",
-        "build": "vite build",
-        "build-only": "vite build",
-        "dev": "vite",
-        "electron": "electron .",
-        "electron:dev": "vite build --mode electron & npx electron .",
-        "electron:build": "vite build --mode electron && electron-builder --win portable",
-        "electron:serve": "vite build --mode electron && electron .",
-        "postinstall": "electron-builder install-app-deps",
-        "postuninstall": "electron-builder install-app-deps",
-        "preview": "vite preview",
-        "type-check": "vue-tsc --build",
-        "release": "node scripts/release.mjs",
-        "release:portable": "vite build --mode electron && electron-builder --win portable --x64 --publish always",
-        "test": "vite-node src/test.ts"
+  "name": "eftsptdevkit",
+  "productName": "SPT DevKit",
+  "version": "1.0.4",
+  "private": true,
+  "scripts": {
+    "start": "node scripts/start.js",
+    "build": "vite build",
+    "build-only": "vite build",
+    "dev": "vite",
+    "electron": "electron .",
+    "electron:dev": "vite build --mode electron & npx electron .",
+    "electron:build": "vite build --mode electron && electron-builder --win portable",
+    "electron:serve": "vite build --mode electron && electron .",
+    "postinstall": "electron-builder install-app-deps",
+    "postuninstall": "electron-builder install-app-deps",
+    "preview": "vite preview",
+    "type-check": "vue-tsc --build",
+    "release": "node scripts/release.mjs",
+    "release:portable": "vite build --mode electron && electron-builder --win portable --x64 --publish always",
+    "test": "vite-node src/test.ts"
+  },
+  "main": "src/background.js",
+  "dependencies": {
+    "dataclass": "^2.1.1",
+    "fast-glob": "^3.3.3",
+    "json2typescript": "^1.6.1",
+    "jsonc-parser": "^3.3.1",
+    "pinia": "^4.0.2",
+    "unplugin-auto-import": "^21.1.0",
+    "vue": "^3.5.40",
+    "vue-virtual-scroller": "^3.0.5"
+  },
+  "devDependencies": {
+    "@tsconfig/node24": "^24.0.4",
+    "@types/node": "^24.13.3",
+    "@vitejs/plugin-vue": "^6.0.8",
+    "@vitejs/plugin-vue-jsx": "^5.1.6",
+    "@vue/cli-plugin-babel": "^5.0.9",
+    "@vue/cli-plugin-eslint": "^5.0.9",
+    "@vue/cli-service": "^5.0.9",
+    "@vue/tsconfig": "^0.9.1",
+    "electron": "^44.2.0",
+    "electron-builder": "^26.15.3",
+    "electron-devtools-installer": "^3.1.0",
+    "npm-run-all2": "^9.0.2",
+    "typescript": "~6.0.0",
+    "vite": "^8.2.1",
+    "vite-node": "^6.0.0",
+    "vite-plugin-electron": "^1.1.1",
+    "vite-plugin-vue-devtools": "^8.1.5",
+    "vue-cli-plugin-electron-builder": "~2.1.1",
+    "vue-tsc": "^3.3.7"
+  },
+  "engines": {
+    "node": "^22.18.0 || >=24.12.0"
+  },
+  "build": {
+    "appId": "com.passass.eftsptdevkit",
+    "extraResources": [
+      {
+        "from": "data/",
+        "to": "data/"
+      }
+    ],
+    "win": {
+      "icon": "build/favicon.ico"
     },
-    "main": "src/background.js",
-    "dependencies": {
-        "dataclass": "^2.1.1",
-        "fast-glob": "^3.3.3",
-        "json2typescript": "^1.6.1",
-        "jsonc-parser": "^3.3.1",
-        "pinia": "^4.0.2",
-        "unplugin-auto-import": "^21.1.0",
-        "vue": "^3.5.40",
-        "vue-virtual-scroller": "^3.0.5"
-    },
-    "devDependencies": {
-        "@tsconfig/node24": "^24.0.4",
-        "@types/node": "^24.13.3",
-        "@vitejs/plugin-vue": "^6.0.8",
-        "@vitejs/plugin-vue-jsx": "^5.1.6",
-        "@vue/cli-plugin-babel": "^5.0.9",
-        "@vue/cli-plugin-eslint": "^5.0.9",
-        "@vue/cli-service": "^5.0.9",
-        "@vue/tsconfig": "^0.9.1",
-        "electron": "^44.2.0",
-        "electron-builder": "^26.15.3",
-        "electron-devtools-installer": "^3.1.0",
-        "npm-run-all2": "^9.0.2",
-        "typescript": "~6.0.0",
-        "vite": "^8.2.1",
-        "vite-node": "^6.0.0",
-        "vite-plugin-electron": "^1.1.1",
-        "vite-plugin-vue-devtools": "^8.1.5",
-        "vue-cli-plugin-electron-builder": "~2.1.1",
-        "vue-tsc": "^3.3.7"
-    },
-    "engines": {
-        "node": "^22.18.0 || >=24.12.0"
-    },
-    "build": {
-        "appId": "com.passass.eftsptdevkit",
-        "extraResources": [
-            {
-                "from": "data/",
-                "to": "data/"
-            }
-        ],
-        "win": {
-            "icon": "build/favicon.ico"
-        },
-        "electronDownload": {
-            "mirror": "https://npmmirror.com/mirrors/electron/"
-        }
+    "electronDownload": {
+      "mirror": "https://npmmirror.com/mirrors/electron/"
     }
+  }
 }
