@@ -46,7 +46,8 @@ export function copyRecordSchema(
     const copiedSchema = new Constructor(copiedData, {
         choosedSchema: original.choosedSchema,
         schemaChooser: original.schemaChooser,
-        name: original.name,
+		name: original.name,
+        isCreating: true,
 	}) as RecordSchema;
 
 	const fnQueue = new FunctionQueue();

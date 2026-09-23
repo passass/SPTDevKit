@@ -4,7 +4,7 @@ import { dataStore } from "@/stores/dataStore";
 import { useFileDataStore } from "@/stores/fileStore";
 import { RecordSchema } from "@/types/fields/fields";
 import { BuffsSchema } from "@/types/schemas/buffs";
-import { Path } from "@/utils/pathUtils";
+import { Path, PathArray } from "@/utils/pathUtils";
 import { getValueByPath } from "@/utils/utils";
 
 export const buffsDataStore = new dataStore("buffs");
@@ -50,7 +50,11 @@ class Buffs {
 	}
 
 	async loadFromEFT(EFTFolder: Path) {
-        const globalsPath = EFTFolder.join("SPT/SPT_Data/database/globals.json");
+		const globalsPath = await new PathArray([
+			EFTFolder.join("SPT/SPT_Data/database/globals.json"),
+			EFTFolder.join("SPT_Runtime/SPT_Data/database/globals.json"),
+        ]).first();
+		if (!globalsPath) return;
 		buffsDataStore.addFileToStore({ filename: globalsPath.toString(), tags: [vanillaTag] });
         await buffsDataStore.load();
     }

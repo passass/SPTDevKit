@@ -109,7 +109,8 @@ export class itemsSchema extends RecordSchema {
         Field.create({
             key: "handbookParentId",
             type: "select",
-            order: 3,
+			order: 3,
+            fillWithDefaultOnCreate: true,
             options: [
                 "5b47574386f77428ca22b345",
                 "5b5f757486f774093e6cb507",
@@ -211,14 +212,16 @@ export class itemsSchema extends RecordSchema {
             key: "fleaPriceRoubles",
             type: "number",
             order: 5,
-            defaultValue: 0,
+            fillWithDefaultOnCreate: true,
+            defaultValue: 100000,
         }),
 
         Field.create({
             key: "handbookPriceRoubles",
             type: "number",
             order: 6,
-            defaultValue: 0,
+            fillWithDefaultOnCreate: true,
+            defaultValue: 100000,
         }),
 
         // ===== НАСТРОЙКИ =====
@@ -237,12 +240,14 @@ export class itemsSchema extends RecordSchema {
         Field.create({
             key: "CanSellOnRagfair",
             type: "boolean",
+            fillWithDefaultOnCreate: true,
             order: 9,
         }),
 
         Field.create({
             key: "CanRequireOnRagfair",
             type: "boolean",
+            fillWithDefaultOnCreate: true,
             order: 10,
         }),
 
