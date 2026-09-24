@@ -7,6 +7,7 @@ import { getValuesByPath, isElectron } from "@/utils/utils";
 import { currentProjectTag, type ProjectArgs } from "../consts/ProjectConsts";
 import type { SchemaData } from "@/types/fields/fields";
 import { generateUUID24chars } from "@/utils/uuidUtils";
+import { copyRecordSchema } from "@/utils/copyUtils";
 
 const SPAWN_POINTS_STORE = "spawnPoints";
 export const lootSpawndataStore = new dataStore(SPAWN_POINTS_STORE);
@@ -45,8 +46,12 @@ class LootSpawns {
         const files = await path.findFiles();
         for (const file of files) {
             const content = await fileStore.read(file.toString());
-            for (const [location, spawnPoints] of Object.entries(content.data)) {
-				if (!Array.isArray(spawnPoints)) continue;
+            for (const [_location, spawnPoints] of Object.entries(content.data)) {
+				if (!Array.isArray(spawnPoints) || _location === "sandbox_high") continue;
+				let location = _location;
+				if (_location === "factory4_day" || _location === "factory4_day") {
+					location = "factory"
+				}
                 for (const spawnPoint of spawnPoints) {
                     spawnPoint["__location"] = location;
                     const id = (spawnPoint["locationId"] as string) ?? generateUUID24chars();
@@ -77,9 +82,19 @@ class LootSpawns {
                 lootSpawndataStore.addTag(id, "vanilla");
             }
         }
-    }
+	}
 
-    getSpawnPointsForItem(itemId: string | number): LootLocationSchema[] {
+	copy(schema: LootLocationSchema): LootLocationSchema {
+		const res = copyRecordSchema(schema);
+        const template: any = res.get("template");
+        if (template && typeof template === "object") {
+            template["Root"] = res.getValueByPath("template.Items.0._id");
+        }
+
+        return res;
+	}
+
+	getSpawnPointsForItem(itemId: string | number): LootLocationSchema[] {
         const res: LootLocationSchema[] = [];
         for (const [, record] of lootSpawndataStore.getMap().entries()) {
 			if (

@@ -77,7 +77,7 @@ export function copyRecordSchema(
             return;
         }
         for (const [key, value] of Object.entries(obj)) {
-            if (key === "_id" || key === "id") {
+            if (key.toLocaleLowerCase() === "_id" || key.toLocaleLowerCase() === "id") {
                 obj[key] = isRoot ? newItemId : generateUUID24chars();
                 if (typeof value === "string") idsMap.set(value, obj[key]);
             } else if (typeof value === "string" && sourceId && value.includes(sourceId)) {

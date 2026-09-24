@@ -12,23 +12,23 @@ import { generateUUID24chars } from "@/utils/uuidUtils";
 
 export class CoordinatesSchema extends RecordSchema {
     static fields: Field[] = [
-        Field.create({ key: "x", label: "X", type: "number", order: 1 }),
-        Field.create({ key: "y", label: "Y", type: "number", order: 2 }),
-        Field.create({ key: "z", label: "Z", type: "number", order: 3 }),
+        Field.create({ key: "x", label: "X", type: "number", order: 1, alwaysFillWithDefault: true, }),
+        Field.create({ key: "y", label: "Y", type: "number", order: 2, alwaysFillWithDefault: true, }),
+        Field.create({ key: "z", label: "Z", type: "number", order: 3, alwaysFillWithDefault: true, }),
     ];
 }
 
 export class ItemUpdSchema extends RecordSchema {
     static fields: Field[] = [
-        Field.create({ key: "StackObjectsCount", type: "number", order: 1, defaultValue: 1 }),
+        Field.create({ key: "StackObjectsCount", type: "number", order: 1, defaultValue: 1, alwaysFillWithDefault: true, }),
     ];
 }
 
 export class ItemSchema extends RecordSchema {
     static fields: Field[] = [
-        Field.create({ key: "_id", type: "text", order: 1 }),
-        Field.create({ key: "_tpl", type: "text", order: 2 }),
-        Field.create({ key: "upd", type: "object", nestedSchema: ItemUpdSchema, order: 3 }),
+        Field.create({ key: "_id", type: "text", order: 1, alwaysFillWithDefault: true, }),
+        Field.create({ key: "_tpl", type: "text", order: 2, alwaysFillWithDefault: true, }),
+        Field.create({ key: "upd", type: "object", nestedSchema: ItemUpdSchema, order: 3, alwaysFillWithDefault: true, }),
     ];
 }
 
@@ -42,23 +42,25 @@ export class ItemDistributionSchema extends RecordSchema {
             key: "composedKey",
             type: "object",
             nestedSchema: ComposedKeySchema,
-            order: 1,
+			order: 1,
+            alwaysFillWithDefault: true,
         }),
         Field.create({
             key: "relativeProbability",
             type: "number",
             order: 2,
-            defaultValue: 1,
+			defaultValue: 1,
+            alwaysFillWithDefault: true,
         }),
     ];
 }
 
 export class GroupCoordinatesSchema extends RecordSchema {
     static fields: Field[] = [
-        Field.create({ key: "Name", type: "text", order: 1 }),
-        Field.create({ key: "Weight", type: "number", order: 2, defaultValue: 1 }),
-        Field.create({ key: "Position", type: "object", nestedSchema: CoordinatesSchema, order: 3 }),
-        Field.create({ key: "Rotation", type: "object", nestedSchema: CoordinatesSchema, order: 4 }),
+        Field.create({ key: "Name", type: "text", order: 1, alwaysFillWithDefault: true, }),
+        Field.create({ key: "Weight", type: "number", order: 2, defaultValue: 1, alwaysFillWithDefault: true, }),
+        Field.create({ key: "Position", type: "object", nestedSchema: CoordinatesSchema, order: 3, alwaysFillWithDefault: true, }),
+        Field.create({ key: "Rotation", type: "object", nestedSchema: CoordinatesSchema, order: 4, alwaysFillWithDefault: true, }),
     ];
 }
 
@@ -78,37 +80,40 @@ class GroupPositionField extends Field {
 
 export class TemplateSchema extends RecordSchema {
     static fields: Field[] = [
-        IdField.create({ key: "Id", type: "text", order: 1 }),
-        Field.create({ key: "IsContainer", type: "boolean", order: 2, defaultValue: false }),
-        Field.create({ key: "useGravity", type: "boolean", order: 3, defaultValue: true }),
+        IdField.create({ key: "Id", type: "text", order: 1, alwaysFillWithDefault: true, }),
+        Field.create({ key: "IsContainer", type: "boolean", order: 2, defaultValue: false, alwaysFillWithDefault: true, }),
+        Field.create({ key: "useGravity", type: "boolean", order: 3, defaultValue: true, alwaysFillWithDefault: true, }),
         Field.create({
             key: "randomRotation",
             type: "boolean",
             order: 4,
-            defaultValue: false,
+			defaultValue: false,
+            alwaysFillWithDefault: true,
         }),
-        Field.create({ key: "Position", type: "object", nestedSchema: CoordinatesSchema, order: 5 }),
-        Field.create({ key: "Rotation", type: "object", nestedSchema: CoordinatesSchema, order: 6 }),
+        Field.create({ key: "Position", type: "object", nestedSchema: CoordinatesSchema, order: 5, alwaysFillWithDefault: true, }),
+        Field.create({ key: "Rotation", type: "object", nestedSchema: CoordinatesSchema, order: 6, alwaysFillWithDefault: true, }),
         Field.create({
             key: "IsGroupPosition",
             type: "boolean",
             order: 7,
-            defaultValue: false,
+			defaultValue: false,
+            alwaysFillWithDefault: true,
         }),
-        GroupPositionField.create({}),
+        GroupPositionField.create({alwaysFillWithDefault: true,}),
         Field.create({
             key: "IsAlwaysSpawn",
             type: "boolean",
             order: 9,
-            defaultValue: false,
+			defaultValue: false,
+            alwaysFillWithDefault: true,
         }),
-        IdField.create({ key: "Root", type: "text", order: 10 }),
+        IdField.create({ key: "Root", type: "text", order: 10, alwaysFillWithDefault: true, }),
         Field.create({
             key: "Items",
             type: "array",
             arrayItemSchema: ItemSchema,
-            order: 11,
-            defaultValue: [],
+			order: 11,
+            alwaysFillWithDefault: true,
         }),
     ];
 }

@@ -839,7 +839,9 @@
     "EQBand3Q": "Добротность полосы 3 эквалайзера",
     "bigmap": "Таможня",
     "develop": "Разработка",
-    "factory4_day": "Завод (день)",
+    "Bigmap": "Таможня",
+    "Factory4_day": "Завод",
+    "factory4_day": "Завод",
     "factory4_night": "Завод (ночь)",
     "hideout": "Убежище",
     "interchange": "Развязка",
@@ -985,5 +987,6 @@
     "DamageModifier": "Модификатор урона",
     "FrostbiteBuff": "Эффект обморожения",
     "HandsTremor": "Тремор рук",
+    "factory": "Завод",
     "selectTabToView": "Выберите вкладку для просмотра"
 }

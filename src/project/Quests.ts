@@ -51,9 +51,11 @@ class Quests {
                         quests.set(questId, quest.data);
                     }
                 groupedDirtiesQuests.delete(traderId);
+			}
+			if (traderId) {
+				await new Path(projectArgs.folderPath, `db/CustomQuests/${traderId}/Quests/quest.json`).saveFile(quests);
+            	await this.saveQuestAssorts(quests, String(traderId), new Path(projectArgs.folderPath, `db/CustomQuests/${traderId}/QuestAssort/assort.json`))
             }
-			await new Path(projectArgs.folderPath, `db/CustomQuests/${traderId}/Quests/quest.json`).saveFile(quests);
-            await this.saveQuestAssorts(quests, String(traderId), new Path(projectArgs.folderPath, `db/CustomQuests/${traderId}/QuestAssort/assort.json`))
         }
 
         if (projectArgs.saveWithOriginalChanges) {
@@ -62,9 +64,11 @@ class Quests {
                 for (const [questId, quest] of quests.entries()) {
                     res.set(questId, quest.data);
                 }
-                await new Path(projectArgs.folderPath, `db/CustomQuests/${traderId}/Quests/quest.json`).saveFile(res);
-                await this.saveQuestAssorts(res, String(traderId), new Path(projectArgs.folderPath, `db/CustomQuests/${traderId}/QuestAssort/assort.json`))
-            }
+                if (traderId) {
+	                await new Path(projectArgs.folderPath, `db/CustomQuests/${traderId}/Quests/quest.json`).saveFile(res);
+	                await this.saveQuestAssorts(res, String(traderId), new Path(projectArgs.folderPath, `db/CustomQuests/${traderId}/QuestAssort/assort.json`))
+                }
+			}
         }
     }
 
@@ -89,11 +93,7 @@ class Quests {
 	                    );
                 }
                 if (localizationsMap.size > 0) {
-                    const path = new Path(currentProjectFolder, `db/CustomQuests/${traderId}/Locales/${locale}.json`);
-                    window.electronAPI.writeJson(
-                        path.filePath,
-                        JSON.stringify(toJsonObject(localizationsMap), null, 2)
-                    );
+                    new Path(currentProjectFolder, `db/CustomQuests/${traderId}/Locales/${locale}.json`).saveFile(localizationsMap);
                 }
             }
         }

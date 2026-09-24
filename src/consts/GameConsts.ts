@@ -1,9 +1,7 @@
 export const zoneLocations = [
 	"Sandbox",
-    "Sandbox_high",
     "Bigmap",
     "Factory4_day",
-    "Factory4_night",
     "Interchange",
     "Laboratory",
     "Lighthouse",
@@ -82,8 +80,7 @@ export const buffTypes = [
 export const allLocationsLowerCase = [
     "bigmap",
     "develop",
-    "factory4_day",
-    "factory4_night",
+    "factory",
     "hideout",
     "interchange",
     "laboratory",
@@ -92,7 +89,7 @@ export const allLocationsLowerCase = [
     "privatearea",
     "rezervbase",
     "sandbox",
-    "sandbox_high",
+    // "sandbox_high",
     "shoreline",
     "suburbs",
     "tarkovstreets",
