@@ -306,15 +306,15 @@ watch(
 
 watch(
     () => getData.value,
-	() => {
+    () => {
         if (frameNavigator?.tab && initialized.value) {
             const id = frameNavigator.tab.id;
-			const storeId = frameNavigator.tab.dataStoreId;
-			console.log("marked", id)
+            const storeId = frameNavigator.tab.dataStoreId;
+            console.log("marked", id);
             if (storeId && id) dataStore.markDirty(storeId, id);
         }
     },
-    { deep: true }
+    { deep: true, flush: "post" }
 );
 </script>
 
