@@ -18,9 +18,13 @@ type ITraderAssort = {
 };
 
 const tradersMongoIdToUUID: Record<string, string> = {
-	jaeger: "5c0647fdd443bc2504c2d371",
-    prapor: "54cb50c76803fa8b248b4571",
-    therapist: "54cb57776803fa99248b456e",
+	"jaeger": "5c0647fdd443bc2504c2d371",
+    "prapor": "54cb50c76803fa8b248b4571",
+	"therapist": "54cb57776803fa99248b456e",
+    "mechanic": "5a7c2eca46aef81a7ca2145d",
+    "peacekeeper": "5935c25fb3acc3127c3d8cd9",
+    "ragman": "5ac3b934156ae10c4430e83c",
+    "ref": "6617beeaa9cfa777ca915b7c",
 };
 
 class TradersAssort {

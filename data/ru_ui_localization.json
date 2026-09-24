@@ -988,5 +988,6 @@
     "FrostbiteBuff": "Эффект обморожения",
     "HandsTremor": "Тремор рук",
     "factory": "Завод",
-    "selectTabToView": "Выберите вкладку для просмотра"
+    "selectTabToView": "Выберите вкладку для просмотра",
+    "buffs": "Баффы"
 }

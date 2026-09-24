@@ -16,6 +16,7 @@ import { useDataStore } from "@/stores/dataStore";
 import { objectChangeAllIds, type WeaponBuildItem } from "@/stores/profileStore";
 import type { IOptionItem, ISelectItem } from "@/consts/AdvancedSelectInputConsts";
 import { ItemsListField } from "./questsConditions";
+import { translateId } from "../localization";
 
 class itemTargetFieldClass extends HiddenField {
     key = "target";
@@ -55,7 +56,7 @@ class TemplateAssort extends Field {
         const traderId = assortSchema.get("traderId");
         if (!traderId || typeof traderId !== "string") return res;
 
-        for (const assort of TradersAssort.getTradersAssortForTraderId(traderId)) {
+		for (const assort of TradersAssort.getTradersAssortForTraderId(traderId)) {
             if (assort.has("_id"))
                 res.set(assort.get("_id") as string, {
                     record: assort,

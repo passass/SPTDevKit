@@ -22,7 +22,7 @@
         <div v-if="isOpen && filteredItems.length > 0" class="item-select__dropdown">
             <div
                 v-for="(item, index) in filteredItems"
-                :key="item.id"
+                :key="item.shownId ?? item.id"
                 :class="['item-select__option', { active: selectedIndex === index }]"
                 @click="selectItem(item)"
                 @mouseenter="selectedIndex = index"
@@ -46,7 +46,7 @@
 <script setup lang="tsx">
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from "vue";
 import { useDataStore } from "@/stores/dataStore";
-import { gameLocalization } from "@/types/localization";
+import { gameLocalization, translateId } from "@/types/localization";
 import { AdvSelectField, RecordSchema, type Field } from "@/types/fields/fields";
 import { FieldContext } from "@/types/fields/fieldsConsts";
 import { ISelectItem } from "@/consts/AdvancedSelectInputConsts";
@@ -73,7 +73,7 @@ const items = computed(() => {
     if (!props.fieldContext && props.itemsOverride === undefined) return result;
 
     if (props.fieldContext?.field?.getOptionsItems) {
-        const items = props.fieldContext.field.getOptionsItems(props.fieldContext);
+		const items = props.fieldContext.field.getOptionsItems(props.fieldContext);
 
         for (const [_id, item] of items) {
             let record;
@@ -95,7 +95,7 @@ const items = computed(() => {
                 if (record.getRepresentation) name = record.getRepresentation();
                 else name = gameLocalization.getObjectLocalization({ instance: item });
             } else if (typeof record === "string")
-                name = gameLocalization.getText({ localeId: [`${record} Name`, record] });
+                name = translateId(record);
             else name = String(record);
 
             const resultObject: ISelectItem = {
